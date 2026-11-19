@@ -1,0 +1,118 @@
+﻿MODÈLES EXCEL D’IMPORT — THAIS
+=================================
+
+Chaque fichier ci-joint correspond à une liste de THAIS. Remplissez-le (une ligne par élément) puis envoyez-le
+à l’équipe THAIS, qui l’importe dans l’application : le fichier est contrôlé ligne par ligne avant l’import et
+les lignes en erreur sont signalées avec la raison.
+
+COMMENT REMPLIR
+  - Gardez la ligne de titres (ligne 1) telle quelle et ne changez pas l’ordre des colonnes.
+  - Les titres sur fond JAUNE, marqués d’une étoile (*), sont obligatoires. Fond gris : facultatif.
+  - Dates : jj/mm/aaaa (exemple 31/12/2028). Nombres : virgule ou point pour les décimales (exemple 161,40).
+  - Une ligne par élément ; vous pouvez utiliser plusieurs feuilles (par exemple une par immeuble).
+  - La feuille « Exemple » (quand elle existe) montre une ligne remplie avec des données fictives ; la feuille
+    « Instructions » rappelle les règles. Ces deux feuilles ne sont pas importées.
+  - Un élément déjà présent dans THAIS est ignoré : on peut renvoyer un fichier corrigé sans créer de doublons.
+
+IMPORTANT — L’ORDRE
+  Un actif doit exister avant ses locaux ; une ville, un type d’actif, un propriétaire ou une banque cités dans un
+  fichier doivent exister dans leur propre liste. Remplissez donc les fichiers dans l’ordre ci-dessous.
+
+ÉTAPE 1 — Listes de référence (à remplir en premier : les autres fichiers s’y réfèrent)
+---------------------------------------------------------------------------------------
+01-Villes.xlsx
+    Colonnes : Désignation *
+    - Un élément déjà présent (même désignation) est ignoré.
+
+02-Types-Actif.xlsx
+    Colonnes : Désignation *
+    - Un élément déjà présent (même désignation) est ignoré.
+
+03-Typologies-de-lot.xlsx
+    Colonnes : Désignation *
+    - Un élément déjà présent (même désignation) est ignoré.
+
+04-Proprietaires.xlsx
+    Colonnes : Désignation *
+    - Un élément déjà présent (même désignation) est ignoré.
+
+05-Banques.xlsx
+    Colonnes : Désignation *
+    - Un élément déjà présent (même désignation) est ignoré.
+
+ÉTAPE 2 — Patrimoine et locataires
+----------------------------------
+06-Actifs.xlsx
+    Colonnes : Code analytique * | Actif * | Typologie | Titre foncier | Ville | Adresse | Superficie (m²) | Propriétaire
+    - La typologie, la ville et le propriétaire, s’ils sont renseignés, doivent exister dans Configuration > Données de référence (Types Actif, Villes, Propriétaires) : importez ces listes d’abord si besoin.
+    - Un actif déjà présent (même code ou même désignation) est ignoré.
+
+07-Locaux.xlsx
+    Colonnes : Actif * | Nom du local * | Type local | Etage | Superficie (m²) | Nb pièces | Titre foncier | Adresse | Description
+    - L’actif doit déjà exister (nom ou code analytique) : importez ou créez les actifs d’abord.
+    - Le type de local, s’il est renseigné, doit exister dans Configuration > Données de référence > Typologies de lot.
+    - Un local déjà présent dans le même actif (même nom) est ignoré.
+
+08-Locataires.xlsx
+    Colonnes : Raison sociale | Nom | Prénom | ICE | RC | Identifiant fiscal | CIN | Téléphone | E-mail | Adresse | Ville | Code locataire
+    - Société : renseignez la « Raison sociale ». Particulier : laissez-la vide et renseignez le « Nom » (et le « Prénom »).
+    - La ville, si elle est renseignée, doit exister dans Configuration > Données de référence > Villes.
+    - Un locataire déjà présent (même raison sociale ou même nom et prénom) est ignoré.
+
+ÉTAPE 3 — Baux (contrats de location)
+-------------------------------------
+09-Baux.xlsx
+    Colonnes : Locataire * | Building * | Superficie (m2) | Nbr place parking | Date de prise d'effet du bail * | Date à partir de laquelle la durée de bail est comptabilisée | Durée du contrat | Délai de préavis | Date de fin du contrat de bail (prenant en considération délai de préavis)
+    - Les actifs et locataires qui n’existent pas encore sont créés automatiquement ; un local « Local - <locataire> » est créé pour chaque bail.
+    - Un bail déjà présent (même actif, même locataire, même date de début) est ignoré.
+    - Dates : au format jj/mm/aaaa (ou vraies dates Excel).
+
+AUTRES LISTES (facultatives, selon vos besoins)
+-----------------------------------------------
+10-Filiales.xlsx
+    Colonnes : Nom * | Numéro de référence | Date | RIB | Banque | Mode de règlement
+    - La banque, si elle est renseignée, doit exister dans Configuration > Données de référence > Banques.
+    - Une filiale déjà présente (même nom) est ignorée.
+
+11-Typologies-de-charge.xlsx
+    Colonnes : Typologie * | Compte | Description
+    - Une typologie déjà présente (même nom) est ignorée.
+
+12-Pays.xlsx
+    Colonnes : Désignation *
+    - Un élément déjà présent (même désignation) est ignoré.
+
+13-Periodicites.xlsx
+    Colonnes : Désignation *
+    - Un élément déjà présent (même désignation) est ignoré.
+
+14-Types-de-taxe.xlsx
+    Colonnes : Désignation *
+    - Un élément déjà présent (même désignation) est ignoré.
+
+15-Encaisseurs.xlsx
+    Colonnes : Désignation *
+    - Un élément déjà présent (même désignation) est ignoré.
+
+16-Assureurs.xlsx
+    Colonnes : Désignation *
+    - Un élément déjà présent (même désignation) est ignoré.
+
+17-Courtiers.xlsx
+    Colonnes : Désignation *
+    - Un élément déjà présent (même désignation) est ignoré.
+
+18-Societes-immobilieres.xlsx
+    Colonnes : Désignation *
+    - Un élément déjà présent (même désignation) est ignoré.
+
+19-Typologies-de-sinistre.xlsx
+    Colonnes : Désignation *
+    - Un élément déjà présent (même désignation) est ignoré.
+
+20-Profils.xlsx
+    Colonnes : Désignation * | Accès complet
+    - « Accès complet » : Oui ou Non (Non par défaut).
+    - Un élément déjà présent (même désignation) est ignoré.
+
+* = colonne obligatoire.

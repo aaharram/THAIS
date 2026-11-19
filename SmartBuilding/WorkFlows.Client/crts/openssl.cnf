@@ -1,0 +1,22 @@
+[req]
+default_bits = 2048
+prompt = no
+default_md = sha256
+x509_extensions = v3_req
+distinguished_name = dn
+
+[dn]
+C = MA
+ST = Casablanca
+L = Casablanca
+O = Local Development
+OU = Development
+CN = 192.168.11.127
+
+[v3_req]
+subjectAltName = @alt_names
+
+[alt_names]
+IP.1 = 192.168.11.127
+DNS.1 = localhost
+DNS.2 = localhost.localdomain

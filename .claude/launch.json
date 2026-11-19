@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "workflows-client-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "SmartBuilding/WorkFlows.Client", "run", "dev"],
+      "port": 5174,
+      "url": "https://localhost:5174"
+    },
+    {
+      "name": "workflows-server-dev",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "SmartBuilding/WorkFlows.Server/src/Design.Api", "--launch-profile", "https"],
+      "port": 7108,
+      "url": "https://localhost:7108"
+    }
+  ]
+}
