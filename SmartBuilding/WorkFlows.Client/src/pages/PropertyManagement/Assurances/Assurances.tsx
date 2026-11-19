@@ -3,6 +3,8 @@ import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ImportMenu } from '@/components/import/import-menu';
+import { ASSURANCES_IMPORT } from '@/utils/import/import-configs';
 import { Title } from '@/components/ui/title';
 import { AssuranceResponse } from '@/store/features/property-management/assurance-schemas';
 import {
@@ -146,6 +148,7 @@ const Assurances = () => {
         <div className='space-y-4'>
           <Title
             icon={Shield}
+            actions={<ImportMenu config={ASSURANCES_IMPORT} onImported={() => dispatch(getAllAssurances({ pageNumber: 1, pageSize, search }))} />}
             title='Assurances'
             description="Gérer les polices d'assurance"
             buttons={[

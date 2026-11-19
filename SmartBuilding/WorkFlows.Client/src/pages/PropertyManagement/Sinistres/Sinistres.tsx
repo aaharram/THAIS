@@ -3,6 +3,8 @@ import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ImportMenu } from '@/components/import/import-menu';
+import { SINISTRES_IMPORT } from '@/utils/import/import-configs';
 import { Title } from '@/components/ui/title';
 import { SinistreResponse } from '@/store/features/property-management/sinistre-schemas';
 import {
@@ -268,6 +270,7 @@ const Sinistres = () => {
         <div className='space-y-4'>
           <Title
             icon={AlertTriangle}
+            actions={<ImportMenu config={SINISTRES_IMPORT} onImported={() => dispatch(getAllSinistres({ pageNumber: 1, pageSize, search }))} />}
             title='Gestion des sinistres'
             description='Suivi des sinistres par actif'
             buttons={[

@@ -3,6 +3,8 @@ import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ImportMenu } from '@/components/import/import-menu';
+import { CHARGES_IMPORT } from '@/utils/import/import-configs';
 import { Title } from '@/components/ui/title';
 import { ChargeResponse } from '@/store/features/property-management/charge-schemas';
 import { deleteCharge, getAllCharges, resetCharge, setCharge } from '@/store/features/property-management/chargesSlice';
@@ -143,6 +145,7 @@ const Charges = () => {
         <div className='space-y-4'>
           <Title
             icon={Banknote}
+            actions={<ImportMenu config={CHARGES_IMPORT} onImported={() => dispatch(getAllCharges({ pageNumber: 1, pageSize, search }))} />}
             title='Charges / Budgets'
             description='Suivi des charges prévues et réelles par actif'
             buttons={[

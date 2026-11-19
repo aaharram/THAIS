@@ -115,4 +115,74 @@ AUTRES LISTES (facultatives, selon vos besoins)
     - « Accès complet » : Oui ou Non (Non par défaut).
     - Un élément déjà présent (même désignation) est ignoré.
 
+PROPERTY MANAGEMENT (facultatif — à remplir après les actifs, locaux, locataires, typologies de charge, assureurs, courtiers et types de taxe)
+----------------------------------------------------------------------------------------------------------------------------------------------
+21-Prestataires.xlsx
+    Colonnes : Désignation * | Activité | Type de prestataire | Enseigne | RC | Identifiant fiscal | ICE | Adresse | Code postal | Ville | Pays | Notes
+    - La ville, si elle est renseignée, doit exister dans Configuration > Données de référence > Villes.
+    - Un prestataire déjà présent (même désignation) est ignoré.
+
+22-Assurances.xlsx
+    Colonnes : N° de police * | Assureur * | Courtier | Type de couverture | Date d'effet | Montant | Statut | Notes
+    - L'assureur doit exister dans Configuration > Données de référence > Assureurs ; le courtier, s'il est renseigné, dans Courtiers.
+    - Statut : EnCours ou Terminé (EnCours par défaut).
+    - Une police déjà présente (même assureur et même numéro) est ignorée.
+
+23-Charges.xlsx
+    Colonnes : Actif * | Typologie de charge * | Prestataire | Année * | Montant prévu | Montant réalisé | Date de décaissement | Notes
+    - L'actif doit déjà exister (nom ou code analytique), ainsi que la typologie de charge (Configuration > Typologies de charge) et le prestataire s'il est renseigné.
+    - Le code de la charge (CH + numéro) est attribué automatiquement.
+    - Une charge déjà présente (même actif, typologie, année et prestataire) est ignorée.
+
+24-Taxes.xlsx
+    Colonnes : Actif * | Local | Locataire | Type de taxe * | Identifiant fiscal | N° d'article | Montant | Année * | Payée | Notes
+    - L'actif doit déjà exister ; le type de taxe doit exister dans Configuration > Données de référence > Types de taxe.
+    - Le local (nom, dans cet actif) et le locataire (raison sociale ou « nom prénom »), s'ils sont renseignés, doivent déjà exister.
+    - « Payée » : Oui ou Non (Non par défaut).
+    - Une taxe déjà présente (même actif, local, locataire, type et année) est ignorée.
+
+25-Membres-du-syndic.xlsx
+    Colonnes : Nom * | Prénom | Poste | Téléphone | Début du mandat | Fin du mandat | Notes
+    - La fin du mandat ne peut pas précéder son début.
+    - L'identifiant du membre (SYN + numéro) est attribué automatiquement.
+    - Un membre déjà présent (même nom et même prénom) est ignoré.
+
+SUITE (facultatif — typologies d’immobilisation, puis Property Management : contrats, bons de commande, prestations, réclamations, sinistres)
+---------------------------------------------------------------------------------------------------------------------------------------------
+26-Typologies-d-immobilisation.xlsx
+    Colonnes : Immobilisation concernée * | Compte comptable | Compte d'amortissement | Compte de dotation | Taux (%) | Durée
+    - Le taux est un pourcentage entre 0 et 100.
+    - Une typologie déjà présente (même immobilisation concernée) est ignorée.
+
+27-Contrats-prestataires.xlsx
+    Colonnes : Prestataire * | Objet * | Date du contrat | Date de début | Date de fin | Montant | Notes
+    - Le prestataire doit déjà exister (importez ou créez-le d’abord).
+    - Le numéro du contrat (CNTR + numéro) est attribué automatiquement.
+    - Un contrat déjà présent (même prestataire, objet et date de début) est ignoré.
+
+28-Bons-de-commande.xlsx
+    Colonnes : N° de bon de commande * | Prestataire * | Date de commande * | Date de réception | Compte | Compte comptable | Statut d'approbation | Notes
+    - Le prestataire doit déjà exister.
+    - Statut d'approbation : En attente (par défaut), Approuvé ou Rejeté.
+    - Un bon déjà présent (même numéro) est ignoré.
+
+29-Prestations.xlsx
+    Colonnes : N° de bon de commande * | Actif * | Typologie de charge * | Prix unitaire HT * | Quantité | Taux de TVA (%) | Durée d'amortissement (mois) | Taux d'amortissement (%) | Notes
+    - Le bon de commande, l'actif et la typologie de charge doivent déjà exister.
+    - La quantité vaut 1 si elle est vide.
+    - Une prestation déjà présente (même bon, actif, typologie, prix et quantité) est ignorée.
+
+30-Reclamations.xlsx
+    Colonnes : Actif * | Local | Locataire * | État | Date de la réclamation | Objet | Notes
+    - L'actif et le locataire doivent déjà exister ; le local (nom, dans cet actif), s'il est renseigné, aussi.
+    - État : Ouverte (par défaut), En traitement, Résolue ou Fermée.
+    - Une réclamation déjà présente (même actif, local, locataire, date et objet) est ignorée.
+
+31-Sinistres.xlsx
+    Colonnes : Actif * | Local | N° de police d'assurance | Type de sinistre * | Étape de suivi | Date de déclaration | Date d'expertise | Date de réclamation | Date de remboursement | Estimation des dégâts (bailleur) | Estimation des dégâts (locataire) | Montant facturé | Montant de rémunération | Nom de l'expert | Réf. dossier assurance | N° de sinistre | Notes
+    - L'actif doit déjà exister, ainsi que le type de sinistre (Configuration > Données de référence > Typologies de sinistre) ; le local et la police d'assurance, s'ils sont renseignés, aussi.
+    - Étape de suivi : Déclaré (par défaut), Expertise, Réclamation, Remboursement ou Clôturé.
+    - L'identifiant du sinistre (SIN + numéro) est attribué automatiquement.
+    - Un sinistre déjà présent (même n° de sinistre, ou mêmes actif, local, type et date de déclaration) est ignoré.
+
 * = colonne obligatoire.

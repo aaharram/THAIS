@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ImportMenu } from '@/components/import/import-menu';
+import { BONS_COMMANDE_IMPORT } from '@/utils/import/import-configs';
 import { Title } from '@/components/ui/title';
 import { BonDeCommandeImportRow, BonDeCommandeResponse } from '@/store/features/property-management/bon-de-commande-schemas';
 import {
@@ -258,6 +260,7 @@ const BonsDeCommande = () => {
         <div className='space-y-4'>
           <Title
             icon={FileText}
+            actions={<ImportMenu config={BONS_COMMANDE_IMPORT} onImported={() => dispatch(getAllBonsDeCommande({ pageNumber: 1, pageSize, search }))} />}
             title='Bon de Commande'
             description='Achats et prestations'
             buttons={[

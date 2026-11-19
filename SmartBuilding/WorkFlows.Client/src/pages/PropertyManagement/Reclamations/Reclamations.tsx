@@ -3,6 +3,8 @@ import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ImportMenu } from '@/components/import/import-menu';
+import { RECLAMATIONS_IMPORT } from '@/utils/import/import-configs';
 import { Title } from '@/components/ui/title';
 import { ReclamationResponse } from '@/store/features/property-management/reclamation-schemas';
 import {
@@ -148,6 +150,7 @@ const Reclamations = () => {
         <div className='space-y-4'>
           <Title
             icon={MessageSquareWarning}
+            actions={<ImportMenu config={RECLAMATIONS_IMPORT} onImported={() => dispatch(getAllReclamations({ pageNumber: 1, pageSize, search }))} />}
             title='Suivi Réclamation'
             description='Réclamations des locataires'
             buttons={[

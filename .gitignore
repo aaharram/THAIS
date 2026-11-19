@@ -50,3 +50,15 @@ $RECYCLE.BIN/
 
 # Built Visual Studio Code Extensions
 *.vsix
+### THAIS : données et secrets à ne jamais versionner
+# Sauvegarde et script d'import contenant les vraies données du client
+import/*.bak
+import/import-cfc.sql
+# Chaînes de connexion et mots de passe (utiliser appsettings.Example.json comme modèle)
+**/appsettings.Development.json
+**/appsettings.Production.json
+# Dossiers locaux
+.claude/
+node_modules/
+dist/
+.playwright-mcp/

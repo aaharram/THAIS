@@ -3,6 +3,8 @@ import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ImportMenu } from '@/components/import/import-menu';
+import { TAXES_IMPORT } from '@/utils/import/import-configs';
 import { Title } from '@/components/ui/title';
 import { TaxeResponse } from '@/store/features/property-management/taxe-schemas';
 import { deleteTaxe, getAllTaxes, resetTaxe, setTaxe } from '@/store/features/property-management/taxesSlice';
@@ -132,6 +134,7 @@ const Taxes = () => {
         <div className='space-y-4'>
           <Title
             icon={Landmark}
+            actions={<ImportMenu config={TAXES_IMPORT} onImported={() => dispatch(getAllTaxes({ pageNumber: 1, pageSize, search }))} />}
             title='Taxes'
             description='Suivi des taxes par actif'
             buttons={[

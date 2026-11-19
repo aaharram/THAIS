@@ -6,6 +6,7 @@ using Design.Contract.Responses;
 using Design.Domain.Entities.Configuration;
 using Design.Domain.Entities.Leasing;
 using Design.Domain.Entities.Patrimoine;
+using Design.Domain.Entities.PropertyManagement;
 using Design.Infrastructure.Data;
 
 namespace Design.Application.Features;
@@ -465,5 +466,849 @@ public class ImportService(DbDesignContext context, ILogger<ImportService> logge
             context.Set<T>().Add(entity);
             return null;
         }, l => l.Designation);
+    }
+
+    // ---------------------------------------------------------------- Property Management : prestataires
+    public async Task<ImportResultResponse> ImportPrestatairesAsync(ImportRequest<PrestataireImportRow> request)
+    {
+        HashSet<string> deja = (await context.Prestataires.Select(p => p.Designation).ToListAsync()).Select(Cle).ToHashSet();
+        Dictionary<string, Ville> villes = Index(await context.Villes.ToListAsync(), v => v.Designation);
+        int user = request.AddUser ?? 0;
+        DateTime now = DateTime.UtcNow;
+
+        return await ExecuterAsync(request, p =>
+        {
+            string? nom = Net(p.Designation), activite = Net(p.Activite), type = Net(p.TypePrestataire), enseigne = Net(p.Enseigne);
+            string? rc = Net(p.Rc), idf = Net(p.Idf), ice = Net(p.Ice), adresse = Net(p.Adresse), cp = Net(p.CodePostal);
+            string? ville = Net(p.Ville), pays = Net(p.Pays), notes = Net(p.Notes);
+
+            string? probleme = PremierProbleme(
+                nom is null ? "Désignation manquante." : null,
+                TropLong<Prestataire>(nameof(Prestataire.Designation), nom, "Désignation"),
+                TropLong<Prestataire>(nameof(Prestataire.Activite), activite, "Activité"),
+                TropLong<Prestataire>(nameof(Prestataire.TypePrestataire), type, "Type de prestataire"),
+                TropLong<Prestataire>(nameof(Prestataire.Enseigne), enseigne, "Enseigne"),
+                TropLong<Prestataire>(nameof(Prestataire.Rc), rc, "RC"),
+                TropLong<Prestataire>(nameof(Prestataire.Idf), idf, "Identifiant fiscal"),
+                TropLong<Prestataire>(nameof(Prestataire.Ice), ice, "ICE"),
+                TropLong<Prestataire>(nameof(Prestataire.Adresse), adresse, "Adresse"),
+                TropLong<Prestataire>(nameof(Prestataire.PostalCode), cp, "Code postal"),
+                TropLong<Prestataire>(nameof(Prestataire.Pays), pays, "Pays"),
+                TropLong<Prestataire>(nameof(Prestataire.Notes), notes, "Notes"));
+            if (probleme is not null)
+            {
+                return probleme;
+            }
+
+            Ville? v = null;
+            if (ville is not null && !villes.TryGetValue(Cle(ville), out v))
+            {
+                return $"Ville inconnue : « {ville} » (Configuration > Données de référence > Villes).";
+            }
+
+            if (!deja.Add(Cle(nom)))
+            {
+                return "Prestataire déjà existant (même désignation) : ignoré.";
+            }
+
+            context.Prestataires.Add(new Prestataire
+            {
+                Designation = nom!,
+                Activite = activite ?? string.Empty,
+                TypePrestataire = type ?? string.Empty,
+                Enseigne = enseigne ?? string.Empty,
+                Rc = rc ?? string.Empty,
+                Idf = idf ?? string.Empty,
+                Ice = ice ?? string.Empty,
+                Adresse = adresse ?? string.Empty,
+                PostalCode = cp ?? string.Empty,
+                NoVille = v?.Numero,
+                Pays = pays ?? string.Empty,
+                Notes = notes ?? string.Empty,
+                AddUser = user,
+                AddDate = now,
+                ModUser = user,
+                ModDate = now
+            });
+            return null;
+        }, p => p.Designation);
+    }
+
+    // ---------------------------------------------------------------- Property Management : assurances
+    public async Task<ImportResultResponse> ImportAssurancesAsync(ImportRequest<AssuranceImportRow> request)
+    {
+        Dictionary<string, Assureur> assureurs = Index(await context.Assureurs.ToListAsync(), a => a.Designation);
+        Dictionary<string, Courtier> courtiers = Index(await context.Courtiers.ToListAsync(), c => c.Designation);
+        HashSet<(int, string)> deja = (await context.Assurances.Select(a => new { a.NoAssureur, a.NumPolice }).ToListAsync())
+            .Select(a => (a.NoAssureur, Cle(a.NumPolice))).ToHashSet();
+        int user = request.AddUser ?? 0;
+        DateTime now = DateTime.UtcNow;
+
+        return await ExecuterAsync(request, a =>
+        {
+            string? police = Net(a.NumPolice), assureurNom = Net(a.Assureur), courtierNom = Net(a.Courtier);
+            string? couverture = Net(a.TypeCouverture), notes = Net(a.Notes), statutBrut = Net(a.Statut);
+
+            string statut = "EnCours";
+            if (statutBrut is not null)
+            {
+                string s = Cle(statutBrut).Replace(" ", string.Empty).Replace("é", "e");
+                if (s is "encours")
+                {
+                    statut = "EnCours";
+                }
+                else if (s is "termine")
+                {
+                    statut = "Terminé";
+                }
+                else
+                {
+                    return $"Statut inconnu : « {statutBrut} » (EnCours ou Terminé).";
+                }
+            }
+
+            string? probleme = PremierProbleme(
+                police is null ? "N° de police manquant." : null,
+                assureurNom is null ? "Assureur manquant." : null,
+                a.Montant < 0 ? "Montant négatif." : null,
+                TropLong<Assurance>(nameof(Assurance.NumPolice), police, "N° de police"),
+                TropLong<Assurance>(nameof(Assurance.TypeCouverture), couverture, "Type de couverture"),
+                TropLong<Assurance>(nameof(Assurance.Notes), notes, "Notes"));
+            if (probleme is not null)
+            {
+                return probleme;
+            }
+
+            if (!assureurs.TryGetValue(Cle(assureurNom), out Assureur? assureur))
+            {
+                return $"Assureur inconnu : « {assureurNom} » (Configuration > Données de référence > Assureurs).";
+            }
+
+            Courtier? courtier = null;
+            if (courtierNom is not null && !courtiers.TryGetValue(Cle(courtierNom), out courtier))
+            {
+                return $"Courtier inconnu : « {courtierNom} » (Configuration > Données de référence > Courtiers).";
+            }
+
+            if (!deja.Add((assureur.Numero, Cle(police))))
+            {
+                return "Police déjà existante (même assureur et même numéro) : ignorée.";
+            }
+
+            context.Assurances.Add(new Assurance
+            {
+                NumPolice = police,
+                NoAssureur = assureur.Numero,
+                NoCourtier = courtier?.Numero,
+                TypeCouverture = couverture,
+                DateEffetContrat = a.DateEffetContrat,
+                Montant = a.Montant,
+                Statut = statut,
+                Notes = notes,
+                AddUser = user,
+                AddDate = now,
+                ModUser = user,
+                ModDate = now
+            });
+            return null;
+        }, a => a.NumPolice ?? a.Assureur);
+    }
+
+    // ---------------------------------------------------------------- Property Management : charges
+    public async Task<ImportResultResponse> ImportChargesAsync(ImportRequest<ChargeImportRow> request)
+    {
+        Dictionary<string, Building> actifs = Index(await context.Buildings.ToListAsync(), b => b.Designation);
+        foreach (Building b in await context.Buildings.ToListAsync())
+        {
+            actifs.TryAdd(Cle(b.CodeImmeuble), b);
+        }
+
+        Dictionary<string, TypologieCharge> typologies = Index(await context.TypologiesCharge.ToListAsync(), t => t.Typologie);
+        Dictionary<string, Prestataire> prestataires = Index(await context.Prestataires.ToListAsync(), p => p.Designation);
+        HashSet<(int, int, int, int)> deja = (await context.Charges.Select(c => new { c.NoBuilding, c.NoTypologieCharge, c.Annee, c.NoPrestataire }).ToListAsync())
+            .Select(c => (c.NoBuilding, c.NoTypologieCharge, c.Annee, c.NoPrestataire ?? 0)).ToHashSet();
+        int user = request.AddUser ?? 0;
+        DateTime now = DateTime.UtcNow;
+
+        ImportResultResponse resultat = await ExecuterAsync(request, c =>
+        {
+            string? nomActif = Net(c.Actif), typologieNom = Net(c.Typologie), prestataireNom = Net(c.Prestataire), notes = Net(c.Notes);
+
+            string? probleme = PremierProbleme(
+                nomActif is null ? "Actif manquant." : null,
+                typologieNom is null ? "Typologie de charge manquante." : null,
+                c.Annee is null ? "Année manquante." : null,
+                c.Annee is < 1900 or > 2100 ? $"Année invalide : {c.Annee}." : null,
+                c.Montant < 0 ? "Montant prévu négatif." : null,
+                c.Realisation < 0 ? "Montant réalisé négatif." : null,
+                TropLong<Charge>(nameof(Charge.Notes), notes, "Notes"));
+            if (probleme is not null)
+            {
+                return probleme;
+            }
+
+            if (!actifs.TryGetValue(Cle(nomActif), out Building? actif))
+            {
+                return $"Actif introuvable : « {nomActif} » (créez-le ou importez-le d'abord).";
+            }
+
+            if (!typologies.TryGetValue(Cle(typologieNom), out TypologieCharge? typologie))
+            {
+                return $"Typologie de charge inconnue : « {typologieNom} » (Configuration > Typologies de charge).";
+            }
+
+            Prestataire? prestataire = null;
+            if (prestataireNom is not null && !prestataires.TryGetValue(Cle(prestataireNom), out prestataire))
+            {
+                return $"Prestataire inconnu : « {prestataireNom} » (importez ou créez-le d'abord).";
+            }
+
+            if (!deja.Add((actif.Numero, typologie.Numero, c.Annee!.Value, prestataire?.Numero ?? 0)))
+            {
+                return "Charge déjà existante (même actif, typologie, année et prestataire) : ignorée.";
+            }
+
+            context.Charges.Add(new Charge
+            {
+                NoBuilding = actif.Numero,
+                NoTypologieCharge = typologie.Numero,
+                NoPrestataire = prestataire?.Numero,
+                Annee = c.Annee.Value,
+                Montant = c.Montant,
+                Realisation = c.Realisation,
+                DateDecaissement = c.DateDecaissement,
+                Notes = notes,
+                AddUser = user,
+                AddDate = now,
+                ModUser = user,
+                ModDate = now
+            });
+            return null;
+        }, c => $"{c.Actif} / {c.Typologie} / {c.Annee}");
+
+        // Comme à la saisie : le code « CH{numéro} » est posé une fois le numéro connu.
+        List<Charge> sansCode = await context.Charges.Where(c => c.CodeCharge == null).ToListAsync();
+        foreach (Charge charge in sansCode)
+        {
+            charge.CodeCharge = $"CH{charge.Numero}";
+        }
+
+        await context.SaveChangesAsync();
+        return resultat;
+    }
+
+    // ---------------------------------------------------------------- Property Management : taxes
+    public async Task<ImportResultResponse> ImportTaxesAsync(ImportRequest<TaxeImportRow> request)
+    {
+        Dictionary<string, Building> actifs = Index(await context.Buildings.ToListAsync(), b => b.Designation);
+        foreach (Building b in await context.Buildings.ToListAsync())
+        {
+            actifs.TryAdd(Cle(b.CodeImmeuble), b);
+        }
+
+        Dictionary<string, TypeTaxe> types = Index(await context.TypesTaxe.ToListAsync(), t => t.Designation);
+        Dictionary<(int, string), Local> locaux = [];
+        foreach (Local l in await context.Locaux.ToListAsync())
+        {
+            locaux.TryAdd((l.NoBuilding, Cle(l.Designation)), l);
+        }
+
+        Dictionary<string, Locataire> locataires = [];
+        foreach (Locataire l in await context.Locataires.ToListAsync())
+        {
+            string k = l.TypeLocataire == 1 ? Cle(l.DesignationEntreprise) : Cle($"{l.Nom} {l.Prenom}");
+            if (k.Length > 0)
+            {
+                locataires.TryAdd(k, l);
+            }
+        }
+
+        HashSet<(int, int, int, int, int)> deja = (await context.Taxes.Select(t => new { t.NoBuilding, t.NoLocal, t.NoLocataire, t.NoType, t.Annee }).ToListAsync())
+            .Select(t => (t.NoBuilding, t.NoLocal ?? 0, t.NoLocataire ?? 0, t.NoType, t.Annee)).ToHashSet();
+        int user = request.AddUser ?? 0;
+        DateTime now = DateTime.UtcNow;
+
+        return await ExecuterAsync(request, t =>
+        {
+            string? nomActif = Net(t.Actif), localNom = Net(t.Local), locataireNom = Net(t.Locataire), typeNom = Net(t.TypeTaxe);
+            string? idFiscal = Net(t.IdFiscal), article = Net(t.NoArticle), notes = Net(t.Notes);
+
+            string? probleme = PremierProbleme(
+                nomActif is null ? "Actif manquant." : null,
+                typeNom is null ? "Type de taxe manquant." : null,
+                t.Annee is null ? "Année manquante." : null,
+                t.Annee is < 1900 or > 2100 ? $"Année invalide : {t.Annee}." : null,
+                t.MontantTaxe < 0 ? "Montant négatif." : null,
+                TropLong<Taxe>(nameof(Taxe.IdFiscal), idFiscal, "Identifiant fiscal"),
+                TropLong<Taxe>(nameof(Taxe.NoArticle), article, "N° d'article"),
+                TropLong<Taxe>(nameof(Taxe.Notes), notes, "Notes"));
+            if (probleme is not null)
+            {
+                return probleme;
+            }
+
+            if (!actifs.TryGetValue(Cle(nomActif), out Building? actif))
+            {
+                return $"Actif introuvable : « {nomActif} » (créez-le ou importez-le d'abord).";
+            }
+
+            if (!types.TryGetValue(Cle(typeNom), out TypeTaxe? type))
+            {
+                return $"Type de taxe inconnu : « {typeNom} » (Configuration > Données de référence > Types de taxe).";
+            }
+
+            Local? local = null;
+            if (localNom is not null && !locaux.TryGetValue((actif.Numero, Cle(localNom)), out local))
+            {
+                return $"Local introuvable dans l'actif « {actif.Designation} » : « {localNom} ».";
+            }
+
+            Locataire? locataire = null;
+            if (locataireNom is not null && !locataires.TryGetValue(Cle(locataireNom), out locataire))
+            {
+                return $"Locataire introuvable : « {locataireNom} » (importez-le d'abord).";
+            }
+
+            if (!deja.Add((actif.Numero, local?.Numero ?? 0, locataire?.Numero ?? 0, type.Numero, t.Annee!.Value)))
+            {
+                return "Taxe déjà existante (même actif, local, locataire, type et année) : ignorée.";
+            }
+
+            context.Taxes.Add(new Taxe
+            {
+                NoBuilding = actif.Numero,
+                NoLocal = local?.Numero,
+                NoLocataire = locataire?.Numero,
+                NoType = type.Numero,
+                IdFiscal = idFiscal,
+                NoArticle = article,
+                MontantTaxe = t.MontantTaxe,
+                Annee = t.Annee.Value,
+                Paye = t.Paye ?? false,
+                Notes = notes,
+                AddUser = user,
+                AddDate = now,
+                ModUser = user,
+                ModDate = now
+            });
+            return null;
+        }, t => $"{t.Actif} / {t.TypeTaxe} / {t.Annee}");
+    }
+
+    // ---------------------------------------------------------------- Property Management : membres du syndic
+    public async Task<ImportResultResponse> ImportMembresSyndicAsync(ImportRequest<SyndicImportRow> request)
+    {
+        HashSet<string> deja = (await context.Syndics.Select(s => new { s.Nom, s.Prenom }).ToListAsync())
+            .Select(s => Cle($"{s.Nom} {s.Prenom}")).ToHashSet();
+        int user = request.AddUser ?? 0;
+        DateTime now = DateTime.UtcNow;
+
+        ImportResultResponse resultat = await ExecuterAsync(request, s =>
+        {
+            string? nom = Net(s.Nom), prenom = Net(s.Prenom), poste = Net(s.Poste), tel = Net(s.Telephone), notes = Net(s.Notes);
+
+            string? probleme = PremierProbleme(
+                nom is null ? "Nom manquant." : null,
+                s.DebutMandat is not null && s.FinMandat is not null && s.FinMandat < s.DebutMandat ? "La fin du mandat précède son début." : null,
+                TropLong<Syndic>(nameof(Syndic.Nom), nom, "Nom"),
+                TropLong<Syndic>(nameof(Syndic.Prenom), prenom, "Prénom"),
+                TropLong<Syndic>(nameof(Syndic.Poste), poste, "Poste"),
+                TropLong<Syndic>(nameof(Syndic.Telephone), tel, "Téléphone"),
+                TropLong<Syndic>(nameof(Syndic.Notes), notes, "Notes"));
+            if (probleme is not null)
+            {
+                return probleme;
+            }
+
+            if (!deja.Add(Cle($"{nom} {prenom}")))
+            {
+                return "Membre déjà existant (même nom et même prénom) : ignoré.";
+            }
+
+            context.Syndics.Add(new Syndic
+            {
+                Nom = nom!,
+                Prenom = prenom,
+                Poste = poste,
+                Telephone = tel,
+                DebutMandat = s.DebutMandat,
+                FinMandat = s.FinMandat,
+                Notes = notes,
+                AddUser = user,
+                AddDate = now,
+                ModUser = user,
+                ModDate = now
+            });
+            return null;
+        }, s => $"{s.Nom} {s.Prenom}".Trim());
+
+        // Comme à la saisie : l'identifiant « SYN{numéro} » est posé une fois le numéro connu.
+        List<Syndic> sansId = await context.Syndics.Where(s => s.IdSyndic == null).ToListAsync();
+        foreach (Syndic syndic in sansId)
+        {
+            syndic.IdSyndic = $"SYN{syndic.Numero}";
+        }
+
+        await context.SaveChangesAsync();
+        return resultat;
+    }
+
+    // Valeur d'une liste fermée (statut, état, étape) : insensible à la casse, aux accents et aux espaces.
+    private static string Simplifie(string s) =>
+        new string(Cle(s).Normalize(System.Text.NormalizationForm.FormD)
+            .Where(c => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark && c != ' ')
+            .ToArray());
+
+    private static string? Choix(string? valeur, string[] autorises) =>
+        valeur is null ? null : autorises.FirstOrDefault(a => Simplifie(a) == Simplifie(valeur));
+
+    // ---------------------------------------------------------------- Typologies d'immobilisation
+    public async Task<ImportResultResponse> ImportTypologiesImmobilisationAsync(ImportRequest<TypologieImmobilisationImportRow> request)
+    {
+        HashSet<string> deja = (await context.TypologiesImmobilisation.Select(t => t.ImmobilisationConcernee).ToListAsync()).Select(Cle).ToHashSet();
+        int user = request.AddUser ?? 0;
+        DateTime now = DateTime.UtcNow;
+
+        return await ExecuterAsync(request, t =>
+        {
+            string? nom = Net(t.ImmobilisationConcernee), compte = Net(t.CompteComptable), amort = Net(t.CompteAmortissement), dotation = Net(t.CompteDotation);
+
+            string? probleme = PremierProbleme(
+                nom is null ? "Immobilisation concernée manquante." : null,
+                t.Taux is < 0 or > 100 ? $"Taux invalide : {t.Taux} (entre 0 et 100)." : null,
+                t.Duree is < 0 ? "Durée négative." : null,
+                TropLong<TypologieImmobilisation>(nameof(TypologieImmobilisation.ImmobilisationConcernee), nom, "Immobilisation concernée"),
+                TropLong<TypologieImmobilisation>(nameof(TypologieImmobilisation.CompteComptable), compte, "Compte comptable"),
+                TropLong<TypologieImmobilisation>(nameof(TypologieImmobilisation.CompteAmortissement), amort, "Compte d'amortissement"),
+                TropLong<TypologieImmobilisation>(nameof(TypologieImmobilisation.CompteDotation), dotation, "Compte de dotation"));
+            if (probleme is not null)
+            {
+                return probleme;
+            }
+
+            if (!deja.Add(Cle(nom)))
+            {
+                return "Typologie déjà existante (même immobilisation) : ignorée.";
+            }
+
+            context.TypologiesImmobilisation.Add(new TypologieImmobilisation
+            {
+                ImmobilisationConcernee = nom!,
+                CompteComptable = compte,
+                CompteAmortissement = amort,
+                CompteDotation = dotation,
+                Taux = t.Taux,
+                Duree = t.Duree,
+                AddUser = user,
+                AddDate = now,
+                ModUser = user,
+                ModDate = now
+            });
+            return null;
+        }, t => t.ImmobilisationConcernee);
+    }
+
+    // ---------------------------------------------------------------- Property Management : contrats prestataires
+    public async Task<ImportResultResponse> ImportContratsPrestatairesAsync(ImportRequest<ContratPrestataireImportRow> request)
+    {
+        Dictionary<string, Prestataire> prestataires = Index(await context.Prestataires.ToListAsync(), p => p.Designation);
+        HashSet<(int, string, DateTime?)> deja = (await context.PrestataireContrats.Select(c => new { c.NoPrestataire, c.Objet, c.DateDebut }).ToListAsync())
+            .Select(c => (c.NoPrestataire, Cle(c.Objet), c.DateDebut?.Date)).ToHashSet();
+        int user = request.AddUser ?? 0;
+        DateTime now = DateTime.UtcNow;
+
+        ImportResultResponse resultat = await ExecuterAsync(request, c =>
+        {
+            string? prestataireNom = Net(c.Prestataire), objet = Net(c.Objet), notes = Net(c.Notes);
+
+            string? probleme = PremierProbleme(
+                prestataireNom is null ? "Prestataire manquant." : null,
+                objet is null ? "Objet du contrat manquant." : null,
+                c.Montant < 0 ? "Montant négatif." : null,
+                TropLong<PrestataireContrat>(nameof(PrestataireContrat.Objet), objet, "Objet"),
+                TropLong<PrestataireContrat>(nameof(PrestataireContrat.Notes), notes, "Notes"));
+            if (probleme is not null)
+            {
+                return probleme;
+            }
+
+            if (!prestataires.TryGetValue(Cle(prestataireNom), out Prestataire? prestataire))
+            {
+                return $"Prestataire inconnu : « {prestataireNom} » (importez ou créez-le d'abord).";
+            }
+
+            if (!deja.Add((prestataire.Numero, Cle(objet), c.DateDebut?.Date)))
+            {
+                return "Contrat déjà existant (même prestataire, objet et date de début) : ignoré.";
+            }
+
+            context.PrestataireContrats.Add(new PrestataireContrat
+            {
+                NoPrestataire = prestataire.Numero,
+                Objet = objet,
+                DateContrat = c.DateContrat,
+                DateDebut = c.DateDebut,
+                DateFin = c.DateFin,
+                Montant = c.Montant,
+                Notes = notes,
+                AddUser = user,
+                AddDate = now,
+                ModUser = user,
+                ModDate = now
+            });
+            return null;
+        }, c => $"{c.Prestataire} / {c.Objet}");
+
+        // Comme à la saisie : le numéro « CNTR{numéro} » est posé une fois le numéro connu.
+        List<PrestataireContrat> sansNumero = await context.PrestataireContrats.Where(c => c.NumeroContrat == null).ToListAsync();
+        foreach (PrestataireContrat contrat in sansNumero)
+        {
+            contrat.NumeroContrat = $"CNTR{contrat.Numero}";
+        }
+
+        await context.SaveChangesAsync();
+        return resultat;
+    }
+
+    // ---------------------------------------------------------------- Property Management : bons de commande
+    public async Task<ImportResultResponse> ImportBonsCommandeAsync(ImportRequest<BonCommandeImportRow> request)
+    {
+        string[] statuts = ["En attente", "Approuvé", "Rejeté"];
+        Dictionary<string, Prestataire> prestataires = Index(await context.Prestataires.ToListAsync(), p => p.Designation);
+        HashSet<string> deja = (await context.BonsDeCommande.Select(b => b.NumeroBonCommande).ToListAsync()).Select(Cle).ToHashSet();
+        int user = request.AddUser ?? 0;
+        DateTime now = DateTime.UtcNow;
+
+        return await ExecuterAsync(request, b =>
+        {
+            string? numero = Net(b.NumeroBonCommande), prestataireNom = Net(b.Prestataire), compte = Net(b.Compte), compteCompta = Net(b.CompteComptable);
+            string? statutBrut = Net(b.StatutApprobation), notes = Net(b.Notes);
+            string? statut = statutBrut is null ? "En attente" : Choix(statutBrut, statuts);
+
+            string? probleme = PremierProbleme(
+                numero is null ? "N° de bon de commande manquant." : null,
+                prestataireNom is null ? "Prestataire manquant." : null,
+                b.DateCommande is null ? "Date de commande manquante." : null,
+                statut is null ? $"Statut inconnu : « {statutBrut} » (En attente, Approuvé ou Rejeté)." : null,
+                TropLong<BonDeCommande>(nameof(BonDeCommande.NumeroBonCommande), numero, "N° de bon de commande"),
+                TropLong<BonDeCommande>(nameof(BonDeCommande.Compte), compte, "Compte"),
+                TropLong<BonDeCommande>(nameof(BonDeCommande.CompteComptable), compteCompta, "Compte comptable"),
+                TropLong<BonDeCommande>(nameof(BonDeCommande.Notes), notes, "Notes"));
+            if (probleme is not null)
+            {
+                return probleme;
+            }
+
+            if (!prestataires.TryGetValue(Cle(prestataireNom), out Prestataire? prestataire))
+            {
+                return $"Prestataire inconnu : « {prestataireNom} » (importez ou créez-le d'abord).";
+            }
+
+            if (!deja.Add(Cle(numero)))
+            {
+                return "Bon de commande déjà existant (même numéro) : ignoré.";
+            }
+
+            context.BonsDeCommande.Add(new BonDeCommande
+            {
+                NumeroBonCommande = numero!,
+                NoPrestataire = prestataire.Numero,
+                DateCommande = b.DateCommande!.Value,
+                DateReception = b.DateReception,
+                Compte = compte,
+                CompteComptable = compteCompta,
+                StatutApprobation = statut!,
+                Notes = notes,
+                AddUser = user,
+                AddDate = now,
+                ModUser = user,
+                ModDate = now
+            });
+            return null;
+        }, b => b.NumeroBonCommande);
+    }
+
+    // ---------------------------------------------------------------- Property Management : prestations d'achat
+    public async Task<ImportResultResponse> ImportPrestationsAchatAsync(ImportRequest<PrestationAchatImportRow> request)
+    {
+        Dictionary<string, BonDeCommande> bons = Index(await context.BonsDeCommande.ToListAsync(), b => b.NumeroBonCommande);
+        Dictionary<string, Building> actifs = Index(await context.Buildings.ToListAsync(), b => b.Designation);
+        foreach (Building b in await context.Buildings.ToListAsync())
+        {
+            actifs.TryAdd(Cle(b.CodeImmeuble), b);
+        }
+
+        Dictionary<string, TypologieCharge> typologies = Index(await context.TypologiesCharge.ToListAsync(), t => t.Typologie);
+        HashSet<(int, int, int, decimal, decimal)> deja = (await context.PrestationsAchat
+                .Select(p => new { p.NoBonCommande, p.NoBuilding, p.NoTypologieCharge, p.PrixUnitaireHT, p.Quantite }).ToListAsync())
+            .Select(p => (p.NoBonCommande, p.NoBuilding, p.NoTypologieCharge, p.PrixUnitaireHT, p.Quantite)).ToHashSet();
+        int user = request.AddUser ?? 0;
+        DateTime now = DateTime.UtcNow;
+
+        return await ExecuterAsync(request, p =>
+        {
+            string? numeroBon = Net(p.NumeroBonCommande), nomActif = Net(p.Actif), typologieNom = Net(p.Typologie), notes = Net(p.Notes);
+            decimal quantite = p.Quantite ?? 1;
+
+            string? probleme = PremierProbleme(
+                numeroBon is null ? "N° de bon de commande manquant." : null,
+                nomActif is null ? "Actif manquant." : null,
+                typologieNom is null ? "Typologie de charge manquante." : null,
+                p.PrixUnitaireHt is null ? "Prix unitaire HT manquant." : null,
+                p.PrixUnitaireHt < 0 ? "Prix unitaire négatif." : null,
+                quantite <= 0 ? "Quantité nulle ou négative." : null,
+                p.TauxTva is < 0 or > 100 ? $"Taux de TVA invalide : {p.TauxTva}." : null,
+                p.TauxAmortissement is < 0 or > 100 ? $"Taux d'amortissement invalide : {p.TauxAmortissement}." : null,
+                p.DureeAmortissementMois is < 0 ? "Durée d'amortissement négative." : null,
+                TropLong<PrestationAchat>(nameof(PrestationAchat.Notes), notes, "Notes"));
+            if (probleme is not null)
+            {
+                return probleme;
+            }
+
+            if (!bons.TryGetValue(Cle(numeroBon), out BonDeCommande? bon))
+            {
+                return $"Bon de commande introuvable : « {numeroBon} » (importez-le d'abord).";
+            }
+
+            if (!actifs.TryGetValue(Cle(nomActif), out Building? actif))
+            {
+                return $"Actif introuvable : « {nomActif} » (créez-le ou importez-le d'abord).";
+            }
+
+            if (!typologies.TryGetValue(Cle(typologieNom), out TypologieCharge? typologie))
+            {
+                return $"Typologie de charge inconnue : « {typologieNom} » (Configuration > Typologies de charge).";
+            }
+
+            if (!deja.Add((bon.Numero, actif.Numero, typologie.Numero, p.PrixUnitaireHt!.Value, quantite)))
+            {
+                return "Prestation déjà existante (même bon, actif, typologie, prix et quantité) : ignorée.";
+            }
+
+            context.PrestationsAchat.Add(new PrestationAchat
+            {
+                NoBonCommande = bon.Numero,
+                NoBuilding = actif.Numero,
+                NoTypologieCharge = typologie.Numero,
+                PrixUnitaireHT = p.PrixUnitaireHt.Value,
+                Quantite = quantite,
+                TauxTVA = p.TauxTva,
+                DureeAmortissementMois = p.DureeAmortissementMois,
+                TauxAmortissement = p.TauxAmortissement,
+                Notes = notes,
+                AddUser = user,
+                AddDate = now,
+                ModUser = user,
+                ModDate = now
+            });
+            return null;
+        }, p => $"{p.NumeroBonCommande} / {p.Actif} / {p.Typologie}");
+    }
+
+    // ---------------------------------------------------------------- Property Management : réclamations
+    public async Task<ImportResultResponse> ImportReclamationsAsync(ImportRequest<ReclamationImportRow> request)
+    {
+        string[] etats = ["Ouverte", "En traitement", "Résolue", "Fermée"];
+        Dictionary<string, Building> actifs = Index(await context.Buildings.ToListAsync(), b => b.Designation);
+        foreach (Building b in await context.Buildings.ToListAsync())
+        {
+            actifs.TryAdd(Cle(b.CodeImmeuble), b);
+        }
+
+        Dictionary<(int, string), Local> locaux = [];
+        foreach (Local l in await context.Locaux.ToListAsync())
+        {
+            locaux.TryAdd((l.NoBuilding, Cle(l.Designation)), l);
+        }
+
+        Dictionary<string, Locataire> locataires = IndexLocataires(await context.Locataires.ToListAsync());
+        HashSet<(int, int, int, DateTime?, string)> deja = (await context.Reclamations
+                .Select(r => new { r.NoBuilding, r.NoLocal, r.NoLocataire, r.DateReclamation, r.Objet }).ToListAsync())
+            .Select(r => (r.NoBuilding, r.NoLocal ?? 0, r.NoLocataire, r.DateReclamation?.Date, Cle(r.Objet))).ToHashSet();
+        int user = request.AddUser ?? 0;
+        DateTime now = DateTime.UtcNow;
+
+        return await ExecuterAsync(request, r =>
+        {
+            string? nomActif = Net(r.Actif), localNom = Net(r.Local), locataireNom = Net(r.Locataire), etatBrut = Net(r.Etat), objet = Net(r.Objet), notes = Net(r.Notes);
+            string? etat = etatBrut is null ? "Ouverte" : Choix(etatBrut, etats);
+
+            string? probleme = PremierProbleme(
+                nomActif is null ? "Actif manquant." : null,
+                locataireNom is null ? "Locataire manquant." : null,
+                etat is null ? $"État inconnu : « {etatBrut} » (Ouverte, En traitement, Résolue ou Fermée)." : null,
+                TropLong<Reclamation>(nameof(Reclamation.Objet), objet, "Objet"),
+                TropLong<Reclamation>(nameof(Reclamation.Notes), notes, "Notes"));
+            if (probleme is not null)
+            {
+                return probleme;
+            }
+
+            if (!actifs.TryGetValue(Cle(nomActif), out Building? actif))
+            {
+                return $"Actif introuvable : « {nomActif} » (créez-le ou importez-le d'abord).";
+            }
+
+            Local? local = null;
+            if (localNom is not null && !locaux.TryGetValue((actif.Numero, Cle(localNom)), out local))
+            {
+                return $"Local introuvable dans l'actif « {actif.Designation} » : « {localNom} ».";
+            }
+
+            if (!locataires.TryGetValue(Cle(locataireNom), out Locataire? locataire))
+            {
+                return $"Locataire introuvable : « {locataireNom} » (importez-le d'abord).";
+            }
+
+            if (!deja.Add((actif.Numero, local?.Numero ?? 0, locataire.Numero, r.DateReclamation?.Date, Cle(objet))))
+            {
+                return "Réclamation déjà existante (même actif, local, locataire, date et objet) : ignorée.";
+            }
+
+            context.Reclamations.Add(new Reclamation
+            {
+                NoBuilding = actif.Numero,
+                NoLocal = local?.Numero,
+                NoLocataire = locataire.Numero,
+                Etat = etat!,
+                DateReclamation = r.DateReclamation,
+                Objet = objet,
+                Notes = notes,
+                AddUser = user,
+                AddDate = now,
+                ModUser = user,
+                ModDate = now
+            });
+            return null;
+        }, r => $"{r.Actif} / {r.Locataire}");
+    }
+
+    // ---------------------------------------------------------------- Property Management : sinistres
+    public async Task<ImportResultResponse> ImportSinistresAsync(ImportRequest<SinistreImportRow> request)
+    {
+        string[] etapes = ["Déclaré", "Expertise", "Réclamation", "Remboursement", "Clôturé"];
+        Dictionary<string, Building> actifs = Index(await context.Buildings.ToListAsync(), b => b.Designation);
+        foreach (Building b in await context.Buildings.ToListAsync())
+        {
+            actifs.TryAdd(Cle(b.CodeImmeuble), b);
+        }
+
+        Dictionary<(int, string), Local> locaux = [];
+        foreach (Local l in await context.Locaux.ToListAsync())
+        {
+            locaux.TryAdd((l.NoBuilding, Cle(l.Designation)), l);
+        }
+
+        Dictionary<string, Assurance> assurances = Index(await context.Assurances.ToListAsync(), a => a.NumPolice);
+        Dictionary<string, TypeSinistre> types = Index(await context.TypeSinistres.ToListAsync(), t => t.Designation);
+        HashSet<string> deja = (await context.Sinistres.Select(s => new { s.NoSinistre, s.NoBuilding, s.NoLocal, s.NoTypeSinistre, s.DateDeclaration }).ToListAsync())
+            .Select(s => CleSinistre(s.NoSinistre, s.NoBuilding, s.NoLocal ?? 0, s.NoTypeSinistre, s.DateDeclaration)).ToHashSet();
+        int user = request.AddUser ?? 0;
+        DateTime now = DateTime.UtcNow;
+
+        ImportResultResponse resultat = await ExecuterAsync(request, s =>
+        {
+            string? nomActif = Net(s.Actif), localNom = Net(s.Local), police = Net(s.NumPolice), typeNom = Net(s.TypeSinistre), etapeBrut = Net(s.EtapeSuivi);
+            string? expert = Net(s.NomExpert), refDossier = Net(s.RefDossierAssurance), noSinistre = Net(s.NoSinistre), notes = Net(s.Notes);
+            string? etape = etapeBrut is null ? "Déclaré" : Choix(etapeBrut, etapes);
+
+            string? probleme = PremierProbleme(
+                nomActif is null ? "Actif manquant." : null,
+                typeNom is null ? "Type de sinistre manquant." : null,
+                etape is null ? $"Étape inconnue : « {etapeBrut} » (Déclaré, Expertise, Réclamation, Remboursement ou Clôturé)." : null,
+                s.EstimationDegatBailleur < 0 || s.EstimationDegatLocataire < 0 || s.MontantFacture < 0 || s.MontantRemuneration < 0 ? "Montant négatif." : null,
+                TropLong<Sinistre>(nameof(Sinistre.NomExpert), expert, "Nom de l'expert"),
+                TropLong<Sinistre>(nameof(Sinistre.RefDossierAssurance), refDossier, "Réf. dossier assurance"),
+                TropLong<Sinistre>(nameof(Sinistre.NoSinistre), noSinistre, "N° de sinistre"),
+                TropLong<Sinistre>(nameof(Sinistre.Notes), notes, "Notes"));
+            if (probleme is not null)
+            {
+                return probleme;
+            }
+
+            if (!actifs.TryGetValue(Cle(nomActif), out Building? actif))
+            {
+                return $"Actif introuvable : « {nomActif} » (créez-le ou importez-le d'abord).";
+            }
+
+            if (!types.TryGetValue(Cle(typeNom), out TypeSinistre? type))
+            {
+                return $"Type de sinistre inconnu : « {typeNom} » (Configuration > Données de référence > Typologies de sinistre).";
+            }
+
+            Local? local = null;
+            if (localNom is not null && !locaux.TryGetValue((actif.Numero, Cle(localNom)), out local))
+            {
+                return $"Local introuvable dans l'actif « {actif.Designation} » : « {localNom} ».";
+            }
+
+            Assurance? assurance = null;
+            if (police is not null && !assurances.TryGetValue(Cle(police), out assurance))
+            {
+                return $"Assurance introuvable (n° de police) : « {police} » (importez-la d'abord).";
+            }
+
+            if (!deja.Add(CleSinistre(noSinistre, actif.Numero, local?.Numero ?? 0, type.Numero, s.DateDeclaration)))
+            {
+                return "Sinistre déjà existant (même n° de sinistre, ou mêmes actif, local, type et date de déclaration) : ignoré.";
+            }
+
+            context.Sinistres.Add(new Sinistre
+            {
+                NoBuilding = actif.Numero,
+                NoLocal = local?.Numero,
+                NoAssurance = assurance?.Numero,
+                NoTypeSinistre = type.Numero,
+                EtapeSuivi = etape!,
+                DateDeclaration = s.DateDeclaration,
+                DateExpertise = s.DateExpertise,
+                DateReclamation = s.DateReclamation,
+                DateRemboursement = s.DateRemboursement,
+                EstimationDegatBailleur = s.EstimationDegatBailleur,
+                EstimationDegatLocataire = s.EstimationDegatLocataire,
+                MontantFacture = s.MontantFacture,
+                MontantRemuneration = s.MontantRemuneration,
+                NomExpert = expert,
+                RefDossierAssurance = refDossier,
+                NoSinistre = noSinistre,
+                Notes = notes,
+                AddUser = user,
+                AddDate = now,
+                ModUser = user,
+                ModDate = now
+            });
+            return null;
+        }, s => noSinistreOuActif(s));
+
+        // Comme à la saisie : l'identifiant « SIN{numéro} » est posé une fois le numéro connu.
+        List<Sinistre> sansId = await context.Sinistres.Where(s => s.IdSinistre == null).ToListAsync();
+        foreach (Sinistre sinistre in sansId)
+        {
+            sinistre.IdSinistre = $"SIN{sinistre.Numero}";
+        }
+
+        await context.SaveChangesAsync();
+        return resultat;
+
+        static string noSinistreOuActif(SinistreImportRow s) => Net(s.NoSinistre) ?? $"{s.Actif} / {s.TypeSinistre}";
+    }
+
+    private static string CleSinistre(string? noSinistre, int actif, int local, int type, DateTime? date) =>
+        Net(noSinistre) is { } n ? $"n:{Cle(n)}" : $"a:{actif}|{local}|{type}|{date?.Date:yyyyMMdd}";
+
+    private static Dictionary<string, Locataire> IndexLocataires(IEnumerable<Locataire> locataires)
+    {
+        Dictionary<string, Locataire> d = [];
+        foreach (Locataire l in locataires)
+        {
+            string k = l.TypeLocataire == 1 ? Cle(l.DesignationEntreprise) : Cle($"{l.Nom} {l.Prenom}");
+            if (k.Length > 0)
+            {
+                d.TryAdd(k, l);
+            }
+        }
+
+        return d;
     }
 }

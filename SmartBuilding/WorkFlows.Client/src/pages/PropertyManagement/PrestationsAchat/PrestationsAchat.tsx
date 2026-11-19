@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ImportMenu } from '@/components/import/import-menu';
+import { PRESTATIONS_ACHAT_IMPORT } from '@/utils/import/import-configs';
 import { Title } from '@/components/ui/title';
 import { PrestationAchatResponse } from '@/store/features/property-management/prestation-achat-schemas';
 import {
@@ -178,6 +180,7 @@ const PrestationsAchat = () => {
         <div className='space-y-4'>
           <Title
             icon={ClipboardList}
+            actions={<ImportMenu config={PRESTATIONS_ACHAT_IMPORT} onImported={() => dispatch(getAllPrestationsAchat({ pageNumber: 1, pageSize, search }))} />}
             title='Liste des prestations'
             description='Prestations rattachées aux bons de commande'
             buttons={[

@@ -3,6 +3,8 @@ import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ImportMenu } from '@/components/import/import-menu';
+import { MEMBRES_SYNDIC_IMPORT } from '@/utils/import/import-configs';
 import { Title } from '@/components/ui/title';
 import { SyndicResponse } from '@/store/features/property-management/syndic-schemas';
 import { deleteSyndic, getAllSyndics, resetSyndic, setSyndic } from '@/store/features/property-management/syndicsSlice';
@@ -127,6 +129,7 @@ const MembresSyndic = () => {
         <div className='space-y-4'>
           <Title
             icon={Users}
+            actions={<ImportMenu config={MEMBRES_SYNDIC_IMPORT} onImported={() => dispatch(getAllSyndics({ pageNumber: 1, pageSize, search }))} />}
             title='Membres du syndic'
             description='Registre des membres du bureau syndical'
             buttons={[

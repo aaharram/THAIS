@@ -61,6 +61,27 @@ const groupes = [
       lookup('service-profils', 'Profils', 'Accès complet'),
     ],
   },
+  {
+    titre: 'PROPERTY MANAGEMENT (facultatif — à remplir après les actifs, locaux, locataires, typologies de charge, assureurs, courtiers et types de taxe)',
+    listes: [
+      { nom: 'Prestataires', config: configs.PRESTATAIRES_IMPORT },
+      { nom: 'Assurances', config: configs.ASSURANCES_IMPORT },
+      { nom: 'Charges', config: configs.CHARGES_IMPORT },
+      { nom: 'Taxes', config: configs.TAXES_IMPORT },
+      { nom: 'Membres du syndic', config: configs.MEMBRES_SYNDIC_IMPORT },
+    ],
+  },
+  {
+    titre: 'SUITE (facultatif — typologies d’immobilisation, puis Property Management : contrats, bons de commande, prestations, réclamations, sinistres)',
+    listes: [
+      { nom: 'Typologies d’immobilisation', config: configs.TYPOLOGIES_IMMOBILISATION_IMPORT },
+      { nom: 'Contrats prestataires', config: configs.CONTRATS_PRESTATAIRES_IMPORT },
+      { nom: 'Bons de commande', config: configs.BONS_COMMANDE_IMPORT },
+      { nom: 'Prestations', config: configs.PRESTATIONS_ACHAT_IMPORT },
+      { nom: 'Réclamations', config: configs.RECLAMATIONS_IMPORT },
+      { nom: 'Sinistres', config: configs.SINISTRES_IMPORT },
+    ],
+  },
 ];
 
 const slug = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');

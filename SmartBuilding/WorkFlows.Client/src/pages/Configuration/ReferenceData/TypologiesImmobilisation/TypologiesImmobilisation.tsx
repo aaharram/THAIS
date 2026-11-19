@@ -10,6 +10,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ImportMenu } from '@/components/import/import-menu';
+import { TYPOLOGIES_IMMOBILISATION_IMPORT } from '@/utils/import/import-configs';
 import { Title } from '@/components/ui/title';
 import { TypologieImmobilisationResponse } from '@/store/features/configuration/typologieImmobilisation-schemas';
 import {
@@ -201,6 +203,7 @@ const TypologiesImmobilisation = () => {
         <div className='space-y-4'>
           <Title
             icon={Building2}
+            actions={<ImportMenu config={TYPOLOGIES_IMMOBILISATION_IMPORT} onImported={() => dispatch(getAllTypologiesImmobilisation({ pageNumber: 1, pageSize, search }))} />}
             title="Typologies d'immobilisation"
             description="Gérer les typologies d'immobilisation"
           />
