@@ -1,5 +1,5 @@
 // Génère les modèles Excel d'import de THAIS (un fichier par liste) + le guide LISEZ-MOI.txt, dans
-// E-Lease/import/modeles-excel/ : prêts à être envoyés au client, sans aucune donnée réelle.
+// Thais/import/modeles-excel/ : prêts à être envoyés au client, sans aucune donnée réelle.
 // Les colonnes viennent du code de l'application (src/utils/import/import-configs.ts) : si une colonne change
 // dans l'application, relancez ce script pour régénérer les modèles.
 // Usage : node generate-templates.js
@@ -8,7 +8,7 @@ const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
-const client = path.resolve(__dirname, '../SmartBuilding/WorkFlows.Client');
+const client = path.resolve(__dirname, '../Thais/WorkFlows.Client');
 const sortie = path.join(__dirname, 'modeles-excel');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'elease-modeles-'));
 

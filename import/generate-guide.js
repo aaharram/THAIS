@@ -1,5 +1,5 @@
 // Génère le guide Word « Guide de remplissage des fichiers d'import THAIS » (à envoyer au client) dans
-// E-Lease/import/modeles-excel/. Les colonnes viennent du code de l'application (import-configs.ts) : si une
+// Thais/import/modeles-excel/. Les colonnes viennent du code de l'application (import-configs.ts) : si une
 // colonne change, relancez ce script (et generate-templates.js) pour garder le guide et les modèles à jour.
 // Usage : node generate-guide.js
 const fs = require('fs');
@@ -26,7 +26,7 @@ const {
 } = docx;
 
 // 1. Compile les définitions des listes (TypeScript -> CommonJS), comme generate-templates.js.
-const client = path.resolve(__dirname, '../SmartBuilding/WorkFlows.Client');
+const client = path.resolve(__dirname, '../Thais/WorkFlows.Client');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'elease-guide-'));
 const esbuild = path.join(client, 'node_modules', '.bin', process.platform === 'win32' ? 'esbuild.cmd' : 'esbuild');
 const fichierConfigs = path.join(tmp, 'configs.cjs');

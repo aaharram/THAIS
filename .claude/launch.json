@@ -4,14 +4,14 @@
     {
       "name": "workflows-client-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "SmartBuilding/WorkFlows.Client", "run", "dev"],
+      "runtimeArgs": ["--prefix", "Thais/WorkFlows.Client", "run", "dev"],
       "port": 5174,
       "url": "https://localhost:5174"
     },
     {
       "name": "workflows-server-dev",
       "runtimeExecutable": "dotnet",
-      "runtimeArgs": ["run", "--project", "SmartBuilding/WorkFlows.Server/src/Design.Api", "--launch-profile", "https"],
+      "runtimeArgs": ["run", "--project", "Thais/WorkFlows.Server/src/Design.Api", "--launch-profile", "https"],
       "port": 7108,
       "url": "https://localhost:7108"
     }

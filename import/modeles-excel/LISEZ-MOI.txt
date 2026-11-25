@@ -48,7 +48,7 @@ IMPORTANT — L’ORDRE
     - Un actif déjà présent (même code ou même désignation) est ignoré.
 
 07-Locaux.xlsx
-    Colonnes : Actif * | Nom du local * | Type local | Etage | Superficie (m²) | Nb pièces | Titre foncier | Adresse | Description
+    Colonnes : Actif * | Nom du local * | Type local | Etage | Superficie (m²) | Nbr place parking | Titre foncier | Adresse | Description
     - L’actif doit déjà exister (nom ou code analytique) : importez ou créez les actifs d’abord.
     - Le type de local, s’il est renseigné, doit exister dans Configuration > Données de référence > Typologies de lot.
     - Un local déjà présent dans le même actif (même nom) est ignoré.

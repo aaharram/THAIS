@@ -1,0 +1,341 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@media (max-width: 768px) {
+  .hide-sheet-close .absolute.right-4.top-4 {
+    display: none !important;
+  }
+}
+/* .relative {
+  position: relative;
+  overflow: auto;
+} */
+@layer base {
+  :root {
+    --radius: 0.5rem;
+
+    --white: 0 0% 100%; /* #FFFFFF */
+
+    /* Noir ➝ Blanc (via gris) */
+    --gray-950: 210 7% 3%; /* #070809 */
+    --gray-900: 220 5% 6%; /* #0F1012 */
+    --gray-800: 220 4% 10%; /* #16181B */
+    --gray-700: 220 4% 14%; /* #1E2024 */
+    --gray-600: 220 4% 18%; /* #25282D */
+    --gray-500: 222 5% 24%; /* #3B3E42 */
+    --gray-400: 225 3% 50%; /* #7C7E81 */
+    --gray-300: 225 6% 75%; /* #BEBFC0 */
+    --gray-200: 225 3% 85%; /* #D3D4D5 */
+
+    /* Bleu clair ➝ Bleu foncé */
+    --blue-50: 332 60% 98%; /* #FCF5F8 */
+    --blue-100: 332 55% 95%; /* #F9ECF1 */
+    --blue-200: 332 65% 55%; /* #D1356F */
+    --blue-300: 332 50% 88%; /* #F0D3DF */
+    --blue-400: 332 50% 80%; /* #E7B5C9 */
+    --blue-500: 332 50% 68%; /* #D88AA9 */
+    --blue-600: 332 80% 36%; /* #A81254 */
+    --blue-700: 332 78% 31%; /* #8E1046 */
+    --blue-800: 332 55% 20%; /* #4F1730 */
+
+    /* Gris clair ➝ foncé */
+    --neutral-50: 240 11% 98%; /* #F9F9FB */
+    --neutral-100: 240 6% 94%; /* #EFF0F3 */
+    --neutral-200: 240 5% 89%; /* #E0E1E6 */
+    --neutral-300: 240 5% 85%; /* #D8D9E0 */
+    --neutral-400: 240 6% 80%; /* #CDCED7 */
+    --neutral-500: 240 6% 70%; /* #B9BBC6 */
+    --neutral-600: 240 4% 54%; /* #80828D */
+    --neutral-700: 240 4% 40%; /* #62636C */
+    --neutral-800: 240 5% 13%; /* #1E1F24 */
+
+    --fallback: 332 50% 68%; /* #D88AA9 */
+    --fallback-foreground: 332 80% 36%; /* #A81254 */
+
+    /* Assignation */
+    --primary: var(--blue-600);
+    --primary-foreground: 0 0% 100%;
+
+    --sidebar: var(--neutral-50);
+    --sidebar-foreground: var(--neutral-800);
+
+    --secondary: var(--gray-300);
+    --secondary-foreground: var(--gray-800);
+
+    --background: var(--neutral-50);
+    --foreground: var(--gray-800);
+
+    --card: var(--white);
+    --card-foreground: var(--gray-800);
+
+    --card-configuration: var(--blue-100);
+    --card-configuration-foreground: var(--gray-800);
+
+    --title: var(--gray-900);
+    --title-foreground: var(--gray-50);
+
+    --popover: var(--neutral-100);
+    --popover-foreground: var(--gray-800);
+
+    --muted: var(--neutral-100);
+    --muted-foreground: var(--gray-600);
+
+    --accent: var(--blue-100);
+    --accent-foreground: var(--blue-800);
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: var(--neutral-50);
+
+    --success: 142 72% 40%;
+    --success-foreground: var(--neutral-50);
+
+    --warning: 33 100% 50%;
+    --warning-foreground: var(--neutral-50);
+
+    --info: 217 91% 60%; /* bleu : l'information reste bleue */
+    --info-foreground: var(--neutral-50);
+
+    --stat: 0 71% 47%;
+    --stat-foreground: var(--gray-50);
+
+    --priority-1: 32 100% 50%;
+    --priority-1-foreground: var(--neutral-50);
+
+    --priority-2: 45 100% 55%;
+    --priority-2-foreground: var(--neutral-50);
+
+    --priority-3: 88 39% 47%;
+    --priority-3-foreground: var(--neutral-50);
+
+    --border: var(--neutral-200);
+    --input: var(--gray-300);
+    --ring: var(--blue-500);
+
+    --font-rndd: 'YourRnddFont', sans-serif;
+    --font-ecclesiasti: 'YourEcclesiastiFont', serif;
+    --font-ecrabbini: 'YourEcrabbiniFont', serif;
+    --font-regulard: 'YourRegidorFont', sans-serif;
+    --font-semifold: 'YourSemifoldFont', sans-serif;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .font-rndd {
+    font-family: var(--font-rndd);
+  }
+  .font-ecclesiasti {
+    font-family: var(--font-ecclesiasti);
+  }
+  .font-ecrabbini {
+    font-family: var(--font-ecrabbini);
+  }
+  .font-regulard {
+    font-family: var(--font-regulard);
+  }
+  .font-semifold {
+    font-family: var(--font-semifold);
+  }
+}
+
+/* Tailwind Preflight resets `img { max-width: 100%; height: auto; }` app-wide - Google
+   Maps draws its tiles as plain <img> elements sized via a low-specificity class rather
+   than inline styles, so this reset squashes/hides tiles unpredictably (a well-known
+   Tailwind/Bootstrap + Google Maps conflict). RMANew hits the same issue with Bootstrap's
+   identical img reset, and its own css/rma-carte.css (loaded last, deliberately, to win
+   the cascade - see the comment in Carte.aspx) works around it the same way. */
+.gm-style img {
+  max-width: none !important;
+  height: auto !important;
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════════════════════
+   Thèmes de l'application (choix de l'utilisateur, menu de son compte -> « Apparence »).
+   Le thème par défaut « THAIS » est celui défini plus haut dans :root (framboise). Les autres thèmes ne
+   redéfinissent que les variables de couleur : l'attribut data-theme est posé sur <html> (voir
+   utils/theme/theme.ts), au même niveau que :root, donc ces règles l'emportent par leur spécificité.
+   ═════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Bleu classique : l'ancienne palette bleue ── */
+html[data-theme='bleu'] {
+  --blue-50: 224 100% 98%;
+  --blue-100: 224 80% 95%;
+  --blue-200: 217 91% 60%;
+  --blue-300: 224 80% 85%;
+  --blue-400: 224 80% 80%;
+  --blue-500: 226 66% 71%;
+  --blue-600: 226 56% 49%;
+  --blue-700: 226 55% 50%;
+  --blue-800: 226 50% 23%;
+  --fallback: 226 66% 71%;
+  --fallback-foreground: 226 56% 49%;
+}
+
+/* ── Sombre : fond et cartes foncés, accent framboise éclairci pour rester lisible ── */
+html[data-theme='sombre'] {
+  --background: 228 25% 8%;
+  --foreground: 220 15% 92%;
+  --card: 228 22% 12%;
+  --card-foreground: 220 15% 92%;
+  --popover: 228 22% 14%;
+  --popover-foreground: 220 15% 92%;
+  --muted: 228 18% 17%;
+  --muted-foreground: 220 10% 66%;
+  --border: 228 15% 22%;
+  --input: 228 15% 28%;
+  --sidebar: 228 25% 10%;
+  --sidebar-foreground: 220 15% 88%;
+  --secondary: 228 15% 22%;
+  --secondary-foreground: 220 15% 92%;
+  --title: 220 15% 96%;
+  --accent: 332 38% 20%;
+  --accent-foreground: 332 70% 88%;
+  --card-configuration: 332 35% 20%;
+  --card-configuration-foreground: 220 15% 92%;
+  --blue-600: 332 72% 52%;
+  --blue-700: 332 70% 46%;
+  --ring: 332 55% 45%;
+  color-scheme: dark;
+}
+
+/* Couleurs écrites « en dur » dans les composants (fond blanc, gris, texte sombre) : on les rattache aux
+   variables du thème sombre pour que l'écran ne reste pas moitié clair, moitié foncé. */
+html[data-theme='sombre'] .bg-white {
+  background-color: hsl(var(--card));
+}
+html[data-theme='sombre'] .bg-white\/80,
+html[data-theme='sombre'] .bg-white\/85,
+html[data-theme='sombre'] .bg-white\/90 {
+  background-color: hsl(var(--card) / 0.85);
+}
+html[data-theme='sombre'] .bg-gray-50,
+html[data-theme='sombre'] .bg-gray-100,
+html[data-theme='sombre'] .bg-slate-50,
+html[data-theme='sombre'] .bg-slate-100,
+html[data-theme='sombre'] .hover\:bg-gray-100:hover,
+html[data-theme='sombre'] .hover\:bg-slate-50:hover {
+  background-color: hsl(var(--muted));
+}
+html[data-theme='sombre'] .text-gray-900,
+html[data-theme='sombre'] .text-gray-800,
+html[data-theme='sombre'] .text-gray-700,
+html[data-theme='sombre'] .text-slate-900,
+html[data-theme='sombre'] .text-slate-800,
+html[data-theme='sombre'] .text-slate-700,
+html[data-theme='sombre'] .text-black,
+html[data-theme='sombre'] .text-\[\#1b1b3a\] {
+  color: hsl(var(--foreground));
+}
+html[data-theme='sombre'] .text-gray-600,
+html[data-theme='sombre'] .text-gray-500,
+html[data-theme='sombre'] .text-slate-600,
+html[data-theme='sombre'] .text-slate-500 {
+  color: hsl(var(--muted-foreground));
+}
+html[data-theme='sombre'] .border-gray-200,
+html[data-theme='sombre'] .border-gray-300,
+html[data-theme='sombre'] .border-slate-200,
+html[data-theme='sombre'] .border-slate-300 {
+  border-color: hsl(var(--border));
+}
+
+/* Thème sombre : le logo THAIS (framboise, fond transparent) est éclairci pour rester lisible sur fond foncé. */
+html[data-theme='sombre'] img[src*='logo-thais-couleur'] {
+  filter: brightness(1.5) saturate(1.1);
+}
+html[data-theme='sombre'] img[src*='svb-logo-thais'] {
+  filter: brightness(1.4);
+}
+
+/* Survols et lignes sélectionnées : teinte claire de la couleur du thème (rose clair en THAIS, bleu clair en
+   Bleu classique) au lieu d'un gris neutre. Le thème Sombre garde ses gris. --accent est déjà la teinte claire de
+   chaque thème (blue-100 : rose pâle ou bleu pâle). */
+html:not([data-theme='sombre']) .hover\:bg-muted:hover,
+html:not([data-theme='sombre']) .hover\:bg-gray-100:hover,
+html:not([data-theme='sombre']) .hover\:bg-gray-50:hover,
+html:not([data-theme='sombre']) .hover\:bg-slate-50:hover {
+  background-color: hsl(var(--accent));
+}
+html:not([data-theme='sombre']) .hover\:bg-muted\/50:hover {
+  background-color: hsl(var(--accent) / 0.7);
+}
+html:not([data-theme='sombre']) tr[data-state='selected'] {
+  background-color: hsl(var(--accent));
+}
+
+/* Page de connexion en thème Sombre : fond foncé, immeubles éclaircis en filigrane, pied de page en texte clair
+   sans halo blanc, framboise éclairci (liens, icônes) pour rester lisible sur fond foncé. */
+html[data-theme='sombre'] .login-page {
+  background: hsl(var(--background)) !important;
+}
+html[data-theme='sombre'] .login-bg-img {
+  filter: invert(1) brightness(1.9);
+  mix-blend-mode: screen;
+}
+html[data-theme='sombre'] .login-footer {
+  text-shadow: none;
+}
+html[data-theme='sombre'] .login-footer img {
+  filter: brightness(1.4);
+}
+html[data-theme='sombre'] .login-page .text-\[\#a81254\] {
+  color: hsl(332 80% 64%);
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════════════════════
+   Tableau de bord : couleurs du grand cadre « Patrimoine » (dégradé foncé + fenêtres allumées), propres à
+   chaque thème, et animation d'allumage des fenêtres.
+   ═════════════════════════════════════════════════════════════════════════════════════════════ */
+:root {
+  --hero-from: 238 36% 14%;
+  --hero-to: 332 78% 34%;
+  --lit: 332 92% 76%;
+}
+html[data-theme='bleu'] {
+  --hero-from: 226 52% 13%;
+  --hero-to: 226 60% 42%;
+  --lit: 213 96% 80%;
+}
+html[data-theme='sombre'] {
+  --hero-from: 228 28% 10%;
+  --hero-to: 332 52% 30%;
+  --lit: 332 88% 72%;
+}
+
+.font-display {
+  font-family: 'Schibsted Grotesk', system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Les fenêtres s'allument une à une à l'ouverture de la page (le délai est posé en ligne sur chaque fenêtre). */
+@keyframes dash-window-on {
+  from {
+    opacity: 0.08;
+    transform: scale(0.82);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.dash-window-lit {
+  animation: dash-window-on 0.55s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dash-window-lit {
+    animation: none;
+  }
+}
+
+/* Cartes des pages d'accueil de module : sur fond sombre, bordure, icône et titre plus marqués pour rester lisibles. */
+html[data-theme='sombre'] .hub-card { background-color: hsl(var(--primary) / 0.55); }
+html[data-theme='sombre'] .hub-card:hover { background-color: hsl(var(--primary) / 0.8); }
+html[data-theme='sombre'] .hub-card-icon { color: hsl(var(--primary) / 1); }
+html[data-theme='sombre'] .hub-card-title { color: hsl(0 0% 100% / 0.9); }

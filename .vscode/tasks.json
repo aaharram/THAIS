@@ -1,0 +1,49 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Thais : API (back)",
+            "type": "shell",
+            "command": "dotnet run --project Thais/WorkFlows.Server/src/Design.Api --launch-profile https",
+            "isBackground": true,
+            "problemMatcher": [],
+            "presentation": { "panel": "dedicated", "group": "thais", "reveal": "always" }
+        },
+        {
+            "label": "Thais : Client (front)",
+            "type": "shell",
+            "command": "npm run dev",
+            "options": { "cwd": "${workspaceFolder}/Thais/WorkFlows.Client" },
+            "isBackground": true,
+            "problemMatcher": [],
+            "presentation": { "panel": "dedicated", "group": "thais", "reveal": "always" }
+        },
+        {
+            "label": "Thais : Tout lancer (back + front)",
+            "dependsOn": ["Thais : API (back)", "Thais : Client (front)"],
+            "dependsOrder": "parallel",
+            "problemMatcher": [],
+            "group": { "kind": "build", "isDefault": true }
+        },
+        {
+            "label": "Thais : Compiler l'API",
+            "type": "shell",
+            "command": "dotnet build Thais/WorkFlows.Server/src/Design.Api -c Release",
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Thais : Compiler le client",
+            "type": "shell",
+            "command": "npm run build",
+            "options": { "cwd": "${workspaceFolder}/Thais/WorkFlows.Client" },
+            "problemMatcher": ["$tsc"]
+        },
+        {
+            "label": "Thais : Installer les dépendances du client",
+            "type": "shell",
+            "command": "npm install",
+            "options": { "cwd": "${workspaceFolder}/Thais/WorkFlows.Client" },
+            "problemMatcher": []
+        }
+    ]
+}

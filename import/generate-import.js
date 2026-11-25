@@ -1,6 +1,6 @@
 ﻿// Génère import-cfc.sql à partir de "Dates début et fin des baux.xlsx" (Foncière CFC).
 // Usage : node generate-import.js "<chemin du xlsx>"  (exceljs doit être installé dans WorkFlows.Client)
-const E = require('../SmartBuilding/WorkFlows.Client/node_modules/exceljs');
+const E = require('../Thais/WorkFlows.Client/node_modules/exceljs');
 const fs = require('fs');
 const path = process.argv[2];
 const TODAY = new Date('2026-11-13');
