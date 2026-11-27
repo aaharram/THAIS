@@ -6,7 +6,7 @@ export type ThemeId = 'thais' | 'bleu' | 'sombre';
 
 export const THEMES: { id: ThemeId; label: string; swatch: string }[] = [
   { id: 'thais', label: 'THAIS', swatch: '#a81254' },
-  { id: 'bleu', label: 'Bleu classique', swatch: '#3657c3' },
+  { id: 'bleu', label: 'Bleu', swatch: '#3657c3' },
   { id: 'sombre', label: 'Sombre', swatch: '#1b1b3a' },
 ];
 

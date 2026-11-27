@@ -1,7 +1,9 @@
 import { ExportTiles } from '@/components/export/export-tiles';
 import { BaseDialog } from '@/components/dialog/dialog';
+import { fetchAllPages } from '@/components/export/export-menu';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { AvatarCell, Chip, IconTile, KPI_TONES, KpiCard, KpiStrip, MoneyCell, PrimarySecondary, RowActions, fmtMoney as fmtKpi } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Title } from '@/components/ui/title';
@@ -15,19 +17,19 @@ import {
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { downloadAttachment } from '@/store/services/attachments';
 import { ColumnDef } from '@tanstack/react-table';
-import { Download, Gavel, Pencil, Plus, PlusCircle, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { AlertTriangle, Banknote, CheckCircle2, FileDown, Gavel, Plus, PlusCircle } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 const EXPORT_HEADER = ['Locataire', 'Actif', 'Ville', 'Avocat(s)', 'Suivi', 'Nature Procédure', 'Impayé (MAD)', 'Statut Dossier'];
 
 // RMANew (ListSuiviJuridique.vb, StatutDossier codes 1-5)
 const statutBadgeClass = (statut: string) => {
-  if (statut === 'En Contentieux') return 'text-red-700 bg-red-100';
+  if (statut === 'En Contentieux') return 'bg-red-500/10 text-red-700 dark:text-red-400';
   if (statut === 'Dossier jugé' || statut === 'Accord amiable' || statut === 'Non Contentieux') {
-    return 'text-green-700 bg-green-100';
+    return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
   }
-  return 'text-gray-600 bg-gray-100'; // Nouveau
+  return 'bg-slate-500/10 text-slate-600 dark:text-slate-300'; // Nouveau
 };
 
 const fmtMontant = (m?: number | null) =>
@@ -40,6 +42,28 @@ const SuiviContentieux = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<SuiviContentieuxResponse | null>(null);
   const [search, setSearch] = useState('');
+  // Tous les enregistrements (hors pagination) pour le bandeau de synthèse.
+  const [stats, setStats] = useState<SuiviContentieuxResponse[] | null>(null);
+  const loadStats = useCallback(() => {
+    fetchAllPages<SuiviContentieuxResponse>('/api/suivi-contentieux')
+      .then(setStats)
+      .catch(() => setStats([]));
+  }, []);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
+
+  const kpis = useMemo(() => {
+    if (!stats) return null;
+    const enCours = stats.filter((d) => d.statutDossier === 'En Contentieux');
+    return {
+      total: stats.length,
+      enCours: enCours.length,
+      autres: stats.length - enCours.length,
+      montant: enCours.reduce((s, d) => s + (d.montantImpaye ?? 0), 0),
+    };
+  }, [stats]);
 
   useEffect(() => {
     dispatch(getAllSuiviContentieux({ pageNumber: 1, pageSize: 10, search }));
@@ -57,7 +81,7 @@ const SuiviContentieux = () => {
 
   const confirmDelete = () => {
     if (selectedItem) {
-      dispatch(deleteSuiviContentieux(selectedItem.numero));
+      dispatch(deleteSuiviContentieux(selectedItem.numero)).then(() => loadStats());
       setSelectedItem(null);
       setDeleteDialogOpen(false);
     }
@@ -119,17 +143,17 @@ const SuiviContentieux = () => {
     {
       accessorKey: 'nomLocataire',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Locataire' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomLocataire || '-'}</div>,
+      cell: ({ row }) => <AvatarCell name={row.original.nomLocataire} />,
     },
     {
       accessorKey: 'nomBuilding',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Actif' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomBuilding || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomBuilding} />,
     },
     {
       accessorKey: 'ville',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Ville' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.ville || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.ville} />,
     },
     {
       accessorKey: 'avocatCount',
@@ -139,7 +163,7 @@ const SuiviContentieux = () => {
           <button
             type='button'
             title='Voir les avocats'
-            className='inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-100 px-1.5 text-xs font-bold text-blue-700 hover:bg-blue-200'
+            className='inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/10 px-1.5 text-xs font-bold text-primary hover:bg-primary/20'
             onClick={(e) => {
               e.stopPropagation();
               navigate(`${row.original.numero}/avocats`);
@@ -150,14 +174,14 @@ const SuiviContentieux = () => {
           <Button
             variant='ghost'
             size='sm'
-            className='h-6 w-6 p-0 hover:bg-blue-100'
+            className='h-6 w-6 p-0 hover:bg-sky-500/10'
             title='Ajouter un avocat'
             onClick={(e) => {
               e.stopPropagation();
               navigate(`${row.original.numero}/avocats/ajouter`);
             }}
           >
-            <PlusCircle className='h-4 w-4 text-blue-600' />
+            <PlusCircle className='h-4 w-4 text-primary' />
           </Button>
         </div>
       ),
@@ -174,12 +198,12 @@ const SuiviContentieux = () => {
     {
       accessorKey: 'natureProcedure',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Nature Procédure' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.natureProcedure || '-'}</div>,
+      cell: ({ row }) => row.original.natureProcedure ? <Chip>{row.original.natureProcedure}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'montantImpaye',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Impayé (MAD)' />,
-      cell: ({ row }) => <div className='font-bold text-orange-600'>{fmtMontant(row.original.montantImpaye)}</div>,
+      header: () => <div className='text-right'>Impayé</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.montantImpaye} tone='danger' />,
     },
     {
       accessorKey: 'statutDossier',
@@ -187,7 +211,7 @@ const SuiviContentieux = () => {
       cell: ({ row }) => (
         <div className='flex justify-center'>
           <span
-            className={`inline-block w-fit text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${statutBadgeClass(row.original.statutDossier)}`}
+            className={`inline-block w-fit text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${statutBadgeClass(row.original.statutDossier)}`}
           >
             {row.original.statutDossier}
           </span>
@@ -197,56 +221,29 @@ const SuiviContentieux = () => {
     {
       id: 'piecesJointes',
       header: () => <div className='text-center'>Pièces jointes</div>,
-      cell: ({ row }) => (
-        <div className='flex justify-center'>
-          {row.original.pieceJointe ? (
-            <Button
-              variant='ghost'
-              size='sm'
-              className='h-7 w-7 p-0'
-              title='Télécharger'
-              onClick={(e) => {
-                e.stopPropagation();
-                downloadAttachment('suivi-contentieux', row.original.pieceJointe!);
-              }}
-            >
-              <Download className='h-4 w-4 text-blue-600' />
-            </Button>
-          ) : (
-            <span className='text-muted-foreground'>-</span>
-          )}
-        </div>
-      ),
+      cell: ({ row }) =>
+        row.original.pieceJointe ? (
+          <IconTile
+            icon={FileDown}
+            label='Télécharger la pièce jointe'
+            tone='primary'
+            onClick={() => downloadAttachment('suivi-contentieux', row.original.pieceJointe!)}
+          />
+        ) : (
+          <div className='text-center text-muted-foreground'>—</div>
+        ),
     },
     {
       id: 'actions',
       header: () => <div className='text-right'>Actions</div>,
       cell: ({ row }) => (
-        <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              dispatch(setSuiviContentieux(row.original));
-              navigate(`modifier/${row.original.numero}`);
-            }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-red-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row.original);
-            }}
-          >
-            <Trash2 className='h-4 w-4 text-red-600' />
-          </Button>
-        </div>
+        <RowActions
+          onEdit={() => {
+            dispatch(setSuiviContentieux(row.original));
+            navigate(`modifier/${row.original.numero}`);
+          }}
+          onDelete={() => handleDelete(row.original)}
+        />
       ),
     },
   ];
@@ -279,6 +276,37 @@ const SuiviContentieux = () => {
               },
             ]}
           />
+
+          <KpiStrip>
+            <KpiCard
+              icon={Gavel}
+              label='Dossiers'
+              value={kpis ? String(kpis.total) : '—'}
+              hint={'au total'}
+              tone={KPI_TONES.primary}
+            />
+            <KpiCard
+              icon={AlertTriangle}
+              label='En contentieux'
+              value={kpis ? String(kpis.enCours) : '—'}
+              hint={'dossiers ouverts'}
+              tone={KPI_TONES.red}
+            />
+            <KpiCard
+              icon={CheckCircle2}
+              label='Autres statuts'
+              value={kpis ? String(kpis.autres) : '—'}
+              hint={'résolus ou clôturés'}
+              tone={KPI_TONES.green}
+            />
+            <KpiCard
+              icon={Banknote}
+              label='Impayé en contentieux'
+              value={kpis ? `${fmtKpi(kpis.montant)} MAD` : '—'}
+              hint={'dossiers ouverts'}
+              tone={KPI_TONES.amber}
+            />
+          </KpiStrip>
         </div>
 
         <DataTable

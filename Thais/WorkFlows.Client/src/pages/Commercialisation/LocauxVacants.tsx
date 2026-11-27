@@ -3,7 +3,6 @@ import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -23,7 +22,6 @@ import {
   ArrowLeft,
   Building,
   ImageOff,
-  Search,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -203,7 +201,7 @@ const LocauxVacants = () => {
       id: 'image',
       header: 'Image',
       cell: () => (
-        <div className='flex items-center justify-center h-9 w-9 rounded-md bg-gray-100 text-gray-400'>
+        <div className='flex items-center justify-center h-9 w-9 rounded-md bg-gray-100 text-muted-foreground'>
           <ImageOff className='h-4 w-4' />
         </div>
       ),
@@ -257,72 +255,64 @@ const LocauxVacants = () => {
               icon={Building}
               title='Locaux Vacant'
               description='Suivi des locaux vacants par actif'
+              actions={
+                <>
+              <div className='w-60'>
+                <Select value={noProprietaire} onValueChange={setNoProprietaire}>
+                  <SelectTrigger className='h-10 rounded-lg bg-card'>
+                    <SelectValue placeholder='Tous les propriétaires' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='0'>Tous les propriétaires</SelectItem>
+                    {proprietaires.map((p) => (
+                      <SelectItem key={p.numero} value={p.numero.toString()}>
+                        {p.designation}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className='w-48'>
+                <Select value={minSuperficie} onValueChange={setMinSuperficie}>
+                  <SelectTrigger className='h-10 rounded-lg bg-card'>
+                    <SelectValue placeholder='Min Superficie' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NO_FILTER}>Min Superficie</SelectItem>
+                    {superficieValues.map((v) => (
+                      <SelectItem key={v} value={v.toString()}>
+                        {formatSuperficie(v)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className='w-48'>
+                <Select value={maxSuperficie} onValueChange={setMaxSuperficie}>
+                  <SelectTrigger className='h-10 rounded-lg bg-card'>
+                    <SelectValue placeholder='Max Superficie' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NO_FILTER}>Max Superficie</SelectItem>
+                    {superficieValues.map((v) => (
+                      <SelectItem key={v} value={v.toString()}>
+                        {formatSuperficie(v)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <ExportTiles onPdf={handleExportPdf} onExcel={handleExportExcel} />
+                </>
+              }
             />
-          </div>
-
-          <div className='flex flex-col sm:flex-row sm:items-center gap-3 mb-4'>
-            <div className='relative flex-1'>
-              <span className='absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground'>
-                <Search className='h-4 w-4' />
-              </span>
-              <Input
-                placeholder='Recherche...'
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className='pl-8'
-              />
-            </div>
-            <div className='w-full sm:w-56'>
-              <Select value={noProprietaire} onValueChange={setNoProprietaire}>
-                <SelectTrigger>
-                  <SelectValue placeholder='Tous les propriétaires' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='0'>Tous les propriétaires</SelectItem>
-                  {proprietaires.map((p) => (
-                    <SelectItem key={p.numero} value={p.numero.toString()}>
-                      {p.designation}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className='w-full sm:w-40'>
-              <Select value={minSuperficie} onValueChange={setMinSuperficie}>
-                <SelectTrigger>
-                  <SelectValue placeholder='Min Superficie' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NO_FILTER}>Min Superficie</SelectItem>
-                  {superficieValues.map((v) => (
-                    <SelectItem key={v} value={v.toString()}>
-                      {formatSuperficie(v)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className='w-full sm:w-40'>
-              <Select value={maxSuperficie} onValueChange={setMaxSuperficie}>
-                <SelectTrigger>
-                  <SelectValue placeholder='Max Superficie' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NO_FILTER}>Max Superficie</SelectItem>
-                  {superficieValues.map((v) => (
-                    <SelectItem key={v} value={v.toString()}>
-                      {formatSuperficie(v)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <ExportTiles onPdf={handleExportPdf} onExcel={handleExportExcel} />
           </div>
 
           <DataTable
             columns={columns}
             data={filteredItems}
+            searchableColumns={[{ id: 'designation', title: 'Actif' }]}
+            onSearchChange={setSearch}
             isLoading={loading}
             onRowDoubleClick={(item) => navigate(`/patrimoine/actifs/details/${item.numero}`)}
           />
@@ -330,9 +320,8 @@ const LocauxVacants = () => {
       </Card>
 
       <div className='flex justify-end'>
-        <Button variant='secondary' onClick={() => navigate('/commercialisation')}>
-          <ArrowLeft className='h-4 w-4 mr-2' />
-          <ArrowLeft />
+        <Button variant='outline' onClick={() => navigate('/commercialisation')}>
+          <ArrowLeft className='h-4 w-4 mr-2 border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary' />
           Retour
         </Button>
       </div>

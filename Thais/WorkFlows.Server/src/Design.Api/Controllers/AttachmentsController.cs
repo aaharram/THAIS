@@ -12,7 +12,7 @@ namespace Design.Api.Controllers;
 [Authorize]
 public class AttachmentsController(IWebHostEnvironment env) : ControllerBase
 {
-    private static readonly HashSet<string> AllowedFolders = ["avocats", "suivi-contentieux", "expertises", "actifs"];
+    private static readonly HashSet<string> AllowedFolders = ["avocats", "suivi-contentieux", "expertises", "actifs", "locaux", "baux"];
     private static readonly HashSet<string> AllowedExtensions =
         [".pdf", ".jpg", ".jpeg", ".png", ".gif", ".webp", ".doc", ".docx", ".xls", ".xlsx"];
 

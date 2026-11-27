@@ -1,3 +1,4 @@
+import { GridSection as Section, FormGroupTitle } from '@/components/form/form-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -28,33 +29,13 @@ import {
   resetResiliation,
 } from '@/store/features/leasing/resiliationsSlice';
 import { useAppSelector } from '@/store/hooks';
-import { Info, XCircle, ArrowLeft, Save } from 'lucide-react';
+import { XCircle, ArrowLeft, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
 import { z } from 'zod';
 
 const backPath = '/leasing-management/resiliations';
-
-const Section = ({
-  icon: Icon,
-  title,
-  children,
-}: {
-  icon: typeof Info;
-  title: string;
-  children: React.ReactNode;
-}) => (
-  <div className='border rounded-lg overflow-hidden'>
-    <div className='bg-gray-50 px-4 py-3 flex items-center gap-2 border-b'>
-      <div className='flex items-center justify-center h-7 w-7 rounded-full bg-blue-100 text-blue-600'>
-        <Icon className='h-4 w-4' />
-      </div>
-      <h3 className='text-base font-semibold text-gray-900'>{title}</h3>
-    </div>
-    <div className='p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4'>{children}</div>
-  </div>
-);
 
 const emptyForm: ResiliationRequest = {
   noBuilding: 0,
@@ -188,7 +169,9 @@ const Form = ({ details }: { details?: boolean }) => {
         )}
         <form onSubmit={handleSubmit} className='space-y-6'>
           <Section icon={XCircle} title='Informations'>
-            <div className='space-y-2'>
+            <FormGroupTitle>Contrat concerné</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 md:col-span-6'>
               <Label htmlFor='noBuilding' className='text-sm font-medium'>
                 <span className='text-red-500'>* </span>Actif
               </Label>
@@ -213,7 +196,7 @@ const Form = ({ details }: { details?: boolean }) => {
               {errors.noBuilding && <p className='text-red-600 text-sm'>{errors.noBuilding}</p>}
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 md:col-span-6'>
               <Label htmlFor='noContrat' className='text-sm font-medium'>
                 <span className='text-red-500'>* </span>N° Contrat
               </Label>
@@ -236,7 +219,9 @@ const Form = ({ details }: { details?: boolean }) => {
               {errors.noContrat && <p className='text-red-600 text-sm'>{errors.noContrat}</p>}
             </div>
 
-            <div className='space-y-2'>
+            <FormGroupTitle>Résiliation</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='typeResiliation' className='text-sm font-medium'>
                 Type De Résiliation
               </Label>
@@ -258,7 +243,7 @@ const Form = ({ details }: { details?: boolean }) => {
               </Select>
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='origineResiliation' className='text-sm font-medium'>
                 Origine résiliation
               </Label>
@@ -280,20 +265,7 @@ const Form = ({ details }: { details?: boolean }) => {
               </Select>
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='motifResiliation' className='text-sm font-medium'>
-                <span className='text-red-500'>* </span>Motif résiliation
-              </Label>
-              <Input
-                id='motifResiliation'
-                value={formData.motifResiliation ?? ''}
-                onChange={(e) => handleChange('motifResiliation', e.target.value)}
-                disabled={changeToDetails}
-                className={errors.motifResiliation ? 'border-red-300' : ''}
-              />
-            </div>
-
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='durePreavis' className='text-sm font-medium'>
                 <span className='text-red-500'>* </span>Durée de préavis
               </Label>
@@ -306,47 +278,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='dateResiliation' className='text-sm font-medium'>
-                <span className='text-red-500'>* </span>Date effet résiliation
-              </Label>
-              <Input
-                id='dateResiliation'
-                type='date'
-                value={formData.dateResiliation ?? ''}
-                onChange={(e) => handleChange('dateResiliation', e.target.value)}
-                disabled={changeToDetails}
-                className={errors.dateResiliation ? 'border-red-300' : ''}
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='dateReception' className='text-sm font-medium'>
-                Date de réception de la demande de résiliation
-              </Label>
-              <Input
-                id='dateReception'
-                type='date'
-                value={formData.dateReception ?? ''}
-                onChange={(e) => handleChange('dateReception', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='dateRestitutionActif' className='text-sm font-medium'>
-                Date restitution actif
-              </Label>
-              <Input
-                id='dateRestitutionActif'
-                type='date'
-                value={formData.dateRestitutionActif ?? ''}
-                onChange={(e) => handleChange('dateRestitutionActif', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='statutValidation' className='text-sm font-medium'>
                 Statut
               </Label>
@@ -367,12 +299,68 @@ const Form = ({ details }: { details?: boolean }) => {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12'>
+              <Label htmlFor='motifResiliation' className='text-sm font-medium'>
+                <span className='text-red-500'>* </span>Motif résiliation
+              </Label>
+              <Input
+                id='motifResiliation'
+                value={formData.motifResiliation ?? ''}
+                onChange={(e) => handleChange('motifResiliation', e.target.value)}
+                disabled={changeToDetails}
+                className={errors.motifResiliation ? 'border-red-300' : ''}
+              />
+            </div>
+
+            <FormGroupTitle>Dates</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='dateReception' className='text-sm font-medium'>
+                Date de réception de la demande de résiliation
+              </Label>
+              <Input
+                id='dateReception'
+                type='date'
+                value={formData.dateReception ?? ''}
+                onChange={(e) => handleChange('dateReception', e.target.value)}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='dateResiliation' className='text-sm font-medium'>
+                <span className='text-red-500'>* </span>Date effet résiliation
+              </Label>
+              <Input
+                id='dateResiliation'
+                type='date'
+                value={formData.dateResiliation ?? ''}
+                onChange={(e) => handleChange('dateResiliation', e.target.value)}
+                disabled={changeToDetails}
+                className={errors.dateResiliation ? 'border-red-300' : ''}
+              />
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='dateRestitutionActif' className='text-sm font-medium'>
+                Date restitution actif
+              </Label>
+              <Input
+                id='dateRestitutionActif'
+                type='date'
+                value={formData.dateRestitutionActif ?? ''}
+                onChange={(e) => handleChange('dateRestitutionActif', e.target.value)}
+                disabled={changeToDetails}
+              />
+            </div>
           </Section>
         </form>
       </CardContent>
       <Separator />
       <CardFooter className='flex justify-end gap-2 mt-6'>
-        <Button variant='secondary' onClick={() => navigate(backPath)}>
+        <Button variant='outline'
+          className='border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary' onClick={() => navigate(backPath)}>
           <ArrowLeft />
           Retour
         </Button>

@@ -111,14 +111,14 @@ const Form = () => {
           </div>
 
           {factureSelectionnee && (
-            <div className='rounded-lg border bg-blue-50/50 p-4 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm'>
+            <div className='rounded-lg border bg-sky-500/10/50 p-4 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm'>
               <div>
                 <div className='text-muted-foreground'>Montant dû actuel</div>
                 <div className='font-semibold'>{factureSelectionnee.montant.toLocaleString('fr-FR')} MAD</div>
               </div>
               <div>
                 <div className='text-muted-foreground'>Solde après avoir</div>
-                <div className='font-semibold text-blue-700'>
+                <div className='font-semibold text-sky-700 dark:text-sky-400'>
                   {soldeApres !== null ? soldeApres.toLocaleString('fr-FR') : '-'} MAD
                 </div>
               </div>
@@ -129,7 +129,7 @@ const Form = () => {
             </div>
           )}
 
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-4 [&_input:not([type=checkbox])]:w-full [&_[role=combobox]]:w-full [&_textarea]:w-full'>
             <div className='space-y-2'>
               <Label htmlFor='dateAvoir' className='text-sm font-medium'>
                 <span className='text-red-500'>* </span>Date de l'avoir
@@ -175,7 +175,8 @@ const Form = () => {
         <hr />
       </div>
       <CardFooter className='flex justify-end gap-2 mt-6'>
-        <Button variant='secondary' onClick={() => navigate(backPath)}>
+        <Button variant='outline'
+          className='border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary' onClick={() => navigate(backPath)}>
           <ArrowLeft />
           Retour
         </Button>

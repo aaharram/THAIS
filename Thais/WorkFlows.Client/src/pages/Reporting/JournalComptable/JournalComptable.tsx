@@ -35,6 +35,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { Download, FileClock, Plus, Settings2, Trash2, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
+import { ActionButton } from '@/components/table/list-cells';
 
 // RMANew (JournalSqComptable.vb, fonctions SMartStrmExport*) : export plat SmartStream,
 // 21 colonnes, 3-4 lignes par facture (ventilation TVA sur des comptes câblés en dur,
@@ -387,7 +388,7 @@ const JournalComptable = () => {
                         <td className='py-2 px-4 text-center'>
                           <span
                             className={`inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                              l.sensDrCr === 'D' ? 'text-blue-700 bg-blue-100' : 'text-green-700 bg-green-100'
+                              l.sensDrCr === 'D' ? 'bg-sky-500/10 text-sky-700 dark:text-sky-400' : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
                             }`}
                           >
                             {l.sensDrCr === 'D' ? 'Débit' : 'Crédit'}
@@ -476,7 +477,7 @@ const JournalComptable = () => {
                     ))}
                     {lignesTriees.length === 0 && (
                       <tr>
-                        <td colSpan={TYPES_JOURNAL.length + 1} className='py-4 px-4 text-center text-gray-400'>
+                        <td colSpan={TYPES_JOURNAL.length + 1} className='py-4 px-4 text-center text-muted-foreground'>
                           Aucune génération enregistrée
                         </td>
                       </tr>
@@ -523,17 +524,14 @@ const JournalComptable = () => {
                       <td className='py-2 px-4'>{c.compteCredit}</td>
                       <td className='py-2 px-4'>{c.description || '-'}</td>
                       <td className='py-2 px-4 text-right'>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          className='h-8 w-8 p-0 hover:bg-red-100'
-                          onClick={(e) => {
-                            e.stopPropagation();
+                        <ActionButton
+            icon={Trash2}
+            label="Supprimer"
+            onClick={() => {
                             dispatch(deleteCompteComptableJournal(c.numero));
-                          }}
-                        >
-                          <Trash2 className='h-4 w-4 text-red-600' />
-                        </Button>
+            }}
+            className='text-red-600 hover:bg-red-500/10 hover:text-red-600'
+          />
                       </td>
                     </tr>
                   ))}

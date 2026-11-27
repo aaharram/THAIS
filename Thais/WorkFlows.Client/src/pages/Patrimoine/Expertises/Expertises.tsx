@@ -2,6 +2,7 @@ import { ExportTiles } from '@/components/export/export-tiles';
 import { BaseDialog } from '@/components/dialog/dialog';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { ActionButton, IconTile, PrimarySecondary, RowActions, fmtMoney as fmtKpi } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -19,7 +20,7 @@ import { API_BASE_URL } from '@/store/services/api';
 import { downloadAttachment } from '@/store/services/attachments';
 import { api } from '@/store/services/authConfig';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowLeft, CirclePlus, Download, FileSearch, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, CirclePlus, FileDown, FileSearch, Pencil, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
@@ -33,7 +34,7 @@ const Expertises = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ExpertiseResponse | null>(null);
   const [search, setSearch] = useState('');
-  const [noProprietaire, setNoProprietaire] = useState<string>('0');
+  const [noProprietaire, setNoProprietaire] = useState<string>(searchParams.get('proprietaire') ?? '0');
   const { allItems: proprietaires } = useAppSelector((state) => state.cfgProprietaires);
 
   // Filtre "Propriétaire" : même clé que la liste des actifs (Building.NoProprietaire).
@@ -122,8 +123,6 @@ const Expertises = () => {
   const fmtNumber = (v?: number | null) =>
     v === null || v === undefined ? '' : v.toLocaleString('fr-FR').replace(/\s/g, ' ');
   // Affichage des montants dans les listes : séparateur de milliers français + 2 décimales.
-  const fmtMontant = (m?: number | null) =>
-    m == null ? '-' : m.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtDate = (v?: string | null) => (v ? new Date(v).toLocaleDateString('fr-FR') : '');
 
   const toExportRows = (items: ExpertiseSummary[]) =>
@@ -181,7 +180,7 @@ const Expertises = () => {
     {
       accessorKey: 'nomBuilding',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Actif' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.getValue('nomBuilding')}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomBuilding} />,
     },
     {
       accessorKey: 'titreFoncier',
@@ -196,26 +195,23 @@ const Expertises = () => {
     {
       accessorKey: 'valeurEntree',
       header: ({ column }) => <DataTableColumnHeader column={column} title="Valeur d'entrée" />,
-      cell: ({ row }) => <div className='font-medium'>{fmtMontant(row.original.valeurEntree)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap tabular-nums'>{row.original.valeurEntree != null ? fmtKpi(row.original.valeurEntree) : '—'}</span>,
     },
     {
       accessorKey: 'derniereExpertise',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Expertise' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtMontant(row.original.derniereExpertise)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap tabular-nums'>{row.original.derniereExpertise != null ? fmtKpi(row.original.derniereExpertise) : '—'}</span>,
     },
     {
       id: 'dateDerniereExpertise',
       accessorFn: (row) =>
         row.dateDerniereExpertise ? new Date(row.dateDerniereExpertise).toLocaleDateString('fr-FR') : '',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date Expertise' />,
-      cell: ({ row }) =>
-        row.original.dateDerniereExpertise ? (
-          <div className='font-medium'>
-            {new Date(row.original.dateDerniereExpertise).toLocaleDateString('fr-FR')}
-          </div>
-        ) : (
-          <div className='font-medium'>-</div>
-        ),
+      cell: ({ row }) => (
+        <span className='whitespace-nowrap'>
+          {row.original.dateDerniereExpertise ? new Date(row.original.dateDerniereExpertise).toLocaleDateString('fr-FR') : '—'}
+        </span>
+      ),
     },
     {
       id: 'versions',
@@ -246,17 +242,14 @@ const Expertises = () => {
           >
             <CirclePlus className='h-4 w-4' />
           </button>
-          <button
-            type='button'
-            className='text-yellow-600 hover:text-yellow-700'
-            title='Modifier la dernière expertise'
-            onClick={(e) => {
-              e.stopPropagation();
+          <ActionButton
+            icon={Pencil}
+            label='Modifier la dernière expertise'
+            onClick={() => {
               navigate(`/patrimoine/expertises/modifier/${row.original.derniereExpertiseNumero}`);
             }}
-          >
-            <Pencil className='h-4 w-4' />
-          </button>
+            className='h-7 w-7 text-yellow-600 hover:bg-yellow-500/10 hover:text-yellow-600'
+          />
         </div>
       ),
     },
@@ -266,89 +259,54 @@ const Expertises = () => {
     {
       accessorKey: 'cabinetExpert',
       header: ({ column }) => <DataTableColumnHeader column={column} title="Cabinet d'expert" sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.getValue('cabinetExpert')}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.cabinetExpert} />,
     },
     {
       accessorKey: 'valeurTerrain',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Valeur Terrain' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtMontant(row.original.valeurTerrain)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap tabular-nums'>{row.original.valeurTerrain != null ? fmtKpi(row.original.valeurTerrain) : '—'}</span>,
     },
     {
       accessorKey: 'valeurConstruction',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Valeur Construction' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtMontant(row.original.valeurConstruction)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap tabular-nums'>{row.original.valeurConstruction != null ? fmtKpi(row.original.valeurConstruction) : '—'}</span>,
     },
     {
       accessorKey: 'valeurExpertiseActualiser',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Nouvelle Expertise' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtMontant(row.original.valeurExpertiseActualiser)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap tabular-nums'>{row.original.valeurExpertiseActualiser != null ? fmtKpi(row.original.valeurExpertiseActualiser) : '—'}</span>,
     },
     {
       id: 'dateExpertiseActualiser',
       accessorFn: (row) =>
         row.dateExpertiseActualiser ? new Date(row.dateExpertiseActualiser).toLocaleDateString('fr-FR') : '',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date' />,
-      cell: ({ row }) =>
-        row.original.dateExpertiseActualiser ? (
-          <div className='font-medium'>
-            {new Date(row.original.dateExpertiseActualiser).toLocaleDateString('fr-FR')}
-          </div>
-        ) : (
-          <div className='font-medium'>-</div>
-        ),
+      cell: ({ row }) => (
+        <span className='whitespace-nowrap'>
+          {row.original.dateExpertiseActualiser ? new Date(row.original.dateExpertiseActualiser).toLocaleDateString('fr-FR') : '—'}
+        </span>
+      ),
     },
     {
       id: 'piecesJointes',
       header: () => <div className='text-center'>Pièce jointe</div>,
-      cell: ({ row }) => (
-        <div className='flex justify-center'>
-          {row.original.pieceJointe ? (
-            <Button
-              variant='ghost'
-              size='sm'
-              className='h-7 w-7 p-0'
-              title='Télécharger'
-              onClick={(e) => {
-                e.stopPropagation();
-                downloadAttachment('expertises', row.original.pieceJointe!);
-              }}
-            >
-              <Download className='h-4 w-4 text-blue-600' />
-            </Button>
-          ) : (
-            <span className='text-muted-foreground'>-</span>
-          )}
-        </div>
-      ),
+      cell: ({ row }) =>
+        row.original.pieceJointe ? (
+          <IconTile
+            icon={FileDown}
+            label='Télécharger la pièce jointe'
+            tone='primary'
+            onClick={() => downloadAttachment('expertises', row.original.pieceJointe!)}
+          />
+        ) : (
+          <div className='text-center text-muted-foreground'>—</div>
+        ),
     },
     {
       id: 'actions',
       header: () => <div className='text-right'>Actions</div>,
       cell: ({ row }) => (
-        <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/patrimoine/expertises/modifier/${row.original.numero}`);
-            }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-red-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row.original);
-            }}
-          >
-            <Trash2 className='h-4 w-4 text-red-600' />
-          </Button>
-        </div>
+        <RowActions onEdit={() => navigate(`/patrimoine/expertises/modifier/${row.original.numero}`)} onDelete={() => handleDelete(row.original)} />
       ),
     },
   ];
@@ -368,7 +326,7 @@ const Expertises = () => {
     <>
       <div className='w-56'>
         <Select value={noProprietaire} onValueChange={setNoProprietaire}>
-          <SelectTrigger className='h-8'>
+          <SelectTrigger className='h-10 rounded-lg bg-card'>
             <SelectValue placeholder='Tous les propriétaires' />
           </SelectTrigger>
           <SelectContent>

@@ -1,6 +1,8 @@
 import { BaseDialog } from '@/components/dialog/dialog';
+import { fetchAllPages } from '@/components/export/export-menu';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { Chip, KPI_TONES, KpiCard, KpiStrip, MoneyCell, PrimarySecondary, RowActions, fmtMoney as fmtKpi } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ImportMenu } from '@/components/import/import-menu';
@@ -10,8 +12,8 @@ import { TaxeResponse } from '@/store/features/property-management/taxe-schemas'
 import { deleteTaxe, getAllTaxes, resetTaxe, setTaxe } from '@/store/features/property-management/taxesSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { ColumnDef } from '@tanstack/react-table';
-import { Landmark, Pencil, Plus, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Banknote, CheckCircle2, Landmark, Plus, Receipt, Wallet } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 const Taxes = () => {
@@ -21,6 +23,30 @@ const Taxes = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<TaxeResponse | null>(null);
   const [search, setSearch] = useState('');
+  // Tous les enregistrements (hors pagination) pour le bandeau de synthèse.
+  const [stats, setStats] = useState<TaxeResponse[] | null>(null);
+  const loadStats = useCallback(() => {
+    fetchAllPages<TaxeResponse>('/api/taxes')
+      .then(setStats)
+      .catch(() => setStats([]));
+  }, []);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
+
+  const kpis = useMemo(() => {
+    if (!stats) return null;
+    const payees = stats.filter((t) => t.paye);
+    const ouvertes = stats.filter((t) => !t.paye);
+    return {
+      total: stats.length,
+      montant: stats.reduce((s, t) => s + (t.montantTaxe ?? 0), 0),
+      paye: payees.reduce((s, t) => s + (t.montantTaxe ?? 0), 0),
+      reste: ouvertes.reduce((s, t) => s + (t.montantTaxe ?? 0), 0),
+      nbOuvertes: ouvertes.length,
+    };
+  }, [stats]);
 
   useEffect(() => {
     dispatch(getAllTaxes({ pageNumber: 1, pageSize: 10, search }));
@@ -38,29 +64,27 @@ const Taxes = () => {
 
   const confirmDelete = () => {
     if (selectedItem) {
-      dispatch(deleteTaxe(selectedItem.numero));
+      dispatch(deleteTaxe(selectedItem.numero)).then(() => loadStats());
       setSelectedItem(null);
       setDeleteDialogOpen(false);
     }
   };
 
-  const fmtMoney = (m?: number | null) => (m == null ? '-' : m.toLocaleString('fr-FR', { minimumFractionDigits: 2 }));
-
   const columns: ColumnDef<TaxeResponse>[] = [
     {
       accessorKey: 'nomBuilding',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Actif' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomBuilding || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomBuilding} />,
     },
     {
       accessorKey: 'nomLocal',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Local' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomLocal || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomLocal} />,
     },
     {
       accessorKey: 'nomType',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Type' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomType || '-'}</div>,
+      cell: ({ row }) => row.original.nomType ? <Chip>{row.original.nomType}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'annee',
@@ -69,8 +93,8 @@ const Taxes = () => {
     },
     {
       accessorKey: 'montantTaxe',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Montant' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtMoney(row.original.montantTaxe)}</div>,
+      header: () => <div className='text-right'>Montant</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.montantTaxe} />,
     },
     {
       accessorKey: 'paye',
@@ -78,8 +102,8 @@ const Taxes = () => {
       cell: ({ row }) => (
         <div className='flex justify-center'>
           <span
-            className={`inline-block text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${
-              row.original.paye ? 'text-green-700 bg-green-100' : 'text-gray-600 bg-gray-100'
+            className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${
+              row.original.paye ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'bg-slate-500/10 text-slate-600 dark:text-slate-300'
             }`}
           >
             {row.original.paye ? 'Payé' : 'Impayé'}
@@ -91,31 +115,13 @@ const Taxes = () => {
       id: 'actions',
       header: () => <div className='text-right'>Actions</div>,
       cell: ({ row }) => (
-        <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              dispatch(setTaxe(row.original));
-              navigate(`modifier/${row.original.numero}`);
-            }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-red-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row.original);
-            }}
-          >
-            <Trash2 className='h-4 w-4 text-red-600' />
-          </Button>
-        </div>
+        <RowActions
+          onEdit={() => {
+            dispatch(setTaxe(row.original));
+            navigate(`modifier/${row.original.numero}`);
+          }}
+          onDelete={() => handleDelete(row.original)}
+        />
       ),
     },
   ];
@@ -149,6 +155,37 @@ const Taxes = () => {
               },
             ]}
           />
+
+          <KpiStrip>
+            <KpiCard
+              icon={Receipt}
+              label='Taxes'
+              value={kpis ? String(kpis.total) : '—'}
+              hint={'au total'}
+              tone={KPI_TONES.primary}
+            />
+            <KpiCard
+              icon={Banknote}
+              label='Montant total'
+              value={kpis ? `${fmtKpi(kpis.montant)} MAD` : '—'}
+              hint={'toutes années'}
+              tone={KPI_TONES.sky}
+            />
+            <KpiCard
+              icon={CheckCircle2}
+              label='Payé'
+              value={kpis ? `${fmtKpi(kpis.paye)} MAD` : '—'}
+              hint={'taxes réglées'}
+              tone={KPI_TONES.green}
+            />
+            <KpiCard
+              icon={Wallet}
+              label='Reste à payer'
+              value={kpis ? `${fmtKpi(kpis.reste)} MAD` : '—'}
+              hint={kpis ? `${kpis.nbOuvertes} taxe(s) impayée(s)` : undefined}
+              tone={KPI_TONES.amber}
+            />
+          </KpiStrip>
         </div>
 
         <DataTable

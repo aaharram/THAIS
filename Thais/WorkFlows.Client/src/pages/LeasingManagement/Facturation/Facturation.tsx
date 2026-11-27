@@ -1,6 +1,6 @@
 import { HubCardGrid } from '@/components/ui/hub-card-grid';
 import { Title } from '@/components/ui/title';
-import { Ban, BookOpen, FileText as FileTextIcon, PenLine, Receipt } from 'lucide-react';
+import { Ban, BookOpen, FileClock, FileText as FileTextIcon, PenLine } from 'lucide-react';
 
 // RMANew (ViewFacturation.aspx) : page de menu vers les 4 sous-modules de facturation.
 const items = [
@@ -15,7 +15,7 @@ const items = [
   {
     key: 'factures',
     name: "Avis d'échéance / Facture",
-    icon: Receipt,
+    icon: FileClock,
     link: '/leasing-management/facturation/factures',
     description: 'Génération des avis et factures de loyer',
     enabled: true,

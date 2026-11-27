@@ -1,6 +1,7 @@
 import { ExportTiles } from '@/components/export/export-tiles';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { AvatarCell, MoneyCell, PrimarySecondary, StatusPill } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -111,32 +112,36 @@ const PaiementClient = () => {
     {
       accessorKey: 'nomLocataire',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Locataire' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomLocataire}</div>,
+      cell: ({ row }) => <AvatarCell name={row.original.nomLocataire} />,
     },
     {
       accessorKey: 'nomBuilding',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Actif' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomBuilding}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomBuilding} />,
     },
     {
       accessorKey: 'loyerMensuel',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Loyer mensuel (MAD)' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtMontant(row.original.loyerMensuel)}</div>,
+      header: () => <div className='text-right'>Loyer mensuel</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.loyerMensuel} />,
     },
     {
       accessorKey: 'nombreFacturesImpayees',
-      header: () => <div className='text-center'>Nb mois impayé</div>,
-      cell: ({ row }) => <div className='text-center font-medium'>{row.original.nombreFacturesImpayees}</div>,
+      header: () => <div>Mois impayés</div>,
+      // 1 mois : à surveiller ; 3 mois et plus : situation critique.
+      cell: ({ row }) => {
+        const n = row.original.nombreFacturesImpayees;
+        return <StatusPill label={`${n} mois`} tone={n >= 3 ? 'danger' : n >= 1 ? 'warning' : 'success'} />;
+      },
     },
     {
       accessorKey: 'montantImpaye',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Montant loyer impayé (MAD)' />,
-      cell: ({ row }) => <div className='font-bold text-orange-600'>{fmtMontant(row.original.montantImpaye)}</div>,
+      header: () => <div className='text-right'>Montant impayé</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.montantImpaye} tone={row.original.montantImpaye > 0 ? 'danger' : undefined} />,
     },
     {
       accessorKey: 'nomEncaisseur',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Encaisseur' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomEncaisseur || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomEncaisseur} />,
     },
     {
       id: 'paiementDirect',
@@ -179,9 +184,9 @@ const PaiementClient = () => {
           pagination={pagination}
           toolbar={
             <div className='flex items-center gap-2'>
-              <div className='w-full sm:w-48'>
+              <div className='w-full sm:w-56'>
                 <Select value={noProprietaire} onValueChange={setNoProprietaire}>
-                  <SelectTrigger className='h-8'>
+                  <SelectTrigger className='h-10 rounded-lg bg-card'>
                     <SelectValue placeholder='Tous les propriétaires' />
                   </SelectTrigger>
                   <SelectContent>
@@ -194,9 +199,9 @@ const PaiementClient = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className='w-full sm:w-48'>
+              <div className='w-full sm:w-56'>
                 <Select value={noEncaisseur} onValueChange={setNoEncaisseur}>
-                  <SelectTrigger className='h-8'>
+                  <SelectTrigger className='h-10 rounded-lg bg-card'>
                     <SelectValue placeholder='Choix Encaisseur' />
                   </SelectTrigger>
                   <SelectContent>

@@ -1,6 +1,8 @@
 import { BaseDialog } from '@/components/dialog/dialog';
+import { fetchAllPages } from '@/components/export/export-menu';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { AvatarCell, Chip, IconTile, KPI_TONES, KpiCard, KpiStrip, MoneyCell, PrimarySecondary, RowActions, fmtMoney as fmtKpi } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ImportMenu } from '@/components/import/import-menu';
@@ -16,21 +18,21 @@ import {
 } from '@/store/features/property-management/sinistresSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { ColumnDef } from '@tanstack/react-table';
-import { AlertTriangle, Download, Pencil, Plus, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { AlertTriangle, Banknote, CheckCircle2, FileDown, Hourglass, Plus } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 const etapeBadgeClass = (etape: string) => {
   switch (etape) {
     case 'Clôturé':
-      return 'text-green-700 bg-green-100';
+      return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
     case 'Remboursement':
-      return 'text-blue-700 bg-blue-100';
+      return 'bg-sky-500/10 text-sky-700 dark:text-sky-400';
     case 'Expertise':
     case 'Réclamation':
-      return 'text-yellow-700 bg-yellow-100';
+      return 'bg-amber-500/10 text-amber-700 dark:text-amber-400';
     default:
-      return 'text-gray-600 bg-gray-100';
+      return 'bg-slate-500/10 text-slate-600 dark:text-slate-300';
   }
 };
 
@@ -44,6 +46,28 @@ const Sinistres = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<SinistreResponse | null>(null);
   const [search, setSearch] = useState('');
+  // Tous les enregistrements (hors pagination) pour le bandeau de synthèse.
+  const [stats, setStats] = useState<SinistreResponse[] | null>(null);
+  const loadStats = useCallback(() => {
+    fetchAllPages<SinistreResponse>('/api/sinistres')
+      .then(setStats)
+      .catch(() => setStats([]));
+  }, []);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
+
+  const kpis = useMemo(() => {
+    if (!stats) return null;
+    const rembourses = stats.filter((x) => x.dateRemboursement);
+    return {
+      total: stats.length,
+      enCours: stats.length - rembourses.length,
+      rembourses: rembourses.length,
+      montant: stats.reduce((s, x) => s + (x.montantRemuneration ?? 0), 0),
+    };
+  }, [stats]);
 
   useEffect(() => {
     dispatch(getAllSinistres({ pageNumber: 1, pageSize: 10, search }));
@@ -61,7 +85,7 @@ const Sinistres = () => {
 
   const confirmDelete = () => {
     if (selectedItem) {
-      dispatch(deleteSinistre(selectedItem.numero));
+      dispatch(deleteSinistre(selectedItem.numero)).then(() => loadStats());
       setSelectedItem(null);
       setDeleteDialogOpen(false);
     }
@@ -89,27 +113,27 @@ const Sinistres = () => {
     {
       accessorKey: 'nomBuilding',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Actif' sorting />,
-      cell: ({ row }) => <div className='font-medium min-w-[130px] whitespace-nowrap'>{row.original.nomBuilding || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomBuilding} />,
     },
     {
       accessorKey: 'nomLocataire',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Locataire' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomLocataire || '-'}</div>,
+      cell: ({ row }) => <AvatarCell name={row.original.nomLocataire} />,
     },
     {
       accessorKey: 'nomTypeSinistre',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Nature Reclamation' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomTypeSinistre || '-'}</div>,
+      cell: ({ row }) => row.original.nomTypeSinistre ? <Chip>{row.original.nomTypeSinistre}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'dateReclamation',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date du Sinistre' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateReclamation)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.dateReclamation)}</span>,
     },
     {
       accessorKey: 'dateDeclaration',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date de déclaration' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateDeclaration)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.dateDeclaration)}</span>,
     },
     {
       accessorKey: 'etapeSuivi',
@@ -117,7 +141,7 @@ const Sinistres = () => {
       cell: ({ row }) => (
         <div className='flex justify-center min-w-[120px]'>
           <span
-            className={`inline-block text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full whitespace-nowrap ${etapeBadgeClass(row.original.etapeSuivi)}`}
+            className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap whitespace-nowrap ${etapeBadgeClass(row.original.etapeSuivi)}`}
           >
             {row.original.etapeSuivi}
           </span>
@@ -132,126 +156,95 @@ const Sinistres = () => {
     {
       accessorKey: 'noSinistre',
       header: ({ column }) => <DataTableColumnHeader column={column} title='N° Sinistre' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.noSinistre || '-'}</div>,
+      cell: ({ row }) => row.original.noSinistre ? <Chip className='font-mono'>{row.original.noSinistre}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'numPoliceAssurance',
       header: ({ column }) => <DataTableColumnHeader column={column} title="N° Police d'assurance" />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.numPoliceAssurance || '-'}</div>,
+      cell: ({ row }) => row.original.numPoliceAssurance ? <Chip className='font-mono'>{row.original.numPoliceAssurance}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'nomAssureur',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Assurance' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomAssureur || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomAssureur} />,
     },
     {
       accessorKey: 'nomCourtier',
       header: ({ column }) => <DataTableColumnHeader column={column} title="Courtier d'assurance" />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomCourtier || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomCourtier} />,
     },
     {
       accessorKey: 'dateExpertise',
       header: ({ column }) => <DataTableColumnHeader column={column} title="Date d'expertise" sorting />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateExpertise)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.dateExpertise)}</span>,
     },
     {
       id: 'pvExpertise',
       header: () => <div className='text-center'>PV d&apos;expertise</div>,
       cell: ({ row }) =>
         row.original.cheminPVExpertise ? (
-          <div className='flex justify-center'>
-            <Button
-              variant='ghost'
-              size='sm'
-              className='h-8 w-8 p-0'
-              disabled={downloadingAttachment === String(row.original.numero)}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDownloadPV(row.original);
-              }}
-            >
-              <Download className='h-4 w-4 text-primary' />
-            </Button>
-          </div>
+          <IconTile
+            icon={FileDown}
+            label="Télécharger le PV d'expertise"
+            tone='primary'
+            disabled={downloadingAttachment === String(row.original.numero)}
+            onClick={() => handleDownloadPV(row.original)}
+          />
         ) : (
-          <div className='text-center text-gray-400'>-</div>
+          <div className='text-center text-muted-foreground'>-</div>
         ),
     },
     {
       accessorKey: 'montantRemuneration',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Montant de remboursement' />,
-      cell: ({ row }) => <div className='font-medium text-right'>{fmtNum(row.original.montantRemuneration)}</div>,
+      header: () => <div className='text-right'>Montant de remboursement</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.montantRemuneration} />,
     },
     {
       accessorKey: 'dateRemboursement',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date de remboursement' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateRemboursement)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.dateRemboursement)}</span>,
     },
     {
       accessorKey: 'referenceDossierDAG',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Reference Dossier DAG' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.referenceDossierDAG || '-'}</div>,
+      cell: ({ row }) => row.original.referenceDossierDAG ? <Chip className='font-mono'>{row.original.referenceDossierDAG}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'refDossierAssurance',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Reference Dossier Assurance' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.refDossierAssurance || '-'}</div>,
+      cell: ({ row }) => row.original.refDossierAssurance ? <Chip className='font-mono'>{row.original.refDossierAssurance}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'nomExpert',
       header: ({ column }) => <DataTableColumnHeader column={column} title="Nom de l'Expert" />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomExpert || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomExpert} />,
     },
     {
       accessorKey: 'montantExpert',
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Montant de l'Expert" />,
-      cell: ({ row }) => <div className='font-medium text-right'>{fmtNum(row.original.montantExpert)}</div>,
+      header: () => <div className='text-right'>Montant de l&apos;Expert</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.montantExpert} />,
     },
     {
       accessorKey: 'montantFacture',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Montant de facture' />,
-      cell: ({ row }) => <div className='font-medium text-right'>{fmtNum(row.original.montantFacture)}</div>,
+      header: () => <div className='text-right'>Montant de facture</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.montantFacture} />,
     },
     {
       id: 'ficheSinistre',
       header: () => <div className='text-center'>Fiche Sinistre</div>,
-      cell: () => (
-        <div className='flex justify-center'>
-          <Button variant='ghost' size='sm' className='h-8 w-8 p-0' disabled title='Génération PDF non disponible'>
-            <Download className='h-4 w-4 text-gray-400' />
-          </Button>
-        </div>
-      ),
+      cell: () => <IconTile icon={FileDown} label='Fiche sinistre : génération PDF non disponible' tone='sky' disabled />,
     },
     {
       id: 'actions',
       header: () => <div className='text-right'>Actions</div>,
       cell: ({ row }) => (
-        <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              dispatch(setSinistre(row.original));
-              navigate(`modifier/${row.original.numero}`);
-            }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-red-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row.original);
-            }}
-          >
-            <Trash2 className='h-4 w-4 text-red-600' />
-          </Button>
-        </div>
+        <RowActions
+          onEdit={() => {
+            dispatch(setSinistre(row.original));
+            navigate(`modifier/${row.original.numero}`);
+          }}
+          onDelete={() => handleDelete(row.original)}
+        />
       ),
     },
   ];
@@ -285,6 +278,37 @@ const Sinistres = () => {
               },
             ]}
           />
+
+          <KpiStrip>
+            <KpiCard
+              icon={AlertTriangle}
+              label='Sinistres'
+              value={kpis ? String(kpis.total) : '—'}
+              hint={'dossiers au total'}
+              tone={KPI_TONES.primary}
+            />
+            <KpiCard
+              icon={Hourglass}
+              label='En cours'
+              value={kpis ? String(kpis.enCours) : '—'}
+              hint={'sans remboursement'}
+              tone={KPI_TONES.amber}
+            />
+            <KpiCard
+              icon={CheckCircle2}
+              label='Remboursés'
+              value={kpis ? String(kpis.rembourses) : '—'}
+              hint={'dossiers soldés'}
+              tone={KPI_TONES.green}
+            />
+            <KpiCard
+              icon={Banknote}
+              label='Montant remboursé'
+              value={kpis ? `${fmtKpi(kpis.montant)} MAD` : '—'}
+              hint={'tous dossiers'}
+              tone={KPI_TONES.sky}
+            />
+          </KpiStrip>
         </div>
 
         <DataTable

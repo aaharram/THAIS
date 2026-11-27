@@ -21,7 +21,16 @@ export type HubCardItem = {
  * Carte des pages d'accueil de module (même rendu que les cartes de configuration d'iAudit) :
  * carte blanche, bordure fine et claire de la couleur primaire (framboise du logo), icône dans un rond teinté, titre centré. Quatre par ligne sur grand écran.
  */
-export function HubCardGrid({ items, className }: { items: HubCardItem[]; className?: string }) {
+export function HubCardGrid({
+  items,
+  className,
+  iconStrokeWidth = 1.9,
+}: {
+  items: HubCardItem[];
+  className?: string;
+  /** épaisseur du trait des icônes (1.9 par défaut ; plus bas = rendu plus fin et plus doux) */
+  iconStrokeWidth?: number;
+}) {
   const navigate = useNavigate();
   return (
     <div className={cn('grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4', className)}>
@@ -55,7 +64,7 @@ export function HubCardGrid({ items, className }: { items: HubCardItem[]; classN
           >
             <span className='flex min-h-40 flex-col items-center justify-center gap-3 py-4 rounded-[calc(1rem-2px)] bg-white'>
               <span className='flex h-16 w-16 items-center justify-center rounded-full bg-primary/[0.07] ring-1 ring-primary/10'>
-                {item.icon ? <item.icon className='h-9 w-9 hub-card-icon text-primary/90' strokeWidth={1.9} /> : null}
+                {item.icon ? <item.icon className='h-9 w-9 hub-card-icon text-primary/90' strokeWidth={iconStrokeWidth} /> : null}
               </span>
               <span className='px-4 text-center text-sm hub-card-title font-medium text-primary/95'>{item.name}</span>
               {item.footer ? (

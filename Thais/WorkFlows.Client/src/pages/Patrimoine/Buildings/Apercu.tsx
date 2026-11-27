@@ -8,6 +8,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Building2, CirclePlus, ImageOff, Pencil } from 'lucide-react';
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
+import { ActionButton } from '@/components/table/list-cells';
 
 // RMANew (PatrimoineRMANew/Classes/Immeuble.vb, GenerateTable) : aperçu d'un seul actif -
 // une mini-liste à une ligne avec le même jeu de colonnes que RMANew (Image, Actif, Code,
@@ -38,7 +39,7 @@ const Apercu = () => {
       id: 'image',
       header: 'Image',
       cell: () => (
-        <div className='flex items-center justify-center h-9 w-9 rounded-md bg-gray-100 text-gray-400'>
+        <div className='flex items-center justify-center h-9 w-9 rounded-md bg-gray-100 text-muted-foreground'>
           <ImageOff className='h-4 w-4' />
         </div>
       ),
@@ -177,14 +178,7 @@ const Apercu = () => {
       header: () => <div className='text-right'>Détails</div>,
       cell: ({ row }) => (
         <div className='flex justify-end'>
-          <button
-            type='button'
-            className='inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-yellow-100'
-            title='Modifier'
-            onClick={() => navigate(`/patrimoine/actifs/modifier/${row.original.numero}`)}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </button>
+          <ActionButton icon={Pencil} label='Modifier' onClick={() => navigate(`/patrimoine/actifs/modifier/${row.original.numero}`)} className='text-yellow-600 hover:bg-yellow-500/10 hover:text-yellow-600' />
         </div>
       ),
     },

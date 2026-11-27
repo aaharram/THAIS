@@ -125,7 +125,7 @@ const RevisionLoyer = () => {
     {
       accessorKey: 'nouveauLoyer',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Nouv Loyer' />,
-      cell: ({ row }) => <div className='font-medium text-blue-700'>{fmtMontant(row.original.nouveauLoyer)}</div>,
+      cell: ({ row }) => <div className='font-medium text-sky-700 dark:text-sky-400'>{fmtMontant(row.original.nouveauLoyer)}</div>,
     },
     {
       id: 'dateRevision',
@@ -145,7 +145,7 @@ const RevisionLoyer = () => {
       header: ({ column }) => <DataTableColumnHeader column={column} title='Ecart' />,
       cell: ({ row }) => {
         const e = ecart(row.original);
-        return <div className={`font-medium ${e > 0 ? 'text-green-700' : e < 0 ? 'text-red-700' : ''}`}>{fmtMontant(e)}</div>;
+        return <div className={`font-medium ${e > 0 ? 'text-emerald-700 dark:text-emerald-400' : e < 0 ? 'text-red-700 dark:text-red-400' : ''}`}>{fmtMontant(e)}</div>;
       },
     },
     {

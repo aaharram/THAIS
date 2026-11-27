@@ -1,6 +1,8 @@
 import { BaseDialog } from '@/components/dialog/dialog';
+import { fetchAllPages } from '@/components/export/export-menu';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { Chip, KPI_TONES, KpiCard, KpiStrip, MoneyCell, PrimarySecondary, RowActions, fmtMoney as fmtKpi } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ImportMenu } from '@/components/import/import-menu';
@@ -15,13 +17,13 @@ import {
 } from '@/store/features/property-management/assurancesSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { ColumnDef } from '@tanstack/react-table';
-import { Pencil, Plus, Shield, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Banknote, FileCheck2, Hourglass, Plus, Shield, ShieldCheck } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 const statutBadgeClass = (statut: string) => {
-  if (statut === 'EnCours') return 'text-green-700 bg-green-100';
-  return 'text-gray-600 bg-gray-100';
+  if (statut === 'EnCours') return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
+  return 'bg-slate-500/10 text-slate-600 dark:text-slate-300';
 };
 
 const Assurances = () => {
@@ -31,6 +33,28 @@ const Assurances = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<AssuranceResponse | null>(null);
   const [search, setSearch] = useState('');
+  // Tous les enregistrements (hors pagination) pour le bandeau de synthèse.
+  const [stats, setStats] = useState<AssuranceResponse[] | null>(null);
+  const loadStats = useCallback(() => {
+    fetchAllPages<AssuranceResponse>('/api/assurances')
+      .then(setStats)
+      .catch(() => setStats([]));
+  }, []);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
+
+  const kpis = useMemo(() => {
+    if (!stats) return null;
+    const enCours = stats.filter((a) => a.statut === 'EnCours');
+    return {
+      total: stats.length,
+      enCours: enCours.length,
+      autres: stats.length - enCours.length,
+      primes: enCours.reduce((s, a) => s + (a.montant ?? 0), 0),
+    };
+  }, [stats]);
 
   useEffect(() => {
     dispatch(getAllAssurances({ pageNumber: 1, pageSize: 10, search }));
@@ -48,7 +72,7 @@ const Assurances = () => {
 
   const confirmDelete = () => {
     if (selectedItem) {
-      dispatch(deleteAssurance(selectedItem.numero));
+      dispatch(deleteAssurance(selectedItem.numero)).then(() => loadStats());
       setSelectedItem(null);
       setDeleteDialogOpen(false);
     }
@@ -60,33 +84,33 @@ const Assurances = () => {
     {
       accessorKey: 'numPolice',
       header: ({ column }) => <DataTableColumnHeader column={column} title='N° Police' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.numPolice || '-'}</div>,
+      cell: ({ row }) => row.original.numPolice ? <Chip className='font-mono'>{row.original.numPolice}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'nomAssureur',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Assureur' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomAssureur || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomAssureur} />,
     },
     {
       accessorKey: 'nomCourtier',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Courtier' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomCourtier || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomCourtier} />,
     },
     {
       accessorKey: 'typeCouverture',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Couverture' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.typeCouverture || '-'}</div>,
+      cell: ({ row }) => row.original.typeCouverture ? <Chip>{row.original.typeCouverture}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       id: 'dateEffetContrat',
       accessorFn: (row) => fmtDate(row.dateEffetContrat),
       header: ({ column }) => <DataTableColumnHeader column={column} title="Date d'effet" />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateEffetContrat)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.dateEffetContrat)}</span>,
     },
     {
       accessorKey: 'montant',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Montant' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.montant ?? '-'}</div>,
+      header: () => <div className='text-right'>Montant</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.montant} />,
     },
     {
       accessorKey: 'statut',
@@ -94,7 +118,7 @@ const Assurances = () => {
       cell: ({ row }) => (
         <div className='flex justify-center'>
           <span
-            className={`inline-block text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${statutBadgeClass(row.original.statut)}`}
+            className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${statutBadgeClass(row.original.statut)}`}
           >
             {row.original.statut}
           </span>
@@ -105,31 +129,13 @@ const Assurances = () => {
       id: 'actions',
       header: () => <div className='text-right'>Actions</div>,
       cell: ({ row }) => (
-        <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              dispatch(setAssurance(row.original));
-              navigate(`modifier/${row.original.numero}`);
-            }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-red-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row.original);
-            }}
-          >
-            <Trash2 className='h-4 w-4 text-red-600' />
-          </Button>
-        </div>
+        <RowActions
+          onEdit={() => {
+            dispatch(setAssurance(row.original));
+            navigate(`modifier/${row.original.numero}`);
+          }}
+          onDelete={() => handleDelete(row.original)}
+        />
       ),
     },
   ];
@@ -163,6 +169,37 @@ const Assurances = () => {
               },
             ]}
           />
+
+          <KpiStrip>
+            <KpiCard
+              icon={ShieldCheck}
+              label='Polices'
+              value={kpis ? String(kpis.total) : '—'}
+              hint={'au total'}
+              tone={KPI_TONES.primary}
+            />
+            <KpiCard
+              icon={FileCheck2}
+              label='En cours'
+              value={kpis ? String(kpis.enCours) : '—'}
+              hint={'contrats actifs'}
+              tone={KPI_TONES.green}
+            />
+            <KpiCard
+              icon={Hourglass}
+              label='Terminées'
+              value={kpis ? String(kpis.autres) : '—'}
+              hint={'échues ou résiliées'}
+              tone={KPI_TONES.amber}
+            />
+            <KpiCard
+              icon={Banknote}
+              label='Primes en cours'
+              value={kpis ? `${fmtKpi(kpis.primes)} MAD` : '—'}
+              hint={'polices en cours'}
+              tone={KPI_TONES.sky}
+            />
+          </KpiStrip>
         </div>
 
         <DataTable

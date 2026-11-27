@@ -1,3 +1,4 @@
+import { GridSection as Section, FormGroupTitle } from '@/components/form/form-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -26,33 +27,13 @@ import {
 } from '@/store/features/leasing/suiviContentieuxSlice';
 import { useAppSelector } from '@/store/hooks';
 import { downloadAttachment, uploadAttachment } from '@/store/services/attachments';
-import { Download, FolderOpen, Gavel, Info, Loader2, ArrowLeft, Save } from 'lucide-react';
+import { Download, FolderOpen, Gavel, Loader2, ArrowLeft, Save } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
 
 const backPath = '/leasing-management/recouvrement/suivi-contentieux';
 const ATTACHMENT_FOLDER = 'suivi-contentieux';
-
-const Section = ({
-  icon: Icon,
-  title,
-  children,
-}: {
-  icon: typeof Info;
-  title: string;
-  children: React.ReactNode;
-}) => (
-  <div className='border rounded-lg overflow-hidden'>
-    <div className='bg-gray-50 px-4 py-3 flex items-center gap-2 border-b'>
-      <div className='flex items-center justify-center h-7 w-7 rounded-full bg-blue-100 text-blue-600'>
-        <Icon className='h-4 w-4' />
-      </div>
-      <h3 className='text-base font-semibold text-gray-900'>{title}</h3>
-    </div>
-    <div className='p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4'>{children}</div>
-  </div>
-);
 
 const emptyForm: SuiviContentieuxRequest = {
   noLocation: null,
@@ -177,20 +158,10 @@ const Form = ({ details }: { details?: boolean }) => {
             {/* Ordre des champs ci-dessous : identique à DataEntrySuiviJuridique.aspx
                 (Suivi, Nature procedure, Statut Dossier, Date de Encaissement, Date début
                 contentieux, Solde Année Précédente, Montant Encaissé, Description). */}
-            <div className='space-y-2 col-span-full'>
-              <Label htmlFor='observation' className='text-sm font-medium'>
-                Suivi
-              </Label>
-              <Textarea
-                id='observation'
-                rows={4}
-                value={formData.observation ?? ''}
-                onChange={(e) => handleChange('observation', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
 
-            <div className='space-y-2 col-span-full'>
+            <FormGroupTitle>Dossier</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='natureProcedure' className='text-sm font-medium'>
                 Nature procedure
               </Label>
@@ -203,7 +174,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='statutDossier' className='text-sm font-medium'>
                 Statut Dossier
               </Label>
@@ -225,20 +196,7 @@ const Form = ({ details }: { details?: boolean }) => {
               </Select>
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='dateEncaissement' className='text-sm font-medium'>
-                Date de Encaissement
-              </Label>
-              <Input
-                id='dateEncaissement'
-                type='date'
-                value={formData.dateEncaissement ?? ''}
-                onChange={(e) => handleChange('dateEncaissement', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='dateDebutContentieux' className='text-sm font-medium'>
                 Date début contentieux
               </Label>
@@ -251,7 +209,35 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12'>
+              <Label htmlFor='observation' className='text-sm font-medium'>
+                Suivi
+              </Label>
+              <Textarea
+                id='observation'
+                rows={4}
+                value={formData.observation ?? ''}
+                onChange={(e) => handleChange('observation', e.target.value)}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <FormGroupTitle>Encaissement</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='dateEncaissement' className='text-sm font-medium'>
+                Date de Encaissement
+              </Label>
+              <Input
+                id='dateEncaissement'
+                type='date'
+                value={formData.dateEncaissement ?? ''}
+                onChange={(e) => handleChange('dateEncaissement', e.target.value)}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='soldeAnneePrecedente' className='text-sm font-medium'>
                 Solde Année Précédente
               </Label>
@@ -265,7 +251,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='montantEncaisse' className='text-sm font-medium'>
                 Montant Encaissé
               </Label>
@@ -279,7 +265,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2 col-span-full'>
+            <div className='min-w-0 space-y-1.5 col-span-12'>
               <Label htmlFor='description' className='text-sm font-medium'>
                 Description
               </Label>
@@ -294,7 +280,8 @@ const Form = ({ details }: { details?: boolean }) => {
 
             {/* RMANew (champ "Pieces jointe") : stockage physique + nom généré en base,
                 sur le même modèle que ProfileController (photo de profil). */}
-            <div className='space-y-2 col-span-full'>
+
+            <div className='min-w-0 space-y-1.5 col-span-12'>
               <Label htmlFor='pieceJointe' className='text-sm font-medium'>
                 Pieces jointe
               </Label>
@@ -322,7 +309,7 @@ const Form = ({ details }: { details?: boolean }) => {
                     type='button'
                     variant='ghost'
                     size='sm'
-                    className='h-7 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+                    className='h-7 px-2 text-blue-600 hover:text-sky-700 dark:text-sky-400 hover:bg-sky-500/10'
                     disabled={changeToDetails || uploading}
                     onClick={() => fileInputRef.current?.click()}
                   >
@@ -339,7 +326,8 @@ const Form = ({ details }: { details?: boolean }) => {
       </CardContent>
       <Separator />
       <CardFooter className='flex justify-end gap-2 mt-6'>
-        <Button variant='secondary' onClick={() => navigate(backPath)}>
+        <Button variant='outline'
+          className='border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary' onClick={() => navigate(backPath)}>
           <ArrowLeft />
           Retour
         </Button>

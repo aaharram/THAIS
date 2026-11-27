@@ -1,6 +1,7 @@
 import { ExportTiles } from '@/components/export/export-tiles';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { AvatarCell, Chip, PrimarySecondary } from '@/components/table/list-cells';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Select,
@@ -28,16 +29,16 @@ const EXPORT_HEADER = ['Local', 'Client', "N° Contrat", 'Statut Contrat', 'Dét
 const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString('fr-FR') : '-');
 
 const typeRelanceBadgeClass = (type?: string | null) => {
-  if (type === 'Mise en demeure') return 'text-red-700 bg-red-100';
-  if (type === 'Téléphonique') return 'text-amber-700 bg-amber-100';
-  if (type === 'Lettre') return 'text-blue-700 bg-blue-100';
-  return 'text-gray-600 bg-gray-100';
+  if (type === 'Mise en demeure') return 'bg-red-500/10 text-red-700 dark:text-red-400';
+  if (type === 'Téléphonique') return 'bg-amber-500/10 text-amber-700 dark:text-amber-400';
+  if (type === 'Lettre') return 'bg-sky-500/10 text-sky-700 dark:text-sky-400';
+  return 'bg-slate-500/10 text-slate-600 dark:text-slate-300';
 };
 
 const etatBailBadgeClass = (etat?: string | null) => {
-  if (etat === 'En cours de location') return 'text-green-700 bg-green-100';
-  if (etat === 'Suspendu') return 'text-amber-700 bg-amber-100';
-  return 'text-gray-600 bg-gray-100';
+  if (etat === 'En cours de location') return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
+  if (etat === 'Suspendu') return 'bg-amber-500/10 text-amber-700 dark:text-amber-400';
+  return 'bg-slate-500/10 text-slate-600 dark:text-slate-300';
 };
 
 const SuiviRecouvrement = () => {
@@ -131,24 +132,24 @@ const SuiviRecouvrement = () => {
     {
       accessorKey: 'nomLocal',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Local' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomLocal || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomLocal} />,
     },
     {
       accessorKey: 'nomLocataire',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Client' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomLocataire}</div>,
+      cell: ({ row }) => <AvatarCell name={row.original.nomLocataire} />,
     },
     {
       accessorKey: 'numContratLocations',
       header: ({ column }) => <DataTableColumnHeader column={column} title='N°Contrat' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.numContratLocations || '-'}</div>,
+      cell: ({ row }) => row.original.numContratLocations ? <Chip className='font-mono'>{row.original.numContratLocations}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'etatBail',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Statut Contrat' />,
       cell: ({ row }) => (
         <span
-          className={`inline-block w-fit text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${etatBailBadgeClass(row.original.etatBail)}`}
+          className={`inline-block w-fit text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${etatBailBadgeClass(row.original.etatBail)}`}
         >
           {row.original.etatBail || '-'}
         </span>
@@ -181,7 +182,7 @@ const SuiviRecouvrement = () => {
       cell: ({ row }) => (
         <div className='flex justify-center'>
           <span
-            className={`inline-block text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${typeRelanceBadgeClass(row.original.typeRelance)}`}
+            className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${typeRelanceBadgeClass(row.original.typeRelance)}`}
           >
             {row.original.typeRelance}
           </span>
@@ -192,12 +193,12 @@ const SuiviRecouvrement = () => {
       id: 'dateRelance',
       accessorFn: (row) => fmtDate(row.dateRelance),
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateRelance)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.dateRelance)}</span>,
     },
     {
       accessorKey: 'typeEnvoi',
       header: ({ column }) => <DataTableColumnHeader column={column} title="Mode d'envoi" />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.typeEnvoi}</div>,
+      cell: ({ row }) => row.original.typeEnvoi ? <Chip>{row.original.typeEnvoi}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'notes',
@@ -261,7 +262,7 @@ const SuiviRecouvrement = () => {
               <div className='flex items-center gap-2'>
                 <div className='w-full sm:w-56'>
                   <Select value={statutContrat} onValueChange={setStatutContrat}>
-                    <SelectTrigger className='h-8'>
+                    <SelectTrigger className='h-10 rounded-lg bg-card'>
                       <SelectValue placeholder='Statut Contrat' />
                     </SelectTrigger>
                     <SelectContent>

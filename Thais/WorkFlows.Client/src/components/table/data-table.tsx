@@ -19,9 +19,10 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { LucideIcon, Search } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/utils/lib/utils';
+import { Inbox, LucideIcon, Search } from 'lucide-react';
 import React from 'react';
-import Loading from '../loading/loading';
 import { DataTablePagination } from './pagination';
 import { DataTableToolbar } from './toolbar';
 
@@ -163,20 +164,6 @@ export function DataTable<TData>({
   // pagination collée en bas (≈ 56 px) , de la marge de la carte et du pied de page de l'application. Mesurée à chaque rendu (l'en-tête de page
   // change de hauteur d'un écran à l'autre : filtre actif, description longue...) et à chaque redimensionnement.
   const wrapRef = React.useRef<HTMLDivElement>(null);
-  const rootRef = React.useRef<HTMLDivElement>(null);
-  const [searchSlot, setSearchSlot] = React.useState<HTMLElement | null>(null);
-  React.useLayoutEffect(() => {
-    // Cherche le bloc « titre » de la page : un emplacement data-title-search-slot dans un ancêtre proche,
-    // sans traverser une fenêtre modale (une liste dans une fenêtre garde sa propre recherche).
-    let node: HTMLElement | null = rootRef.current?.parentElement ?? null;
-    let found: HTMLElement | null = null;
-    for (let i = 0; i < 4 && node && !found; i += 1) {
-      const slot = node.querySelector<HTMLElement>('[data-title-search-slot]');
-      if (slot && slot.closest('[role=dialog]') === rootRef.current?.closest('[role=dialog]')) found = slot;
-      node = node.parentElement;
-    }
-    setSearchSlot((prev) => (prev === found ? prev : found));
-  });
   const [zoneHeight, setZoneHeight] = React.useState<number | undefined>(undefined);
   const measureZone = React.useCallback(() => {
     const el = wrapRef.current;
@@ -194,9 +181,8 @@ export function DataTable<TData>({
   }, [measureZone]);
 
   return (
-    <div ref={rootRef} className={searchSlot ? 'mt-4 space-y-4' : 'space-y-4'}>
-      {(toolbar || filterableColumns.length > 0 || searchableColumns.length > 0) && (
-        <DataTableToolbar
+    <div className='mt-5 space-y-4 border-t border-border/60 pt-5'>
+      <DataTableToolbar
           table={table}
           filterableColumns={filterableColumns}
           searchableColumns={searchableColumns}
@@ -206,18 +192,17 @@ export function DataTable<TData>({
           onFilterChange={onFilterChange}
           name={name}
           centerToolbar={centerToolbar}
-          searchSlot={searchSlot}
+          pagination={pagination}
         >
           {toolbar}
-        </DataTableToolbar>
-      )}
+      </DataTableToolbar>
       {/* Les listes larges (beaucoup de colonnes, ex: Actifs) débordaient de la page
           entière plutôt que de rester contenues dans leur propre zone de défilement - la
           page (et la sidebar/le header avec elle) défilait horizontalement au lieu du seul
           tableau. Pas de overflow-x-auto ici : <Table> l'applique déjà sur son propre div
           interne (voir components/ui/table.tsx) - l'empiler ici n'aurait fait qu'imbriquer
           deux zones de défilement pour rien. Cette div n'apporte que la bordure visuelle. */}
-      <div ref={wrapRef} className='rounded-md border'>
+      <div ref={wrapRef} className='overflow-hidden rounded-xl border bg-card shadow-sm'>
         {/* Zone de défilement à hauteur limitée (hauteur de la fenêtre moins l'en-tête de page et la pagination) :
             la barre de défilement horizontale reste visible en bas de l'écran même avec 20 lignes, et l'en-tête
             des colonnes reste collé en haut pendant le défilement vertical. */}
@@ -229,7 +214,10 @@ export function DataTable<TData>({
                   <TableHead
                     key={header.id}
                     style={getColumnWidthStyle(header.column.columnDef)}
-                    className={header.column.columnDef.size !== undefined ? 'leading-tight' : undefined}
+                    className={cn(
+                      'h-11 border-b bg-muted/70 px-3 text-xs font-semibold tracking-wide text-muted-foreground',
+                      header.column.columnDef.size !== undefined && 'leading-tight',
+                    )}
                   >
                     {header.isPlaceholder
                       ? null
@@ -257,7 +245,7 @@ export function DataTable<TData>({
                       <TableHead
                         key={`${header.id}-filter`}
                         style={getColumnWidthStyle(header.column.columnDef)}
-                        className='py-1.5'
+                        className='bg-muted/30 px-3 py-1.5'
                       >
                         {!header.isPlaceholder &&
                           (canFilter ? (
@@ -268,7 +256,7 @@ export function DataTable<TData>({
                               <Input
                                 value={(header.column.getFilterValue() as string) ?? ''}
                                 onChange={(e) => header.column.setFilterValue(e.target.value || undefined)}
-                                className='h-7 w-full pl-6 text-xs'
+                                className='h-7 w-full border-border/60 bg-background/70 pl-6 text-xs shadow-none focus-visible:ring-1'
                               />
                             </div>
                           ) : (
@@ -277,7 +265,10 @@ export function DataTable<TData>({
                                 <span className='pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground/50'>
                                   <Search className='h-3 w-3' />
                                 </span>
-                                <Input disabled className='h-7 w-full pl-6 text-xs' />
+                                <Input
+                                  disabled
+                                  className='h-7 w-full border-border/40 bg-background/40 pl-6 text-xs shadow-none'
+                                />
                               </div>
                             )
                           ))}
@@ -289,28 +280,35 @@ export function DataTable<TData>({
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={columns.length} className='h-24 text-center'>
-                  <div className='flex justify-center items-center h-full'>
-                    <Loading />
-                  </div>
-                </TableCell>
-              </TableRow>
+              // Lignes fantômes : la liste garde sa forme pendant le chargement (au lieu d'un grand logo qui tourne).
+              Array.from({ length: Math.min(pagination?.pageSize ?? 8, 8) }, (_, rowIndex) => (
+                <TableRow key={`skeleton-${rowIndex}`} className='hover:bg-transparent'>
+                  {table.getVisibleLeafColumns().map((column, colIndex) => (
+                    <TableCell key={column.id} className='px-3 py-3.5'>
+                      <Skeleton
+                        className='h-4 rounded-full'
+                        style={{ width: `${colIndex === 0 ? 70 : 45 + ((rowIndex * 7 + colIndex * 11) % 40)}%` }}
+                      />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
             ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
-                  className={
-                    onRowClick || onRowDoubleClick ? 'hover:bg-gray-100' : ''
-                  }
+                  className={cn(
+                    'border-border/60 transition-colors last:border-b-0 hover:bg-primary/[0.04]',
+                    (onRowClick || onRowDoubleClick) && 'cursor-pointer',
+                  )}
                   onClick={onRowClick ? () => onRowClick(row.original) : undefined}
                   onDoubleClick={
                     onRowDoubleClick ? () => onRowDoubleClick(row.original) : undefined
                   }
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} style={getColumnWidthStyle(cell.column.columnDef)}>
+                    <TableCell key={cell.id} style={getColumnWidthStyle(cell.column.columnDef)} className='px-3 py-2.5'>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -318,15 +316,21 @@ export function DataTable<TData>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className='h-24 text-center'>
-                  Aucune donnée disponible
+                <TableCell colSpan={columns.length} className='h-48 text-center'>
+                  <div className='flex flex-col items-center justify-center gap-2 text-muted-foreground'>
+                    <div className='rounded-full bg-muted p-3'>
+                      <Inbox className='h-6 w-6' />
+                    </div>
+                    <p className='text-sm font-medium'>Aucune donnée disponible</p>
+                    <p className='text-xs'>Aucun élément à afficher pour le moment.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-      <DataTablePagination table={table} pagination={pagination} />
+      <DataTablePagination table={table} pagination={pagination} isLoading={isLoading} />
     </div>
   );
 }

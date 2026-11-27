@@ -144,7 +144,7 @@ const HistoriqueEtatDesLoyers = () => {
                 </Select>
               </div>
 
-              <div className='space-y-2 w-full sm:w-48'>
+              <div className='space-y-2 w-full sm:w-64'>
                 <Select value={noProprietaire} onValueChange={setNoProprietaire}>
                   <SelectTrigger>
                     <SelectValue placeholder='Propriétaire' />
@@ -160,7 +160,7 @@ const HistoriqueEtatDesLoyers = () => {
                 </Select>
               </div>
 
-              <div className='space-y-2 w-full sm:w-48'>
+              <div className='space-y-2 w-full sm:w-64'>
                 <Select value={noBuilding} onValueChange={setNoBuilding}>
                   <SelectTrigger>
                     <SelectValue placeholder='Actif' />
@@ -204,9 +204,8 @@ const HistoriqueEtatDesLoyers = () => {
     </Card>
 
     <div className='flex justify-end mt-4'>
-      <Button variant='secondary' onClick={() => navigate('/reporting/etat-des-loyers')}>
-        <ArrowLeft className='h-4 w-4 mr-2' />
-        <ArrowLeft />
+      <Button variant='outline' onClick={() => navigate('/reporting/etat-des-loyers')}>
+        <ArrowLeft className='h-4 w-4 mr-2 border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary' />
         Retour
       </Button>
     </div>

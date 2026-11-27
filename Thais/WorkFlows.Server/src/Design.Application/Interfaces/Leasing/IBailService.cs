@@ -16,4 +16,7 @@ public interface IBailService
     Task<BailResponse> ReactivateAsync(int id);
     Task<List<NouveauBailResponse>> GetNouveauxAsync(int? noProprietaire);
     Task<BailImportResponse> ImportAsync(BailImportRequest request);
+    Task<List<BailPieceJointeResponse>> GetPiecesJointesAsync(int bailId);
+    Task<BailPieceJointeResponse> AddPieceJointeAsync(int bailId, BailPieceJointeRequest request);
+    Task<int> DeletePieceJointeAsync(int bailId, int pieceJointeId);
 }

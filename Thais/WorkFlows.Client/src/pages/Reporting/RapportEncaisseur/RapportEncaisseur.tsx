@@ -106,7 +106,7 @@ const RapportEncaisseur = () => {
 
           <div className='flex flex-wrap items-end justify-between gap-4'>
             <div className='flex flex-wrap items-end gap-4'>
-              <div className='space-y-2 w-full sm:w-56'>
+              <div className='space-y-2 w-full sm:w-80'>
                 <Select value={vue} onValueChange={(v) => setVue(v as 'rapport' | 'prime')}>
                   <SelectTrigger>
                     <SelectValue />
@@ -118,7 +118,7 @@ const RapportEncaisseur = () => {
                 </Select>
               </div>
 
-              <div className='space-y-2 w-full sm:w-40'>
+              <div className='space-y-2 w-full sm:w-36'>
                 <Select value={annee} onValueChange={setAnnee}>
                   <SelectTrigger>
                     <SelectValue />
@@ -134,7 +134,7 @@ const RapportEncaisseur = () => {
               </div>
 
               {vue === 'prime' && (
-                <div className='space-y-2 w-full sm:w-48'>
+                <div className='space-y-2 w-full sm:w-64'>
                   <Select value={mois} onValueChange={setMois}>
                     <SelectTrigger>
                       <SelectValue placeholder='Mois' />
@@ -151,7 +151,7 @@ const RapportEncaisseur = () => {
               )}
 
               {vue === 'rapport' && (
-                <div className='space-y-2 w-full sm:w-56'>
+                <div className='space-y-2 w-full sm:w-72'>
                   <Select value={noEncaisseur} onValueChange={setNoEncaisseur}>
                     <SelectTrigger>
                       <SelectValue placeholder='Encaisseur' />

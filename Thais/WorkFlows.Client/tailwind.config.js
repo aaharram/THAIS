@@ -1,6 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: ['class'],
+  // Le variant « dark: » s'applique avec la classe .dark ET avec le thème Sombre de THAIS (posé via l'attribut
+  // data-theme='sombre' sur <html>, sans classe .dark) : sinon les couleurs claires « dark:text-emerald-400 »,
+  // etc. ne s'activaient jamais dans ce thème.
+  darkMode: ['variant', ['&:is(.dark *)', "html[data-theme='sombre'] &"]],
   content: ['./index.html', './src/**/*.{ts,tsx,js,jsx}'],
   theme: {
     extend: {

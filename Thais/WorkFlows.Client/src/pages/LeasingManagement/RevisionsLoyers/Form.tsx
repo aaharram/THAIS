@@ -114,7 +114,7 @@ const Form = () => {
       <Separator />
       <CardContent className='py-6 px-4 sm:px-6 space-y-6'>
         <form onSubmit={handleSubmit} className='space-y-6'>
-          <div className='rounded-lg border bg-blue-50/50 p-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm'>
+          <div className='rounded-lg border bg-sky-500/10/50 p-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm'>
             <div>
               <div className='text-muted-foreground'>Usage</div>
               <div className='font-semibold'>{bail?.usage || '-'}</div>
@@ -129,11 +129,11 @@ const Form = () => {
             </div>
             <div>
               <div className='text-muted-foreground'>Loyer proposé</div>
-              <div className='font-semibold text-blue-700'>{nouveauLoyerDefaut.toLocaleString('fr-FR')} MAD</div>
+              <div className='font-semibold text-sky-700 dark:text-sky-400'>{nouveauLoyerDefaut.toLocaleString('fr-FR')} MAD</div>
             </div>
           </div>
 
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-4 [&_input:not([type=checkbox])]:w-full [&_[role=combobox]]:w-full [&_textarea]:w-full'>
             <div className='space-y-2'>
               <Label htmlFor='ancienLoyer' className='text-sm font-medium'>
                 Ancien loyer
@@ -228,7 +228,8 @@ const Form = () => {
       </CardContent>
       <Separator />
       <CardFooter className='flex justify-end gap-2 mt-6'>
-        <Button variant='secondary' onClick={() => navigate(backPath)}>
+        <Button variant='outline'
+          className='border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary' onClick={() => navigate(backPath)}>
           <ArrowLeft />
           Retour
         </Button>

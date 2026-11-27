@@ -14,7 +14,7 @@ export const BuildingRequestSchema = z.object({
   noEncaisseur: z.number().int().nullable().optional(),
   provenanceActif: z.string().nullable().optional(),
   ajouterContrainte: z.boolean().optional(),
-  noProprieteType: z.string().default('Immeuble'),
+  noProprieteType: z.string().default('Mono-propriété'),
   noProprietaire: z.number().int().nullable().optional(),
   responsable: z.string().nullable().optional(),
   contactResponsable: z.string().nullable().optional(),
@@ -275,7 +275,8 @@ export type BuildingResponse = z.infer<typeof BuildingResponseSchema>;
 export const AFFECTATIONS = ['N.A', 'GSR', 'GV', 'GG', 'AT', 'FP'] as const;
 export const PROVENANCES_ACTIF = ['Construction', 'Acquisition', 'Location', 'Expropriation'] as const;
 export const TYPES_TF = ['Unique', 'Morcelé'] as const;
-export const PROPRIETE_TYPES = ['Immeuble', 'Bien'] as const;
+// RMANew (Building.NoProprieteType) : 1 = Mono-propriété, 2 = Co-propriété, 5 = Cession de Bail.
+export const PROPRIETE_TYPES = ['Mono-propriété', 'Cession de Bail', 'Co-propriété'] as const;
 
 export const SORTS_PROSPECT = [
   { value: 0, label: 'En cours' },

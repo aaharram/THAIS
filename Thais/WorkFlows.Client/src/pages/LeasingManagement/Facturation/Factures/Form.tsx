@@ -111,7 +111,7 @@ const Form = () => {
       </div>
       <CardContent className='py-6 px-4 sm:px-6 space-y-6'>
         <form onSubmit={handleSubmit} className='space-y-6'>
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-4 [&_input:not([type=checkbox])]:w-full [&_[role=combobox]]:w-full [&_textarea]:w-full'>
             <div className='space-y-2'>
               <Label htmlFor='noLocation' className='text-sm font-medium'>
                 <span className='text-red-500'>* </span>Bail
@@ -264,7 +264,8 @@ const Form = () => {
         <hr />
       </div>
       <CardFooter className='flex justify-end gap-2 mt-6'>
-        <Button variant='secondary' onClick={() => navigate(backPath)}>
+        <Button variant='outline'
+          className='border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary' onClick={() => navigate(backPath)}>
           <ArrowLeft />
           Retour
         </Button>

@@ -156,7 +156,7 @@ const Form = ({ details }: { details?: boolean }) => {
               <h3 className='text-base font-semibold text-gray-900'>Informations</h3>
             </div>
 
-            <div className='p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4'>
+            <div className='p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-4 [&_input:not([type=checkbox])]:w-full [&_[role=combobox]]:w-full [&_textarea]:w-full'>
               <div className='space-y-2'>
                 <Label htmlFor='immobilisationConcernee' className='text-sm font-medium'>
                   Immoblisation Concernées
@@ -241,7 +241,8 @@ const Form = ({ details }: { details?: boolean }) => {
       </CardContent>
       <Separator />
       <CardFooter className='flex justify-end gap-2 mt-6'>
-        <Button variant='secondary' onClick={() => navigate(backPath)}>
+        <Button variant='outline'
+          className='border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary' onClick={() => navigate(backPath)}>
           <ArrowLeft />
           Retour
         </Button>

@@ -29,6 +29,8 @@ public class LocalRequest
     public decimal? ValeurInventaire { get; set; }
     public decimal? ValeurRealisation { get; set; }
     public string? Observation { get; set; }
+    public string? Image { get; set; }
+    public string? PlanLocal { get; set; }
     public string? Etat { get; set; }
     public string? Demande { get; set; }
     public string? Suggestion { get; set; }

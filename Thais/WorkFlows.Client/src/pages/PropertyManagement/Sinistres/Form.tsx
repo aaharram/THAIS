@@ -1,3 +1,4 @@
+import { GridSection as Section, FormGroupTitle } from '@/components/form/form-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -32,33 +33,13 @@ import {
   uploadSinistreAttachment,
 } from '@/store/features/property-management/sinistresSlice';
 import { useAppSelector } from '@/store/hooks';
-import { AlertTriangle, Download, Info, Paperclip, ArrowLeft, Save } from 'lucide-react';
+import { AlertTriangle, Download, Paperclip, ArrowLeft, Save } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
 import { z } from 'zod';
 
 const backPath = '/property-management/sinistres';
-
-const Section = ({
-  icon: Icon,
-  title,
-  children,
-}: {
-  icon: typeof Info;
-  title: string;
-  children: React.ReactNode;
-}) => (
-  <div className='border rounded-lg overflow-hidden'>
-    <div className='bg-gray-50 px-4 py-3 flex items-center gap-2 border-b'>
-      <div className='flex items-center justify-center h-7 w-7 rounded-full bg-blue-100 text-blue-600'>
-        <Icon className='h-4 w-4' />
-      </div>
-      <h3 className='text-base font-semibold text-gray-900'>{title}</h3>
-    </div>
-    <div className='p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4'>{children}</div>
-  </div>
-);
 
 const emptyForm: SinistreRequest = {
   noBuilding: 0,
@@ -250,7 +231,9 @@ const Form = ({ details }: { details?: boolean }) => {
       <CardContent className='py-6 px-4 sm:px-6 space-y-6'>
         <form onSubmit={handleSubmit} className='space-y-6'>
           <Section icon={AlertTriangle} title='Informations'>
-            <div className='space-y-2'>
+            <FormGroupTitle>Identification du sinistre</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='noSinistre' className='text-sm font-medium'>
                 N°Sinistre
               </Label>
@@ -262,7 +245,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='noBuilding' className='text-sm font-medium'>
                 <span className='text-red-500'>* </span>Actif
               </Label>
@@ -285,7 +268,7 @@ const Form = ({ details }: { details?: boolean }) => {
               {errors.noBuilding && <p className='text-red-600 text-sm'>{errors.noBuilding}</p>}
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='noLocal' className='text-sm font-medium'>
                 Local
               </Label>
@@ -308,7 +291,7 @@ const Form = ({ details }: { details?: boolean }) => {
               </Select>
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='noTypeSinistre' className='text-sm font-medium'>
                 <span className='text-red-500'>* </span>Type de sinistre
               </Label>
@@ -331,7 +314,7 @@ const Form = ({ details }: { details?: boolean }) => {
               {errors.noTypeSinistre && <p className='text-red-600 text-sm'>{errors.noTypeSinistre}</p>}
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='noAssurance' className='text-sm font-medium'>
                 Police d'assurance
               </Label>
@@ -354,7 +337,7 @@ const Form = ({ details }: { details?: boolean }) => {
               </Select>
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='etapeSuivi' className='text-sm font-medium'>
                 Étape de suivi
               </Label>
@@ -376,7 +359,7 @@ const Form = ({ details }: { details?: boolean }) => {
               </Select>
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='cumul' className='text-sm font-medium'>
                 Cumul en nombre des dossiers remis
               </Label>
@@ -389,7 +372,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='agentAyantReclame' className='text-sm font-medium'>
                 Agent ayant réclamé
               </Label>
@@ -401,19 +384,9 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='compteurFicheIntervention' className='text-sm font-medium'>
-                Compteur fiche d'intervention
-              </Label>
-              <Input
-                id='compteurFicheIntervention'
-                value={formData.compteurFicheIntervention ?? ''}
-                onChange={(e) => handleChange('compteurFicheIntervention', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
+            <FormGroupTitle>Dossier</FormGroupTitle>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='referenceDossierDAG' className='text-sm font-medium'>
                 Reference Dossier DAG
               </Label>
@@ -425,33 +398,45 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='dateDeclaration' className='text-sm font-medium'>
-                Date déclaration
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='refDossierAssurance' className='text-sm font-medium'>
+                Réf. dossier assurance
               </Label>
               <Input
-                id='dateDeclaration'
-                type='date'
-                value={formData.dateDeclaration ?? ''}
-                onChange={(e) => handleChange('dateDeclaration', e.target.value)}
+                id='refDossierAssurance'
+                value={formData.refDossierAssurance ?? ''}
+                onChange={(e) => handleChange('refDossierAssurance', e.target.value)}
                 disabled={changeToDetails}
               />
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='dateExpertise' className='text-sm font-medium'>
-                Date expertise
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='referenceFacture' className='text-sm font-medium'>
+                Référence de facture
               </Label>
               <Input
-                id='dateExpertise'
-                type='date'
-                value={formData.dateExpertise ?? ''}
-                onChange={(e) => handleChange('dateExpertise', e.target.value)}
+                id='referenceFacture'
+                value={formData.referenceFacture ?? ''}
+                onChange={(e) => handleChange('referenceFacture', e.target.value)}
                 disabled={changeToDetails}
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='compteurFicheIntervention' className='text-sm font-medium'>
+                Compteur fiche d'intervention
+              </Label>
+              <Input
+                id='compteurFicheIntervention'
+                value={formData.compteurFicheIntervention ?? ''}
+                onChange={(e) => handleChange('compteurFicheIntervention', e.target.value)}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <FormGroupTitle>Dates</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='dateReclamation' className='text-sm font-medium'>
                 Date réclamation
               </Label>
@@ -464,7 +449,33 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='dateDeclaration' className='text-sm font-medium'>
+                Date déclaration
+              </Label>
+              <Input
+                id='dateDeclaration'
+                type='date'
+                value={formData.dateDeclaration ?? ''}
+                onChange={(e) => handleChange('dateDeclaration', e.target.value)}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='dateExpertise' className='text-sm font-medium'>
+                Date expertise
+              </Label>
+              <Input
+                id='dateExpertise'
+                type='date'
+                value={formData.dateExpertise ?? ''}
+                onChange={(e) => handleChange('dateExpertise', e.target.value)}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='dateRemboursement' className='text-sm font-medium'>
                 Date remboursement
               </Label>
@@ -477,63 +488,9 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='estimationDegatBailleur' className='text-sm font-medium'>
-                Estimation dégât bailleur
-              </Label>
-              <Input
-                id='estimationDegatBailleur'
-                type='number'
-                step='0.01'
-                value={formData.estimationDegatBailleur ?? ''}
-                onChange={(e) => handleChange('estimationDegatBailleur', numOrNull(e.target.value))}
-                disabled={changeToDetails}
-              />
-            </div>
+            <FormGroupTitle>Expertise</FormGroupTitle>
 
-            <div className='space-y-2'>
-              <Label htmlFor='estimationDegatLocataire' className='text-sm font-medium'>
-                Estimation dégât locataire
-              </Label>
-              <Input
-                id='estimationDegatLocataire'
-                type='number'
-                step='0.01'
-                value={formData.estimationDegatLocataire ?? ''}
-                onChange={(e) => handleChange('estimationDegatLocataire', numOrNull(e.target.value))}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='montantFacture' className='text-sm font-medium'>
-                Montant facturé
-              </Label>
-              <Input
-                id='montantFacture'
-                type='number'
-                step='0.01'
-                value={formData.montantFacture ?? ''}
-                onChange={(e) => handleChange('montantFacture', numOrNull(e.target.value))}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='montantRemuneration' className='text-sm font-medium'>
-                Montant remboursé
-              </Label>
-              <Input
-                id='montantRemuneration'
-                type='number'
-                step='0.01'
-                value={formData.montantRemuneration ?? ''}
-                onChange={(e) => handleChange('montantRemuneration', numOrNull(e.target.value))}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='nomExpert' className='text-sm font-medium'>
                 Nom de l'expert
               </Label>
@@ -545,19 +502,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='refDossierAssurance' className='text-sm font-medium'>
-                Réf. dossier assurance
-              </Label>
-              <Input
-                id='refDossierAssurance'
-                value={formData.refDossierAssurance ?? ''}
-                onChange={(e) => handleChange('refDossierAssurance', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='montantExpert' className='text-sm font-medium'>
                 Montant de l'Expert
               </Label>
@@ -571,19 +516,67 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='referenceFacture' className='text-sm font-medium'>
-                Référence de facture
+            <FormGroupTitle>Montants</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='estimationDegatBailleur' className='text-sm font-medium'>
+                Estimation dégât bailleur
               </Label>
               <Input
-                id='referenceFacture'
-                value={formData.referenceFacture ?? ''}
-                onChange={(e) => handleChange('referenceFacture', e.target.value)}
+                id='estimationDegatBailleur'
+                type='number'
+                step='0.01'
+                value={formData.estimationDegatBailleur ?? ''}
+                onChange={(e) => handleChange('estimationDegatBailleur', numOrNull(e.target.value))}
                 disabled={changeToDetails}
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='estimationDegatLocataire' className='text-sm font-medium'>
+                Estimation dégât locataire
+              </Label>
+              <Input
+                id='estimationDegatLocataire'
+                type='number'
+                step='0.01'
+                value={formData.estimationDegatLocataire ?? ''}
+                onChange={(e) => handleChange('estimationDegatLocataire', numOrNull(e.target.value))}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='montantFacture' className='text-sm font-medium'>
+                Montant facturé
+              </Label>
+              <Input
+                id='montantFacture'
+                type='number'
+                step='0.01'
+                value={formData.montantFacture ?? ''}
+                onChange={(e) => handleChange('montantFacture', numOrNull(e.target.value))}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='montantRemuneration' className='text-sm font-medium'>
+                Montant remboursé
+              </Label>
+              <Input
+                id='montantRemuneration'
+                type='number'
+                step='0.01'
+                value={formData.montantRemuneration ?? ''}
+                onChange={(e) => handleChange('montantRemuneration', numOrNull(e.target.value))}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <FormGroupTitle>Description</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 md:col-span-6'>
               <Label htmlFor='objetReclamation' className='text-sm font-medium'>
                 Objet de réclamation
               </Label>
@@ -595,7 +588,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 md:col-span-6'>
               <Label htmlFor='site' className='text-sm font-medium'>
                 Site
               </Label>
@@ -607,17 +600,32 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
+            <div className='min-w-0 space-y-1.5 col-span-12'>
+              <Label htmlFor='notes' className='text-sm font-medium'>
+                Notes
+              </Label>
+              <Textarea
+                id='notes'
+                rows={3}
+                value={formData.notes ?? ''}
+                onChange={(e) => handleChange('notes', e.target.value)}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <FormGroupTitle>Pièces jointes</FormGroupTitle>
+
             {ATTACHMENT_FIELDS.map(({ kind, label, responseField }) => {
               const existingFileName = item?.[responseField];
               const selectedFile = pendingFiles[kind];
               return (
-                <div className='space-y-2' key={kind}>
+                <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4' key={kind}>
                   <Label htmlFor={`file-${kind}`} className='text-sm font-medium'>
                     {label}
                   </Label>
                   <div className='flex items-center gap-2'>
                     <div className='flex-1 flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm text-gray-600 truncate'>
-                      <Paperclip className='h-3.5 w-3.5 shrink-0 text-gray-400' />
+                      <Paperclip className='h-3.5 w-3.5 shrink-0 text-muted-foreground' />
                       <span className='truncate'>
                         {selectedFile?.name ?? existingFileName ?? 'Aucun fichier'}
                       </span>
@@ -659,25 +667,13 @@ const Form = ({ details }: { details?: boolean }) => {
                 </div>
               );
             })}
-
-            <div className='space-y-2 col-span-full'>
-              <Label htmlFor='notes' className='text-sm font-medium'>
-                Notes
-              </Label>
-              <Textarea
-                id='notes'
-                rows={3}
-                value={formData.notes ?? ''}
-                onChange={(e) => handleChange('notes', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
           </Section>
         </form>
       </CardContent>
       <Separator />
       <CardFooter className='flex justify-end gap-2 mt-6'>
-        <Button variant='secondary' onClick={() => navigate(backPath)}>
+        <Button variant='outline'
+          className='border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary' onClick={() => navigate(backPath)}>
           <ArrowLeft />
           Retour
         </Button>

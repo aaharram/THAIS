@@ -1,6 +1,7 @@
 import { BaseDialog } from '@/components/dialog/dialog';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { ActionButton } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Title } from '@/components/ui/title';
@@ -63,9 +64,9 @@ const Prospections = () => {
   const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString('fr-FR') : '-');
   const pj = (name?: string | null) =>
     name ? (
-      <Paperclip className='h-4 w-4 text-blue-600' aria-label={name} />
+      <Paperclip className='h-4 w-4 text-primary' aria-label={name} />
     ) : (
-      <span className='text-gray-400'>-</span>
+      <span className='text-muted-foreground'>-</span>
     );
 
   const columns: ColumnDef<ProspectionResponse>[] = [
@@ -175,8 +176,8 @@ const Prospections = () => {
         const statut = isEncours ? 'Encours' : 'Terminée';
         return (
           <span
-            className={`inline-block text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${
-              isEncours ? 'text-amber-700 bg-amber-100' : 'text-green-700 bg-green-100'
+            className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${
+              isEncours ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400' : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
             }`}
           >
             {statut}
@@ -189,29 +190,23 @@ const Prospections = () => {
       header: () => <div className='text-right'>Détails</div>,
       cell: ({ row }) => (
         <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            onClick={(e) => {
-              e.stopPropagation();
+          <ActionButton
+            icon={Pencil}
+            label="Modifier"
+            onClick={() => {
               dispatch(setProspection(row.original));
               navigate(`modifier/${row.original.numero}`);
             }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-red-100'
-            onClick={(e) => {
-              e.stopPropagation();
+            className='text-yellow-600 hover:bg-yellow-500/10 hover:text-yellow-600'
+          />
+          <ActionButton
+            icon={Trash2}
+            label="Supprimer"
+            onClick={() => {
               handleDelete(row.original);
             }}
-          >
-            <Trash2 className='h-4 w-4 text-red-600' />
-          </Button>
+            className='text-red-600 hover:bg-red-500/10 hover:text-red-600'
+          />
         </div>
       ),
     },

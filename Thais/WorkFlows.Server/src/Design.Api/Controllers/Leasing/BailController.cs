@@ -150,6 +150,55 @@ public class BailController(IBailService bailService) : ControllerBase
         }
     }
 
+    // Documents libres d'un bail (bloc « Pièces jointes » de la fiche). Le fichier est téléversé
+    // au préalable via POST api/attachments/baux ; ces routes n'enregistrent que la référence.
+    [HttpGet("{id:int}/pieces-jointes")]
+    [Authorize(Roles = "Contractor")]
+    public async Task<IActionResult> GetPiecesJointesAsync(int id)
+    {
+        try
+        {
+            return Ok(await bailService.GetPiecesJointesAsync(id));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("{id:int}/pieces-jointes")]
+    [Authorize(Roles = "Contractor")]
+    public async Task<IActionResult> AddPieceJointeAsync(int id, [FromBody] BailPieceJointeRequest request)
+    {
+        try
+        {
+            return Ok(await bailService.AddPieceJointeAsync(id, request));
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { message = "Bail not found" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id:int}/pieces-jointes/{pieceJointeId:int}")]
+    [Authorize(Roles = "Contractor")]
+    public async Task<IActionResult> DeletePieceJointeAsync(int id, int pieceJointeId)
+    {
+        try
+        {
+            int deleted = await bailService.DeletePieceJointeAsync(id, pieceJointeId);
+            return deleted == 0 ? NotFound(new { message = "Pièce jointe not found" }) : NoContent();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPost("{id:int}/reactivate")]
     [Authorize(Roles = "Contractor")]
     public async Task<IActionResult> ReactivateAsync(int id)

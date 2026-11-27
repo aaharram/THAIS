@@ -30,26 +30,59 @@ public class FactureService(DbDesignContext context, ILogger<FactureService> log
             : $"{locataire.Nom} {locataire.Prenom}".Trim();
     }
 
-    private async Task<FactureResponse> ToResponseAsync(Facture entity)
+    // RMANew (ListFacture.vb) : Reference = propriétaire + '/' + année + '/00' + n° d'ordre (000) parmi les factures du
+    // même propriétaire et de la même année, classées par date.
+    private async Task<Dictionary<int, string>> BuildReferencesAsync()
     {
+        var rows = await (from f in context.Factures
+                          join b in context.Baux on f.NoLocation equals b.Numero
+                          join bd in context.Buildings on b.NoBuilding equals bd.Numero
+                          select new { f.Numero, f.Periode, bd.NoProprietaire }).ToListAsync();
+        Dictionary<int, string> noms = await context.Proprietaires.ToDictionaryAsync(x => x.Numero, x => (x.Designation ?? "").Trim());
+
+        var refs = new Dictionary<int, string>();
+        foreach (var groupe in rows.GroupBy(r => new { r.NoProprietaire, r.Periode.Year }))
+        {
+            string nom = groupe.Key.NoProprietaire.HasValue && noms.TryGetValue(groupe.Key.NoProprietaire.Value, out string? n) ? n : "";
+            int rang = 0;
+            foreach (var r in groupe.OrderBy(x => x.Periode).ThenBy(x => x.Numero))
+            {
+                rang++;
+                refs[r.Numero] = $"{nom}/{groupe.Key.Year}/00{rang:000}";
+            }
+        }
+        return refs;
+    }
+
+    private async Task<FactureResponse> ToResponseAsync(Facture entity, Dictionary<int, string>? references = null)
+    {
+        references ??= await BuildReferencesAsync();
         Bail? bail = await context.Baux.FindAsync(entity.NoLocation);
 
         Building? building = bail == null ? null : await context.Buildings.FindAsync(bail.NoBuilding);
         string? nomLocal = bail == null ? null : await context.Locaux
             .Where(x => x.Numero == bail.NoLocal).Select(x => x.Designation).FirstOrDefaultAsync();
         string? nomLocataire = bail == null ? null : await ResolveNomLocataireAsync(bail.NoLocataire);
+        Locataire? locataire = bail == null ? null : await context.Locataires.FindAsync(bail.NoLocataire);
+        Local? local = bail == null ? null : await context.Locaux.FindAsync(bail.NoLocal);
         string? nomProprietaire = building?.NoProprietaire == null ? null : await context.Proprietaires
             .Where(x => x.Numero == building.NoProprietaire).Select(x => x.Designation).FirstOrDefaultAsync();
 
         return new FactureResponse
         {
             Numero = entity.Numero,
+            Reference = references.GetValueOrDefault(entity.Numero),
             NoLocation = entity.NoLocation,
             NumContratLocations = bail?.NumContratLocations,
             NomLocataire = nomLocataire,
             NomBuilding = building?.Designation,
             NomLocal = nomLocal,
             NomProprietaire = nomProprietaire,
+            NoBuilding = building?.Numero,
+            NoProprietaire = building?.NoProprietaire,
+            CodeLocataire = locataire?.CodeLocataire,
+            CompteGeneral = building?.CompteGeneral,
+            Etage = local?.Etage,
             Periode = entity.Periode,
             DateEmission = entity.DateEmission,
             DateEcheance = entity.DateEcheance,
@@ -72,6 +105,14 @@ public class FactureService(DbDesignContext context, ILogger<FactureService> log
         };
     }
 
+    private static int? ExtraireFiltre(List<FilterCriteria> filtres, string champ)
+    {
+        FilterCriteria? f = filtres.FirstOrDefault(x => string.Equals(x.Field, champ, StringComparison.OrdinalIgnoreCase));
+        if (f == null) return null;
+        filtres.Remove(f);
+        return int.TryParse(f.Values.FirstOrDefault(), out int v) && v > 0 ? v : null;
+    }
+
     public async Task<PagedResult<object>> GetAllAsync(GetFilterSearchSortRequest request)
     {
         try
@@ -88,9 +129,30 @@ public class FactureService(DbDesignContext context, ILogger<FactureService> log
 
             IQueryable<Facture> query = context.Factures;
 
-            if (request.Filters != null && request.Filters.Any())
+            // RMANew (ListFacture) : filtres Filiale / Année / Mois, qui ne sont pas des colonnes de la facture.
+            List<FilterCriteria> filtres = request.Filters?.ToList() ?? [];
+            int? annee = ExtraireFiltre(filtres, "Annee");
+            int? mois = ExtraireFiltre(filtres, "Mois");
+            int? filiale = ExtraireFiltre(filtres, "NoProprietaire");
+            int? actif = ExtraireFiltre(filtres, "NoBuilding");
+            if (annee.HasValue) query = query.Where(f => f.Periode.Year == annee.Value);
+            if (mois.HasValue) query = query.Where(f => f.Periode.Month == mois.Value);
+            if (actif.HasValue)
             {
-                query = query.ApplyFilters(request.Filters);
+                query = query.Where(f => context.Baux.Any(b => b.Numero == f.NoLocation && b.NoBuilding == actif.Value));
+            }
+
+            if (filiale.HasValue)
+            {
+                query = query.Where(f => (from b in context.Baux
+                                          join bd in context.Buildings on b.NoBuilding equals bd.Numero
+                                          where b.Numero == f.NoLocation && bd.NoProprietaire == filiale.Value
+                                          select b.Numero).Any());
+            }
+
+            if (filtres.Any())
+            {
+                query = query.ApplyFilters(filtres);
             }
 
             query = !string.IsNullOrWhiteSpace(request.SortField)
@@ -126,10 +188,11 @@ public class FactureService(DbDesignContext context, ILogger<FactureService> log
                 .Take(request.PageSize)
                 .ToList();
 
+            Dictionary<int, string> references = await BuildReferencesAsync();
             var mapped = new List<FactureResponse>();
             foreach (Facture item in items)
             {
-                mapped.Add(await ToResponseAsync(item));
+                mapped.Add(await ToResponseAsync(item, references));
             }
 
             return new PagedResult<object>

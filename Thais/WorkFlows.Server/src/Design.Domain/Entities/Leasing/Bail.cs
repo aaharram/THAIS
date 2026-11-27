@@ -32,5 +32,27 @@ public class Bail : Base
     public string Etat { get; set; } = "En cours de location"; // En cours de location / Location Terminée / Suspendu
 
     public string? Notes { get; set; }
+
+    // RMANew (DataEntryLocation) : champs du formulaire de bail repris de RMA.
+    public string? TypeSequenceComptable { get; set; }
+    public decimal? TauxRevisionLoyer { get; set; }
+    public int? Duree { get; set; }
+    public bool DepotGarantie { get; set; }
+    public string? CautionFichier { get; set; }
+    public string? Reference { get; set; }
+    public DateTime? DateReglement { get; set; }
+    public decimal? ResteCaution { get; set; }
+    public bool UtiliseeCaution { get; set; }
+    public string? Observation { get; set; }
+    public decimal? LoyersImpayes { get; set; }
+    public DateTime? DebutImpayes { get; set; }
+    public DateTime? FinImpayes { get; set; }
+    public int? NbMoisImpayes { get; set; }
+    public decimal? ArrieresAugmentation { get; set; }
+    public bool Contentieux { get; set; }
+    public DateTime? DebutArriere { get; set; }
+    public DateTime? FinArriere { get; set; }
+    public decimal? FraisJustice { get; set; }
+    public string? ContratFichier { get; set; }
     public bool Inactif { get; set; }
 }

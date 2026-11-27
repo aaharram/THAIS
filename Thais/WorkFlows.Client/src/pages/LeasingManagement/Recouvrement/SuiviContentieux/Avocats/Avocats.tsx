@@ -2,6 +2,7 @@ import { ExportTiles } from '@/components/export/export-tiles';
 import { BaseDialog } from '@/components/dialog/dialog';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { Chip, IconTile, InitialsAvatar, PrimarySecondary, RowActions } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Title } from '@/components/ui/title';
@@ -10,7 +11,7 @@ import { deleteAvocat, getAllAvocats, resetAvocat, setAvocat } from '@/store/fea
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { downloadAttachment } from '@/store/services/attachments';
 import { ColumnDef } from '@tanstack/react-table';
-import { ChevronLeft, Download, Pencil, Plus, Scale, Trash2 } from 'lucide-react';
+import { ChevronLeft, FileDown, Plus, Scale } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
@@ -94,7 +95,12 @@ const Avocats = () => {
     {
       accessorKey: 'nom',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Nom' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nom || '-'}</div>,
+      cell: ({ row }) => (
+        <div className='flex items-center gap-3'>
+          <InitialsAvatar name={`${row.original.nom} ${row.original.prenom ?? ''}`} />
+          <span className='font-medium'>{row.original.nom || '—'}</span>
+        </div>
+      ),
     },
     {
       accessorKey: 'prenom',
@@ -104,66 +110,39 @@ const Avocats = () => {
     {
       accessorKey: 'cabinet',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Cabinet' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.cabinet || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.cabinet} />,
     },
     {
       accessorKey: 'contrat',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Contrat' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.contrat || '-'}</div>,
+      cell: ({ row }) => row.original.contrat ? <Chip className='font-mono'>{row.original.contrat}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       id: 'piecesJointes',
       header: () => <div className='text-center'>Pièces jointes</div>,
-      cell: ({ row }) => (
-        <div className='flex justify-center'>
-          {row.original.pieceJointe ? (
-            <Button
-              variant='ghost'
-              size='sm'
-              className='h-7 w-7 p-0'
-              title='Télécharger'
-              onClick={(e) => {
-                e.stopPropagation();
-                downloadAttachment('avocats', row.original.pieceJointe!);
-              }}
-            >
-              <Download className='h-4 w-4 text-blue-600' />
-            </Button>
-          ) : (
-            <span className='text-muted-foreground'>-</span>
-          )}
-        </div>
-      ),
+      cell: ({ row }) =>
+        row.original.pieceJointe ? (
+          <IconTile
+            icon={FileDown}
+            label='Télécharger la pièce jointe'
+            tone='primary'
+            onClick={() => downloadAttachment('avocats', row.original.pieceJointe!)}
+          />
+        ) : (
+          <div className='text-center text-muted-foreground'>—</div>
+        ),
     },
     {
       id: 'actions',
       header: () => <div className='text-right'>Actions</div>,
       cell: ({ row }) => (
-        <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              dispatch(setAvocat(row.original));
-              navigate(`modifier/${row.original.numero}`);
-            }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-red-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row.original);
-            }}
-          >
-            <Trash2 className='h-4 w-4 text-red-600' />
-          </Button>
-        </div>
+        <RowActions
+          onEdit={() => {
+            dispatch(setAvocat(row.original));
+            navigate(`modifier/${row.original.numero}`);
+          }}
+          onDelete={() => handleDelete(row.original)}
+        />
       ),
     },
   ];

@@ -1,23 +1,26 @@
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import {
+  AvatarCell,
+  Chip,
+  fmtDate,
+  KPI_TONES,
+  KpiCard,
+  KpiStrip,
+  MoneyCell,
+  PrimarySecondary,
+  StatusPill,
+  fmtMoney,
+} from '@/components/table/list-cells';
 import { Card, CardContent } from '@/components/ui/card';
 import { Title } from '@/components/ui/title';
 import { AvoirResponse } from '@/store/features/leasing/avoir-schemas';
 import { getAllAvoirs } from '@/store/features/leasing/avoirsSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { ColumnDef } from '@tanstack/react-table';
-import { Plus, Receipt } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { CheckCircle2, Plus, Receipt, Wallet } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-
-const etatBadgeClass = (etat: string) => {
-  if (etat === 'Payée') return 'text-green-700 bg-green-100';
-  return 'text-blue-700 bg-blue-100';
-};
-
-const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString('fr-FR') : '-');
-const fmtMontant = (m?: number | null) =>
-  m == null ? '-' : m.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const Avoirs = () => {
   const dispatch = useAppDispatch();
@@ -34,49 +37,59 @@ const Avoirs = () => {
     dispatch(getAllAvoirs({ pageNumber: 1, pageSize, search: value }));
   };
 
+  // Synthèse de la page affichée (la liste est courte ; pas de requête supplémentaire).
+  const kpis = useMemo(
+    () => ({
+      total: totalCount,
+      montant: allItems.reduce((s, a) => s + (a.montant ?? 0), 0),
+      soldees: allItems.filter((a) => a.etatFactureApres === 'Payée').length,
+    }),
+    [allItems, totalCount],
+  );
+
+  // Colonnes de RMANew (ListEleaseAvoir) : Contrat, Locataire, Actif, Date avoir, Montant avoir, Solde restant, État facture.
   const columns: ColumnDef<AvoirResponse>[] = [
     {
       accessorKey: 'numContratLocations',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Contrat' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.numContratLocations || '-'}</div>,
+      cell: ({ row }) =>
+        row.original.numContratLocations ? (
+          <Chip className='font-mono'>{row.original.numContratLocations}</Chip>
+        ) : (
+          <span className='text-muted-foreground'>—</span>
+        ),
     },
     {
       accessorKey: 'nomLocataire',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Locataire' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomLocataire || '-'}</div>,
+      cell: ({ row }) => <AvatarCell name={row.original.nomLocataire} />,
     },
     {
       accessorKey: 'nomBuilding',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Actif' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomBuilding || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomBuilding} />,
     },
     {
       id: 'dateAvoir',
       accessorFn: (row) => fmtDate(row.dateAvoir),
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date avoir' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateAvoir)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.dateAvoir) || '—'}</span>,
     },
     {
       accessorKey: 'montant',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Montant avoir (MAD)' />,
-      cell: ({ row }) => <div className='font-medium text-blue-700'>{fmtMontant(row.original.montant)}</div>,
+      header: () => <div className='text-right'>Montant avoir</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.montant} tone='success' />,
     },
     {
       accessorKey: 'montantFactureApres',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Solde restant (MAD)' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtMontant(row.original.montantFactureApres)}</div>,
+      header: () => <div className='text-right'>Solde restant</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.montantFactureApres} />,
     },
     {
       accessorKey: 'etatFactureApres',
-      header: () => <div className='text-center'>État facture</div>,
+      header: () => <div>État facture</div>,
       cell: ({ row }) => (
-        <div className='flex justify-center'>
-          <span
-            className={`inline-block text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${etatBadgeClass(row.original.etatFactureApres)}`}
-          >
-            {row.original.etatFactureApres}
-          </span>
-        </div>
+        <StatusPill label={row.original.etatFactureApres} tone={row.original.etatFactureApres === 'Payée' ? 'success' : 'info'} />
       ),
     },
   ];
@@ -106,6 +119,24 @@ const Avoirs = () => {
               },
             ]}
           />
+
+          <KpiStrip>
+            <KpiCard icon={Receipt} label='Avoirs émis' value={String(kpis.total)} hint='au total' tone={KPI_TONES.primary} />
+            <KpiCard
+              icon={Wallet}
+              label='Montant des avoirs'
+              value={`${fmtMoney(kpis.montant)} MAD`}
+              hint='sur la page affichée'
+              tone={KPI_TONES.sky}
+            />
+            <KpiCard
+              icon={CheckCircle2}
+              label='Factures soldées'
+              value={String(kpis.soldees)}
+              hint='par un avoir, sur la page affichée'
+              tone={KPI_TONES.green}
+            />
+          </KpiStrip>
         </div>
 
         <DataTable

@@ -1,3 +1,4 @@
+import { GridSection as Section, FormGroupTitle } from '@/components/form/form-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -27,33 +28,13 @@ import {
   resetProspection,
 } from '@/store/features/commercialisation/prospectionsSlice';
 import { useAppSelector } from '@/store/hooks';
-import { FileText, Info, Search, ArrowLeft, Save } from 'lucide-react';
+import { FileText, Search, ArrowLeft, Save } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
 import { z } from 'zod';
 
 const backPath = '/commercialisation/prospection';
-
-const Section = ({
-  icon: Icon,
-  title,
-  children,
-}: {
-  icon: typeof Info;
-  title: string;
-  children: React.ReactNode;
-}) => (
-  <div className='border rounded-lg overflow-hidden'>
-    <div className='bg-gray-50 px-4 py-3 flex items-center gap-2 border-b'>
-      <div className='flex items-center justify-center h-7 w-7 rounded-full bg-blue-100 text-blue-600'>
-        <Icon className='h-4 w-4' />
-      </div>
-      <h3 className='text-base font-semibold text-gray-900'>{title}</h3>
-    </div>
-    <div className='p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4'>{children}</div>
-  </div>
-);
 
 const emptyForm: ProspectionRequest = {
   description: '',
@@ -192,19 +173,9 @@ const Form = ({ details }: { details?: boolean }) => {
         )}
         <form onSubmit={handleSubmit} className='space-y-6'>
           <Section icon={Search} title='Informations'>
-            <div className='space-y-2'>
-              <Label htmlFor='description' className='text-sm font-medium'>
-                Zone
-              </Label>
-              <Input
-                id='description'
-                value={formData.description ?? ''}
-                onChange={(e) => handleChange('description', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
+            <FormGroupTitle>Prospection</FormGroupTitle>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='typologie' className='text-sm font-medium'>
                 Destination
               </Label>
@@ -227,46 +198,7 @@ const Form = ({ details }: { details?: boolean }) => {
               </Select>
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='dateAjout' className='text-sm font-medium'>
-                Date d&apos;ajout
-              </Label>
-              <Input
-                id='dateAjout'
-                type='date'
-                value={formData.dateAjout ?? ''}
-                onChange={(e) => handleChange('dateAjout', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='dateAdjudication' className='text-sm font-medium'>
-                Date d&apos;accord de la BPP
-              </Label>
-              <Input
-                id='dateAdjudication'
-                type='date'
-                value={formData.dateAdjudication ?? ''}
-                onChange={(e) => handleChange('dateAdjudication', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='dateContrat' className='text-sm font-medium'>
-                Date Contrat
-              </Label>
-              <Input
-                id='dateContrat'
-                type='date'
-                value={formData.dateContrat ?? ''}
-                onChange={(e) => handleChange('dateContrat', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='typeOperation' className='text-sm font-medium'>
                 Nature de l&apos;offre
               </Label>
@@ -288,7 +220,7 @@ const Form = ({ details }: { details?: boolean }) => {
               </Select>
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='situationProspection' className='text-sm font-medium'>
                 Statut
               </Label>
@@ -310,7 +242,60 @@ const Form = ({ details }: { details?: boolean }) => {
               </Select>
             </div>
 
-            <div className='space-y-2 col-span-full'>
+            <div className='min-w-0 space-y-1.5 col-span-12'>
+              <Label htmlFor='description' className='text-sm font-medium'>
+                Zone
+              </Label>
+              <Input
+                id='description'
+                value={formData.description ?? ''}
+                onChange={(e) => handleChange('description', e.target.value)}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <FormGroupTitle>Dates</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='dateAjout' className='text-sm font-medium'>
+                Date d&apos;ajout
+              </Label>
+              <Input
+                id='dateAjout'
+                type='date'
+                value={formData.dateAjout ?? ''}
+                onChange={(e) => handleChange('dateAjout', e.target.value)}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='dateAdjudication' className='text-sm font-medium'>
+                Date d&apos;accord de la BPP
+              </Label>
+              <Input
+                id='dateAdjudication'
+                type='date'
+                value={formData.dateAdjudication ?? ''}
+                onChange={(e) => handleChange('dateAdjudication', e.target.value)}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='dateContrat' className='text-sm font-medium'>
+                Date Contrat
+              </Label>
+              <Input
+                id='dateContrat'
+                type='date'
+                value={formData.dateContrat ?? ''}
+                onChange={(e) => handleChange('dateContrat', e.target.value)}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12'>
               <Label htmlFor='notes' className='text-sm font-medium'>
                 Commentaire
               </Label>
@@ -326,7 +311,7 @@ const Form = ({ details }: { details?: boolean }) => {
 
           <Section icon={FileText} title='Pièces Jointes'>
             {PJ_FIELDS.map(({ key, label }) => (
-              <div className='space-y-2' key={key}>
+              <div className='min-w-0 space-y-1.5 col-span-12 md:col-span-6' key={key}>
                 <Label htmlFor={key} className='text-sm font-medium'>
                   {label}
                 </Label>
@@ -362,7 +347,8 @@ const Form = ({ details }: { details?: boolean }) => {
       </CardContent>
       <Separator />
       <CardFooter className='flex justify-end gap-2 mt-6'>
-        <Button variant='secondary' onClick={() => navigate(backPath)}>
+        <Button variant='outline'
+          className='border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary' onClick={() => navigate(backPath)}>
           <ArrowLeft />
           Retour
         </Button>

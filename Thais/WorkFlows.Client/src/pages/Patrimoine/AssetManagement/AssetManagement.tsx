@@ -17,7 +17,8 @@ const AssetManagement = () => {
   const dispatch = useAppDispatch();
   const { totalCount } = useAppSelector((state) => state.buildings);
   const { allItems: proprietaires } = useAppSelector((state) => state.cfgProprietaires);
-  const [noProprietaire, setNoProprietaire] = useState<string>('0');
+  // RMANew (ViewAsset.vb) : le propriétaire choisi est mémorisé et transmis aux pages ouvertes depuis les tuiles.
+  const [noProprietaire, setNoProprietaire] = useState<string>(() => sessionStorage.getItem('thais.proprietaire') ?? '0');
 
   useEffect(() => {
     dispatch(lookupModules.cfgProprietaires.getAll({ pageSize: 1000 }));
@@ -37,6 +38,7 @@ const AssetManagement = () => {
 
   const changeProprietaire = (v: string) => {
     setNoProprietaire(v);
+    sessionStorage.setItem('thais.proprietaire', v);
   };
 
   const items = [
@@ -44,7 +46,7 @@ const AssetManagement = () => {
       key: 'actifs',
       name: `${totalCount} ${totalCount > 1 ? 'Actifs' : 'Actif'}`,
       icon: Building2,
-      link: '/patrimoine/actifs',
+      link: noProprietaire !== '0' ? `/patrimoine/actifs?proprietaire=${noProprietaire}` : '/patrimoine/actifs',
       description: 'Voir tous les actifs et biens',
       enabled: true,
     },
@@ -62,10 +64,10 @@ const AssetManagement = () => {
           <div className='w-full sm:w-64'>
             <Select value={noProprietaire} onValueChange={changeProprietaire}>
               <SelectTrigger>
-                <SelectValue placeholder='Tous les sites' />
+                <SelectValue placeholder='Tous les propriétaires' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value='0'>Tous les sites</SelectItem>
+                <SelectItem value='0'>Tous les propriétaires</SelectItem>
                 {proprietaires.map((p) => (
                   <SelectItem key={p.numero} value={p.numero.toString()}>
                     {p.designation}

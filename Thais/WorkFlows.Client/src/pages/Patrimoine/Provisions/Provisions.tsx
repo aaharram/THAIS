@@ -1,6 +1,8 @@
 import { BaseDialog } from '@/components/dialog/dialog';
+import { fetchAllPages } from '@/components/export/export-menu';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { KPI_TONES, KpiCard, KpiStrip, MoneyCell, PrimarySecondary, RowActions, fmtMoney as fmtKpi } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Title } from '@/components/ui/title';
@@ -13,8 +15,8 @@ import {
 import { getBuildingById } from '@/store/features/patrimoine/buildingsSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { ColumnDef } from '@tanstack/react-table';
-import { Pencil, Plus, Trash2, Wallet, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Banknote, Building2, Landmark, Plus, Wallet, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 const Provisions = () => {
@@ -28,6 +30,26 @@ const Provisions = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ProvisionResponse | null>(null);
   const [search, setSearch] = useState('');
+  // Tous les enregistrements (hors pagination) pour le bandeau de synthèse.
+  const [stats, setStats] = useState<ProvisionResponse[] | null>(null);
+  const loadStats = useCallback(() => {
+    fetchAllPages<ProvisionResponse>('/api/provisions')
+      .then(setStats)
+      .catch(() => setStats([]));
+  }, []);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
+
+  const kpis = useMemo(() => {
+    if (!stats) return null;
+    return {
+      total: stats.length,
+      montant: stats.reduce((s, p) => s + (p.montantProvision ?? 0), 0),
+      actifs: new Set(stats.map((p) => p.noBuilding)).size,
+    };
+  }, [stats]);
 
   const buildingId = Number(searchParams.get('building')) || 0;
 
@@ -75,7 +97,7 @@ const Provisions = () => {
 
   const confirmDelete = () => {
     if (selectedItem) {
-      dispatch(deleteProvision(selectedItem.numero));
+      dispatch(deleteProvision(selectedItem.numero)).then(() => loadStats());
       setSelectedItem(null);
       setDeleteDialogOpen(false);
     }
@@ -87,47 +109,24 @@ const Provisions = () => {
     {
       accessorKey: 'nomBuilding',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Actif' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomBuilding || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomBuilding} />,
     },
     {
       accessorKey: 'montantProvision',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Montant Provision' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.montantProvision ?? '-'}</div>,
+      header: () => <div className='text-right'>Montant Provision</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.montantProvision} />,
     },
     {
       id: 'dateProvision',
       accessorFn: (row) => fmtDate(row.dateProvision),
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date Commité' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateProvision)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.dateProvision)}</span>,
     },
     {
       id: 'actions',
       header: () => <div className='text-right'>Actions</div>,
       cell: ({ row }) => (
-        <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`modifier/${row.original.numero}`);
-            }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-red-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row.original);
-            }}
-          >
-            <Trash2 className='h-4 w-4 text-red-600' />
-          </Button>
-        </div>
+        <RowActions onEdit={() => navigate(`modifier/${row.original.numero}`)} onDelete={() => handleDelete(row.original)} />
       ),
     },
   ];
@@ -178,6 +177,30 @@ const Provisions = () => {
               <X className='h-3.5 w-3.5' />
             </button>
           )}
+
+          <KpiStrip>
+            <KpiCard
+              icon={Landmark}
+              label='Provisions'
+              value={kpis ? String(kpis.total) : '—'}
+              hint={'au total'}
+              tone={KPI_TONES.primary}
+            />
+            <KpiCard
+              icon={Banknote}
+              label='Montant provisionné'
+              value={kpis ? `${fmtKpi(kpis.montant)} MAD` : '—'}
+              hint={'toutes provisions'}
+              tone={KPI_TONES.sky}
+            />
+            <KpiCard
+              icon={Building2}
+              label='Actifs concernés'
+              value={kpis ? String(kpis.actifs) : '—'}
+              hint={'avec au moins une provision'}
+              tone={KPI_TONES.amber}
+            />
+          </KpiStrip>
         </div>
 
         <DataTable

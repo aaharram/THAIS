@@ -1,3 +1,4 @@
+import { GridSection as Section, FormGroupTitle } from '@/components/form/form-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,33 +26,13 @@ import {
   resetPrestataire,
 } from '@/store/features/property-management/prestatairesSlice';
 import { useAppSelector } from '@/store/hooks';
-import { Handshake, Info, ArrowLeft, Save } from 'lucide-react';
+import { Handshake, ArrowLeft, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
 import { z } from 'zod';
 
 const backPath = '/property-management/prestataires';
-
-const Section = ({
-  icon: Icon,
-  title,
-  children,
-}: {
-  icon: typeof Info;
-  title: string;
-  children: React.ReactNode;
-}) => (
-  <div className='border rounded-lg overflow-hidden'>
-    <div className='bg-gray-50 px-4 py-3 flex items-center gap-2 border-b'>
-      <div className='flex items-center justify-center h-7 w-7 rounded-full bg-blue-100 text-blue-600'>
-        <Icon className='h-4 w-4' />
-      </div>
-      <h3 className='text-base font-semibold text-gray-900'>{title}</h3>
-    </div>
-    <div className='p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4'>{children}</div>
-  </div>
-);
 
 const emptyForm: PrestataireRequest = {
   designation: '',
@@ -175,7 +156,9 @@ const Form = ({ details }: { details?: boolean }) => {
       <CardContent className='py-6 px-4 sm:px-6 space-y-6'>
         <form onSubmit={handleSubmit} className='space-y-6'>
           <Section icon={Handshake} title='Informations'>
-            <div className='space-y-2'>
+            <FormGroupTitle>Société</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='designation' className='text-sm font-medium'>
                 <span className='text-red-500'>* </span>Désignation
               </Label>
@@ -189,7 +172,7 @@ const Form = ({ details }: { details?: boolean }) => {
               {errors.designation && <p className='text-red-600 text-sm'>{errors.designation}</p>}
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='enseigne' className='text-sm font-medium'>
                 Enseigne
               </Label>
@@ -201,7 +184,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='activite' className='text-sm font-medium'>
                 Activité
               </Label>
@@ -213,7 +196,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='typePrestataire' className='text-sm font-medium'>
                 Type de prestataire
               </Label>
@@ -225,7 +208,9 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <FormGroupTitle>Identification légale</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='rc' className='text-sm font-medium'>
                 RC
               </Label>
@@ -237,7 +222,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='idf' className='text-sm font-medium'>
                 IDF
               </Label>
@@ -249,7 +234,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='ice' className='text-sm font-medium'>
                 ICE
               </Label>
@@ -261,7 +246,9 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <FormGroupTitle>Adresse</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12'>
               <Label htmlFor='adresse' className='text-sm font-medium'>
                 Adresse
               </Label>
@@ -273,7 +260,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='postalCode' className='text-sm font-medium'>
                 Code postal
               </Label>
@@ -285,7 +272,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='noVille' className='text-sm font-medium'>
                 Ville
               </Label>
@@ -308,7 +295,7 @@ const Form = ({ details }: { details?: boolean }) => {
               </Select>
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='pays' className='text-sm font-medium'>
                 Pays
               </Label>
@@ -320,7 +307,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2 col-span-full'>
+            <div className='min-w-0 space-y-1.5 col-span-12'>
               <Label htmlFor='notes' className='text-sm font-medium'>
                 Notes
               </Label>
@@ -337,7 +324,8 @@ const Form = ({ details }: { details?: boolean }) => {
       </CardContent>
       <Separator />
       <CardFooter className='flex justify-end gap-2 mt-6'>
-        <Button variant='secondary' onClick={() => navigate(backPath)}>
+        <Button variant='outline'
+          className='border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary' onClick={() => navigate(backPath)}>
           <ArrowLeft />
           Retour
         </Button>

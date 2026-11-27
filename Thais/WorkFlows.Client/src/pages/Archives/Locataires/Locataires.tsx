@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { ActionButton } from '@/components/table/list-cells';
 import { BaseDialog } from '@/components/dialog/dialog';
 import { Title } from '@/components/ui/title';
 import { lookupModules } from '@/store/features/configuration/lookupModules';
@@ -40,7 +41,7 @@ const formatMontant = (value?: number | null) =>
   value != null ? `${value.toLocaleString('fr-FR').replace(/ /g, ' ')} DH` : '-';
 
 const etatBadgeClass = (etat?: string | null) =>
-  etat === 'Contentieux' ? 'text-red-700 bg-red-100' : 'text-green-700 bg-green-100';
+  etat === 'Contentieux' ? 'bg-red-500/10 text-red-700 dark:text-red-400' : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
 
 const ArchivesLocataires = () => {
   const dispatch = useAppDispatch();
@@ -201,7 +202,7 @@ const ArchivesLocataires = () => {
       cell: ({ row }) =>
         row.original.etat ? (
           <span
-            className={`inline-block w-fit text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${etatBadgeClass(row.original.etat)}`}
+            className={`inline-block w-fit text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${etatBadgeClass(row.original.etat)}`}
           >
             {row.original.etat}
           </span>
@@ -214,11 +215,16 @@ const ArchivesLocataires = () => {
       header: () => <div className='text-right'>Actions</div>,
       cell: ({ row }) => (
         <div className='flex justify-end gap-2'>
-          <Button variant='ghost' size='sm' className='h-8 w-8 p-0 hover:bg-yellow-100' title='Modifier'
-            onClick={(e) => { e.stopPropagation(); dispatch(setLocataire(row.original)); navigate(`/leasing-management/locataires/modifier/${row.original.numero}`); }}>
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
-          <Button variant='ghost' size='sm' className='h-8 px-2 gap-1.5 hover:bg-green-100 text-green-700' title='Réactiver ce locataire'
+          <ActionButton
+            icon={Pencil}
+            label='Modifier'
+            onClick={() => {
+              dispatch(setLocataire(row.original));
+              navigate(`/leasing-management/locataires/modifier/${row.original.numero}`);
+            }}
+            className='text-yellow-600 hover:bg-yellow-500/10 hover:text-yellow-600'
+          />
+          <Button variant='ghost' size='sm' className='h-8 gap-1.5 rounded-lg bg-emerald-500/10 px-3 text-emerald-700 hover:bg-emerald-500/20 hover:text-emerald-700 dark:text-emerald-400' title='Réactiver ce locataire'
             onClick={(e) => { e.stopPropagation(); handleReactivate(row.original); }}>
             <CircleCheck className='h-4 w-4' />
             Réactiver
@@ -252,7 +258,7 @@ const ArchivesLocataires = () => {
           toolbar={
             <div className='flex items-center gap-2'>
               <Select value={noProprietaire.toString()} onValueChange={handleProprietaireChange}>
-                <SelectTrigger className='h-8 w-48'>
+                <SelectTrigger className='h-10 w-56 rounded-lg bg-card'>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

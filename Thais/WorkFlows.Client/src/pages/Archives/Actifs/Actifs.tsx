@@ -2,6 +2,7 @@ import { ExportTiles } from '@/components/export/export-tiles';
 import { BaseDialog } from '@/components/dialog/dialog';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { ActionButton, IconTile } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,7 +14,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { formatSurface } from '@/utils/formatters';
 import { generateFicheSignaletique } from '@/utils/reports/ficheSignaletique';
 import { ColumnDef } from '@tanstack/react-table';
-import { Archive, CircleCheck, Download, ImageOff, Pencil } from 'lucide-react';
+import { Archive, CircleCheck, FileDown, ImageOff, Pencil } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -134,7 +135,7 @@ const Actifs = () => {
       id: 'image',
       header: 'Image',
       cell: () => (
-        <div className='flex items-center justify-center h-9 w-9 rounded-md bg-gray-100 text-gray-400'>
+        <div className='flex items-center justify-center h-9 w-9 rounded-md bg-gray-100 text-muted-foreground'>
           <ImageOff className='h-4 w-4' />
         </div>
       ),
@@ -168,20 +169,12 @@ const Actifs = () => {
       id: 'ficheSignaletique',
       header: () => <div className='text-center'>Fiche signalétique</div>,
       cell: ({ row }) => (
-        <div className='flex justify-center'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0'
-            title='Télécharger la fiche signalétique'
-            onClick={(e) => {
-              e.stopPropagation();
-              generateFicheSignaletique(row.original);
-            }}
-          >
-            <Download className='h-4 w-4 text-primary' />
-          </Button>
-        </div>
+        <IconTile
+          icon={FileDown}
+          label='Télécharger la fiche signalétique'
+          tone='sky'
+          onClick={() => generateFicheSignaletique(row.original)}
+        />
       ),
     },
     {
@@ -189,23 +182,19 @@ const Actifs = () => {
       header: () => <div className='text-right'>Actions</div>,
       cell: ({ row }) => (
         <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            title='Modifier'
-            onClick={(e) => {
-              e.stopPropagation();
+          <ActionButton
+            icon={Pencil}
+            label='Modifier'
+            onClick={() => {
               dispatch(setBuilding(row.original));
               navigate(`/patrimoine/actifs/modifier/${row.original.numero}`);
             }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
+            className='text-yellow-600 hover:bg-yellow-500/10 hover:text-yellow-600'
+          />
           <Button
             variant='ghost'
             size='sm'
-            className='h-8 px-2 gap-1.5 hover:bg-green-100 text-green-700'
+            className='h-8 gap-1.5 rounded-lg bg-emerald-500/10 px-3 text-emerald-700 hover:bg-emerald-500/20 hover:text-emerald-700 dark:text-emerald-400'
             title='Réactiver cet actif'
             onClick={(e) => {
               e.stopPropagation();
@@ -245,7 +234,7 @@ const Actifs = () => {
           toolbar={
             <div className='flex items-center gap-2'>
               <Select value={noProprietaire.toString()} onValueChange={handleProprietaireChange}>
-                <SelectTrigger className='h-8 w-48'>
+                <SelectTrigger className='h-10 w-56 rounded-lg bg-card'>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

@@ -1,3 +1,4 @@
+import { GridSection as Section, FormGroupTitle } from '@/components/form/form-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,33 +26,13 @@ import {
 } from '@/store/features/leasing/attestationsSlice';
 import { getAllBaux } from '@/store/features/leasing/bauxSlice';
 import { useAppSelector } from '@/store/hooks';
-import { FileText, Info, ArrowLeft, Save } from 'lucide-react';
+import { FileText, ArrowLeft, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
 import { z } from 'zod';
 
 const backPath = '/leasing-management/attestations';
-
-const Section = ({
-  icon: Icon,
-  title,
-  children,
-}: {
-  icon: typeof Info;
-  title: string;
-  children: React.ReactNode;
-}) => (
-  <div className='border rounded-lg overflow-hidden'>
-    <div className='bg-gray-50 px-4 py-3 flex items-center gap-2 border-b'>
-      <div className='flex items-center justify-center h-7 w-7 rounded-full bg-blue-100 text-blue-600'>
-        <Icon className='h-4 w-4' />
-      </div>
-      <h3 className='text-base font-semibold text-gray-900'>{title}</h3>
-    </div>
-    <div className='p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4'>{children}</div>
-  </div>
-);
 
 const emptyForm: AttestationRequest = {
   noLocation: 0,
@@ -172,7 +153,9 @@ const Form = ({ details }: { details?: boolean }) => {
         )}
         <form onSubmit={handleSubmit} className='space-y-6'>
           <Section icon={FileText} title='Informations'>
-            <div className='space-y-2'>
+            <FormGroupTitle>Contrat</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='noLocation' className='text-sm font-medium'>
                 <span className='text-red-500'>* </span>Contrats
               </Label>
@@ -202,7 +185,7 @@ const Form = ({ details }: { details?: boolean }) => {
               {errors.noLocation && <p className='text-red-600 text-sm'>{errors.noLocation}</p>}
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='client' className='text-sm font-medium'>
                 <span className='text-red-500'>* </span>Clients
               </Label>
@@ -210,7 +193,7 @@ const Form = ({ details }: { details?: boolean }) => {
               {errors.noLocataire && <p className='text-red-600 text-sm'>{errors.noLocataire}</p>}
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='typeAttestation' className='text-sm font-medium'>
                 Type attestation
               </Label>
@@ -232,7 +215,9 @@ const Form = ({ details }: { details?: boolean }) => {
               </Select>
             </div>
 
-            <div className='space-y-2'>
+            <FormGroupTitle>Période</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='dateAttestation' className='text-sm font-medium'>
                 Date attestation
               </Label>
@@ -245,7 +230,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='dateDebut' className='text-sm font-medium'>
                 Date début
               </Label>
@@ -258,7 +243,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='dateFin' className='text-sm font-medium'>
                 Date fin
               </Label>
@@ -275,7 +260,8 @@ const Form = ({ details }: { details?: boolean }) => {
       </CardContent>
       <Separator />
       <CardFooter className='flex justify-end gap-2 mt-6'>
-        <Button variant='secondary' onClick={() => navigate(backPath)}>
+        <Button variant='outline'
+          className='border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary' onClick={() => navigate(backPath)}>
           <ArrowLeft />
           Retour
         </Button>

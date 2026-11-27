@@ -12,7 +12,7 @@ export function ImportMenu({ config, onImported }: { config: ImportConfig; onImp
 
   return (
     <>
-      <div className='flex items-center gap-2'>
+      <div className='order-2 flex items-center gap-2'>
         <ActionTile
           color={TILE_COLORS.orange}
           icon={ExcelGlyph}

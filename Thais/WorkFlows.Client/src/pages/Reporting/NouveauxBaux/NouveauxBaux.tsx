@@ -144,7 +144,7 @@ const NouveauxBaux = () => {
     {
       accessorKey: 'cumulMontant',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Cumul (gains de loyers)' />,
-      cell: ({ row }) => <div className='font-medium text-green-700'>{fmtMontant(row.original.cumulMontant)}</div>,
+      cell: ({ row }) => <div className='font-medium text-emerald-700 dark:text-emerald-400'>{fmtMontant(row.original.cumulMontant)}</div>,
     },
     {
       accessorKey: 'numContratLocations',
@@ -202,7 +202,7 @@ const NouveauxBaux = () => {
             toolbar={
               <div className='flex items-center gap-2'>
                 <Select value={noProprietaire.toString()} onValueChange={(v) => setNoProprietaire(Number(v))}>
-                  <SelectTrigger className='h-8 w-48'>
+                  <SelectTrigger className='h-10 w-64 rounded-lg bg-card'>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

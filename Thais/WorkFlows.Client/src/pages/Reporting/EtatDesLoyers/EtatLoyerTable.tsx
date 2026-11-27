@@ -58,7 +58,7 @@ const EtatLoyerTable = ({ etat }: { etat: EtatLoyerResponse }) => {
                 ))}
                 {building.lignes.length === 0 && (
                   <tr>
-                    <td colSpan={7} className='py-4 px-4 text-center text-gray-400'>
+                    <td colSpan={7} className='py-4 px-4 text-center text-muted-foreground'>
                       Aucune location active
                     </td>
                   </tr>

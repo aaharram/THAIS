@@ -1,6 +1,7 @@
 import { ExportTiles } from '@/components/export/export-tiles';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { Chip, MoneyCell } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -33,8 +34,8 @@ const statutLabel = (item: RemiseResponse) => {
   return STATUTS_REMISE.find((s) => s.value === item.statut)?.label ?? '-';
 };
 const statutBadgeClass = (item: RemiseResponse) => {
-  if (item.isAnnuler) return 'text-red-700 bg-red-100';
-  return item.statut === 1 ? 'text-green-700 bg-green-100' : 'text-gray-600 bg-gray-100';
+  if (item.isAnnuler) return 'bg-red-500/10 text-red-700 dark:text-red-400';
+  return item.statut === 1 ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'bg-slate-500/10 text-slate-600 dark:text-slate-300';
 };
 
 const MOIS_LABELS = [
@@ -172,12 +173,12 @@ const SuiviRemises = () => {
       id: 'dateEntree',
       accessorFn: (row) => fmtDate(row.addDate),
       header: ({ column }) => <DataTableColumnHeader column={column} title="Date d'entrée" sorting />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.addDate)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.addDate)}</span>,
     },
     {
       accessorKey: 'numRemise',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Numéro de Remise' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.numRemise || '-'}</div>,
+      cell: ({ row }) => row.original.numRemise ? <Chip className='font-mono'>{row.original.numRemise}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       id: 'statut',
@@ -186,7 +187,7 @@ const SuiviRemises = () => {
       cell: ({ row }) => (
         <div className='flex justify-center'>
           <span
-            className={`inline-block w-fit text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${statutBadgeClass(row.original)}`}
+            className={`inline-block w-fit text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${statutBadgeClass(row.original)}`}
           >
             {statutLabel(row.original)}
           </span>
@@ -195,24 +196,24 @@ const SuiviRemises = () => {
     },
     {
       accessorKey: 'montant',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Montant' />,
-      cell: ({ row }) => <div className='font-medium text-right'>{fmtMontant(row.original.montant)}</div>,
+      header: () => <div className='text-right'>Montant</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.montant} />,
     },
     {
       accessorKey: 'montantRestant',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Montant Restant' />,
-      cell: ({ row }) => <div className='font-medium text-right'>{fmtMontant(row.original.montantRestant)}</div>,
+      header: () => <div className='text-right'>Montant Restant</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.montantRestant} />,
     },
     {
       accessorKey: 'reference',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Référence' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.reference || '-'}</div>,
+      cell: ({ row }) => row.original.reference ? <Chip className='font-mono'>{row.original.reference}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       id: 'dateAnnulation',
       accessorFn: (row) => fmtDate(row.dateAnnulation),
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date Annulation' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateAnnulation)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.dateAnnulation)}</span>,
     },
   ];
 
@@ -242,7 +243,7 @@ const SuiviRemises = () => {
           toolbar={
             <div className='flex items-center gap-2'>
               <Select value={statut.toString()} onValueChange={handleStatutChange}>
-                <SelectTrigger className='h-8 w-40'>
+                <SelectTrigger className='h-10 w-52 rounded-lg bg-card'>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -256,7 +257,7 @@ const SuiviRemises = () => {
               </Select>
 
               <Select value={annee.toString()} onValueChange={handleAnneeChange}>
-                <SelectTrigger className='h-8 w-36'>
+                <SelectTrigger className='h-10 w-48 rounded-lg bg-card'>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -270,7 +271,7 @@ const SuiviRemises = () => {
               </Select>
 
               <Select value={moisSel.toString()} onValueChange={handleMoisChange} disabled={annee === 0}>
-                <SelectTrigger className='h-8 w-32'>
+                <SelectTrigger className='h-10 w-44 rounded-lg bg-card'>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

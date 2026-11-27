@@ -1,7 +1,9 @@
 import type ExcelJS from 'exceljs';
 import { BaseDialog } from '@/components/dialog/dialog';
+import { fetchAllPages } from '@/components/export/export-menu';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { AvatarCell, Chip, KPI_TONES, KpiCard, KpiStrip, RowActions } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,8 +21,8 @@ import {
 } from '@/store/features/property-management/bonsDeCommandeSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { ColumnDef } from '@tanstack/react-table';
-import { Download, FileText, Pencil, Plus, Trash2, Upload } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { CheckCircle2, Download, FileText, Hourglass, PackageCheck, Plus, ShoppingCart, Upload } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 // RMANew (ImportBonDeCommande.vb, ImportExcelHeader) : ordre et intitulés exacts des
@@ -40,11 +42,11 @@ const IMPORT_HEADER = [
 const statutBadgeClass = (statut: string) => {
   switch (statut) {
     case 'Approuvé':
-      return 'text-green-700 bg-green-100';
+      return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
     case 'Rejeté':
-      return 'text-red-700 bg-red-100';
+      return 'bg-red-500/10 text-red-700 dark:text-red-400';
     default:
-      return 'text-gray-600 bg-gray-100';
+      return 'bg-slate-500/10 text-slate-600 dark:text-slate-300';
   }
 };
 
@@ -56,6 +58,28 @@ const BonsDeCommande = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<BonDeCommandeResponse | null>(null);
   const [search, setSearch] = useState('');
+  // Tous les enregistrements (hors pagination) pour le bandeau de synthèse.
+  const [stats, setStats] = useState<BonDeCommandeResponse[] | null>(null);
+  const loadStats = useCallback(() => {
+    fetchAllPages<BonDeCommandeResponse>('/api/bons-de-commande')
+      .then(setStats)
+      .catch(() => setStats([]));
+  }, []);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
+
+  const kpis = useMemo(() => {
+    if (!stats) return null;
+    const recus = stats.filter((b) => b.dateReception);
+    return {
+      total: stats.length,
+      recus: recus.length,
+      enAttente: stats.length - recus.length,
+      approuves: stats.filter((b) => b.statutApprobation === 'Approuvé').length,
+    };
+  }, [stats]);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
@@ -77,7 +101,7 @@ const BonsDeCommande = () => {
 
   const confirmDelete = () => {
     if (selectedItem) {
-      dispatch(deleteBonDeCommande(selectedItem.numero));
+      dispatch(deleteBonDeCommande(selectedItem.numero)).then(() => loadStats());
       setSelectedItem(null);
       setDeleteDialogOpen(false);
     }
@@ -176,29 +200,29 @@ const BonsDeCommande = () => {
     {
       accessorKey: 'numeroBonCommande',
       header: ({ column }) => <DataTableColumnHeader column={column} title='N° Bon' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.numeroBonCommande}</div>,
+      cell: ({ row }) => row.original.numeroBonCommande ? <Chip className='font-mono'>{row.original.numeroBonCommande}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'nomPrestataire',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Prestataire' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomPrestataire || '-'}</div>,
+      cell: ({ row }) => <AvatarCell name={row.original.nomPrestataire} />,
     },
     {
       id: 'dateCommande',
       accessorFn: (row) => fmtDate(row.dateCommande),
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date commande' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateCommande)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.dateCommande)}</span>,
     },
     {
       id: 'dateReception',
       accessorFn: (row) => fmtDate(row.dateReception),
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date réception' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateReception)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.dateReception)}</span>,
     },
     {
       accessorKey: 'compteComptable',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Compte comptable' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.compteComptable || '-'}</div>,
+      cell: ({ row }) => row.original.compteComptable ? <Chip className='font-mono'>{row.original.compteComptable}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'statutApprobation',
@@ -206,7 +230,7 @@ const BonsDeCommande = () => {
       cell: ({ row }) => (
         <div className='flex justify-center'>
           <span
-            className={`inline-block text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${statutBadgeClass(row.original.statutApprobation)}`}
+            className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${statutBadgeClass(row.original.statutApprobation)}`}
           >
             {row.original.statutApprobation}
           </span>
@@ -217,31 +241,13 @@ const BonsDeCommande = () => {
       id: 'actions',
       header: () => <div className='text-right'>Actions</div>,
       cell: ({ row }) => (
-        <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              dispatch(setBonDeCommande(row.original));
-              navigate(`modifier/${row.original.numero}`);
-            }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-red-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row.original);
-            }}
-          >
-            <Trash2 className='h-4 w-4 text-red-600' />
-          </Button>
-        </div>
+        <RowActions
+          onEdit={() => {
+            dispatch(setBonDeCommande(row.original));
+            navigate(`modifier/${row.original.numero}`);
+          }}
+          onDelete={() => handleDelete(row.original)}
+        />
       ),
     },
   ];
@@ -284,6 +290,37 @@ const BonsDeCommande = () => {
               },
             ]}
           />
+
+          <KpiStrip>
+            <KpiCard
+              icon={ShoppingCart}
+              label='Bons de commande'
+              value={kpis ? String(kpis.total) : '—'}
+              hint={'au total'}
+              tone={KPI_TONES.primary}
+            />
+            <KpiCard
+              icon={CheckCircle2}
+              label='Approuvés'
+              value={kpis ? String(kpis.approuves) : '—'}
+              hint={'statut Approuvé'}
+              tone={KPI_TONES.green}
+            />
+            <KpiCard
+              icon={PackageCheck}
+              label='Reçus'
+              value={kpis ? String(kpis.recus) : '—'}
+              hint={'avec date de réception'}
+              tone={KPI_TONES.sky}
+            />
+            <KpiCard
+              icon={Hourglass}
+              label='En attente de réception'
+              value={kpis ? String(kpis.enAttente) : '—'}
+              hint={'pas encore reçus'}
+              tone={KPI_TONES.amber}
+            />
+          </KpiStrip>
         </div>
 
         <DataTable
@@ -327,7 +364,7 @@ const BonsDeCommande = () => {
             <button
               type='button'
               onClick={handleDownloadTemplate}
-              className='flex items-center gap-2 w-full rounded-md border bg-blue-50 px-4 py-3 text-sm text-blue-700 hover:bg-blue-100 text-left'
+              className='flex items-center gap-2 w-full rounded-md border bg-sky-500/10 px-4 py-3 text-sm text-sky-700 dark:text-sky-400 hover:bg-sky-500/10 text-left'
             >
               <Download className='h-4 w-4 shrink-0' />
               <span className='underline font-medium'>Téléchargez le modèle de fichier d&apos;importation.</span>

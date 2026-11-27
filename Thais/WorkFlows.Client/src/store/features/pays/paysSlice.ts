@@ -50,7 +50,7 @@ export const getUniqueColumnValues = createAsyncThunk<
         columnName: string;
         values: Array<{ value: string | number; label: string; count: number }>;
       }[]
-    >(`${API_BASE_URL}/api/countries/unique-values`, { columnNames });
+    >(`${API_BASE_URL}/api/pays/unique-values`, { columnNames });
     return data;
   } catch (error: unknown) {
     const axiosError = error as AxiosError<ErrorResponse>;
@@ -101,7 +101,7 @@ export const getAllPays = createAsyncThunk<
       totalCount: number;
       pageNumber: number;
       pageSize: number;
-    }>(`${API_BASE_URL}/api/countries?${urlParams.toString()}`);
+    }>(`${API_BASE_URL}/api/pays?${urlParams.toString()}`);
 
     return data;
   } catch (error: unknown) {

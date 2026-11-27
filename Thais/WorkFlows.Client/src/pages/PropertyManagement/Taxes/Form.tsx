@@ -1,3 +1,4 @@
+import { GridSection as Section, FormGroupTitle } from '@/components/form/form-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -21,33 +22,13 @@ import { lookupModules } from '@/store/features/configuration/lookupModules';
 import { TaxeRequest, TaxeRequestSchema } from '@/store/features/property-management/taxe-schemas';
 import { createTaxe, editTaxe, getTaxeById, resetTaxe } from '@/store/features/property-management/taxesSlice';
 import { useAppSelector } from '@/store/hooks';
-import { Info, Landmark, ArrowLeft, Save } from 'lucide-react';
+import { Landmark, ArrowLeft, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
 import { z } from 'zod';
 
 const backPath = '/property-management/taxes';
-
-const Section = ({
-  icon: Icon,
-  title,
-  children,
-}: {
-  icon: typeof Info;
-  title: string;
-  children: React.ReactNode;
-}) => (
-  <div className='border rounded-lg overflow-hidden'>
-    <div className='bg-gray-50 px-4 py-3 flex items-center gap-2 border-b'>
-      <div className='flex items-center justify-center h-7 w-7 rounded-full bg-blue-100 text-blue-600'>
-        <Icon className='h-4 w-4' />
-      </div>
-      <h3 className='text-base font-semibold text-gray-900'>{title}</h3>
-    </div>
-    <div className='p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4'>{children}</div>
-  </div>
-);
 
 const emptyForm: TaxeRequest = {
   noBuilding: 0,
@@ -173,7 +154,9 @@ const Form = ({ details }: { details?: boolean }) => {
       <CardContent className='py-6 px-4 sm:px-6 space-y-6'>
         <form onSubmit={handleSubmit} className='space-y-6'>
           <Section icon={Landmark} title='Informations'>
-            <div className='space-y-2'>
+            <FormGroupTitle>Rattachement</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='noBuilding' className='text-sm font-medium'>
                 <span className='text-red-500'>* </span>Actif
               </Label>
@@ -196,7 +179,7 @@ const Form = ({ details }: { details?: boolean }) => {
               {errors.noBuilding && <p className='text-red-600 text-sm'>{errors.noBuilding}</p>}
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='noLocal' className='text-sm font-medium'>
                 Local
               </Label>
@@ -219,7 +202,7 @@ const Form = ({ details }: { details?: boolean }) => {
               </Select>
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='noLocataire' className='text-sm font-medium'>
                 Locataire
               </Label>
@@ -242,7 +225,9 @@ const Form = ({ details }: { details?: boolean }) => {
               </Select>
             </div>
 
-            <div className='space-y-2'>
+            <FormGroupTitle>Taxe</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='noType' className='text-sm font-medium'>
                 <span className='text-red-500'>* </span>Type de taxe
               </Label>
@@ -265,31 +250,7 @@ const Form = ({ details }: { details?: boolean }) => {
               {errors.noType && <p className='text-red-600 text-sm'>{errors.noType}</p>}
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='idFiscal' className='text-sm font-medium'>
-                ID Fiscal
-              </Label>
-              <Input
-                id='idFiscal'
-                value={formData.idFiscal ?? ''}
-                onChange={(e) => handleChange('idFiscal', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='noArticle' className='text-sm font-medium'>
-                N° Article
-              </Label>
-              <Input
-                id='noArticle'
-                value={formData.noArticle ?? ''}
-                onChange={(e) => handleChange('noArticle', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='annee' className='text-sm font-medium'>
                 <span className='text-red-500'>* </span>Année
               </Label>
@@ -304,7 +265,33 @@ const Form = ({ details }: { details?: boolean }) => {
               {errors.annee && <p className='text-red-600 text-sm'>{errors.annee}</p>}
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='noArticle' className='text-sm font-medium'>
+                N° Article
+              </Label>
+              <Input
+                id='noArticle'
+                value={formData.noArticle ?? ''}
+                onChange={(e) => handleChange('noArticle', e.target.value)}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='idFiscal' className='text-sm font-medium'>
+                ID Fiscal
+              </Label>
+              <Input
+                id='idFiscal'
+                value={formData.idFiscal ?? ''}
+                onChange={(e) => handleChange('idFiscal', e.target.value)}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <FormGroupTitle>Paiement</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='montantTaxe' className='text-sm font-medium'>
                 Montant
               </Label>
@@ -318,6 +305,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
+            <div className='col-span-12 sm:col-span-6 md:col-span-4'>
             <div className='flex items-center gap-2 pt-6'>
               <Checkbox
                 id='paye'
@@ -327,8 +315,9 @@ const Form = ({ details }: { details?: boolean }) => {
               />
               <Label htmlFor='paye'>Payé</Label>
             </div>
+            </div>
 
-            <div className='space-y-2 col-span-full'>
+            <div className='min-w-0 space-y-1.5 col-span-12'>
               <Label htmlFor='notes' className='text-sm font-medium'>
                 Notes
               </Label>
@@ -345,7 +334,8 @@ const Form = ({ details }: { details?: boolean }) => {
       </CardContent>
       <Separator />
       <CardFooter className='flex justify-end gap-2 mt-6'>
-        <Button variant='secondary' onClick={() => navigate(backPath)}>
+        <Button variant='outline'
+          className='border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary' onClick={() => navigate(backPath)}>
           <ArrowLeft />
           Retour
         </Button>

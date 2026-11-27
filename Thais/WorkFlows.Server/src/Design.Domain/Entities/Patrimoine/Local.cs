@@ -31,6 +31,10 @@ public class Local : Base
     public decimal? ValeurInventaire { get; set; }
     public decimal? ValeurRealisation { get; set; }
     public string? Observation { get; set; }
+
+    // RMANew (DataEntryLocaux) : image et plan du local (colonnes Image et PlanLocal).
+    public string? Image { get; set; }
+    public string? PlanLocal { get; set; }
     public string? Etat { get; set; } // Bon / Moyen / Mauvais / Très Mauvais
     public string? Demande { get; set; } // Demandé / Moins Demandé / Très Demandé
     public string? Suggestion { get; set; }

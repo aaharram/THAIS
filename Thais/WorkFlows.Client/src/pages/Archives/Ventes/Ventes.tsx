@@ -1,6 +1,6 @@
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
-import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/table/list-cells';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Title } from '@/components/ui/title';
@@ -221,22 +221,18 @@ const ArchivesVentes = () => {
       header: () => <div className='text-right'>Détails</div>,
       cell: ({ row }) => (
         <div className='flex justify-end'>
-          <Button
-            type='button'
-            variant='ghost'
-            size='icon'
-            title='Modifier'
-            onClick={(e) => {
-              e.stopPropagation();
+          <ActionButton
+            icon={Pencil}
+            label='Modifier'
+            onClick={() => {
               navigate(
                 row.original.type === 'building'
                   ? `/patrimoine/actifs/modifier/${row.original.numero}`
                   : `/patrimoine/locaux/modifier/${row.original.numero}`,
               );
             }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
+            className='text-yellow-600 hover:bg-yellow-500/10 hover:text-yellow-600'
+          />
         </div>
       ),
     },

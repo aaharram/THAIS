@@ -1,6 +1,7 @@
 import { BaseDialog } from '@/components/dialog/dialog';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { RowActions } from '@/components/table/list-cells';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar.tsx';
 import { Badge } from '@/components/ui/badge.tsx';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,6 @@ import { Title } from '@/components/ui/title.tsx';
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip.tsx';
 import { MembersResponse } from '@/store/features/members/members-schemas';
@@ -21,7 +21,7 @@ import {
 } from '@/store/features/members/membersSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { ColumnDef } from '@tanstack/react-table';
-import { Pencil, Plus, Trash2, User } from 'lucide-react';
+import { Plus, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Card, CardContent } from '../../../../components/ui/card';
@@ -272,51 +272,15 @@ function Members() {
       id: 'actions',
       header: () => <div className='text-right'>Actions</div>,
       cell: ({ row }) => (
-        <div className='flex justify-end gap-2'>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  className='h-8 w-8 p-0 hover:bg-yellow-100'
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    dispatch(setMembers(row.original));
-                    const id = row.original.numero;
-                    navigate(`modifier/${id}`);
-                  }}
-                >
-                  <Pencil className='h-4 w-4 text-yellow-600' />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Modifier le batiment</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  className='h-8 w-8 p-0 hover:bg-red-100'
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(row.original);
-                  }}
-                >
-                  <Trash2 className='h-4 w-4 text-red-600' />{' '}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Supprimer le batiment</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+        <RowActions
+          editLabel='Modifier le membre'
+          deleteLabel='Supprimer le membre'
+          onEdit={() => {
+            dispatch(setMembers(row.original));
+            navigate(`modifier/${row.original.numero}`);
+          }}
+          onDelete={() => handleDelete(row.original)}
+        />
       ),
     },
   ];

@@ -1,8 +1,10 @@
 import { ExportTiles } from '@/components/export/export-tiles';
 import type ExcelJS from 'exceljs';
 import { BaseDialog } from '@/components/dialog/dialog';
+import { fetchAllPages } from '@/components/export/export-menu';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { Chip, KPI_TONES, KpiCard, KpiStrip, PrimarySecondary, RowActions, fmtMoney as fmtKpi } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,8 +25,8 @@ import {
 } from '@/store/features/patrimoine/amortissementsSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { ColumnDef } from '@tanstack/react-table';
-import { ClipboardList, Download, Pencil, Plus, RefreshCw, Trash2, Upload } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { ClipboardList, Download, Plus, RefreshCw, TrendingDown, Upload, Wallet } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 const MOIS_CAPITALISES = [
@@ -89,6 +91,26 @@ const Amortissements = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<TableauAmortissementResponse | null>(null);
   const [search, setSearch] = useState('');
+  // Tous les enregistrements (hors pagination) pour le bandeau de synthèse.
+  const [stats, setStats] = useState<TableauAmortissementResponse[] | null>(null);
+  const loadStats = useCallback(() => {
+    fetchAllPages<TableauAmortissementResponse>('/api/tableau-amortissement')
+      .then(setStats)
+      .catch(() => setStats([]));
+  }, []);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
+
+  const kpis = useMemo(() => {
+    if (!stats) return null;
+    return {
+      total: stats.length,
+      valeur: stats.reduce((s, a) => s + (a.vaPrixAcquisition ?? 0), 0),
+      amorti: stats.reduce((s, a) => s + (a.totalAmortiAlaFin ?? 0), 0),
+    };
+  }, [stats]);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
@@ -145,7 +167,7 @@ const Amortissements = () => {
 
   const confirmDelete = () => {
     if (selectedItem) {
-      dispatch(deleteAmortissement(selectedItem.numero));
+      dispatch(deleteAmortissement(selectedItem.numero)).then(() => loadStats());
       setSelectedItem(null);
       setDeleteDialogOpen(false);
     }
@@ -311,12 +333,12 @@ const Amortissements = () => {
     {
       accessorKey: 'numero',
       header: ({ column }) => <DataTableColumnHeader column={column} title='N°' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.numero}</div>,
+      cell: ({ row }) => <Chip className='font-mono'>{row.original.numero}</Chip>,
     },
     {
       accessorKey: 'nomBuilding',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Désignation' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomBuilding || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomBuilding} />,
     },
     {
       accessorKey: 'nomImmobConcernees',
@@ -327,39 +349,39 @@ const Amortissements = () => {
       id: 'dateEntree',
       accessorFn: (row) => fmtDate(row.dateEntree),
       header: ({ column }) => <DataTableColumnHeader column={column} title="Date d'entrée" />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateEntree)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.dateEntree)}</span>,
     },
     {
       accessorKey: 'vaPrixAcquisition',
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Valeur à amortir/prix d'acquisition" />
       ),
-      cell: ({ row }) => <div className='font-medium'>{row.original.vaPrixAcquisition}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap tabular-nums'>{row.original.vaPrixAcquisition != null ? fmtKpi(row.original.vaPrixAcquisition) : '—'}</span>,
     },
     {
       accessorKey: 'valeurTerrain',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Valeur Terrain' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.valeurTerrain ?? '-'}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap tabular-nums'>{row.original.valeurTerrain != null ? fmtKpi(row.original.valeurTerrain) : '—'}</span>,
     },
     {
       accessorKey: 'valeurConstruction',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Valeur Construction' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.valeurConstruction ?? '-'}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap tabular-nums'>{row.original.valeurConstruction != null ? fmtKpi(row.original.valeurConstruction) : '—'}</span>,
     },
     {
       accessorKey: 'valeurAmenagement',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Valeur Aménagement' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.valeurAmenagement ?? '-'}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap tabular-nums'>{row.original.valeurAmenagement != null ? fmtKpi(row.original.valeurAmenagement) : '—'}</span>,
     },
     {
       accessorKey: 'amortiAnterieurs',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Amortissements antérieurs' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.amortiAnterieurs}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap tabular-nums'>{row.original.amortiAnterieurs != null ? fmtKpi(row.original.amortiAnterieurs) : '—'}</span>,
     },
     {
       accessorKey: 'amortiDbeneficebTaux',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Amortissements Taux' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.amortiDbeneficebTaux}%</div>,
+      cell: ({ row }) => <Chip>{row.original.amortiDbeneficebTaux}%</Chip>,
     },
     {
       accessorKey: 'amortiDbenficebDuree',
@@ -369,12 +391,12 @@ const Amortissements = () => {
     {
       accessorKey: 'amortiDbeneficebNorm',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Amortissements normaux' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.amortiDbeneficebNorm}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap tabular-nums'>{row.original.amortiDbeneficebNorm != null ? fmtKpi(row.original.amortiDbeneficebNorm) : '—'}</span>,
     },
     {
       accessorKey: 'totalAmortiAlaFin',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Total des amortissements' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.totalAmortiAlaFin}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap tabular-nums'>{row.original.totalAmortiAlaFin != null ? fmtKpi(row.original.totalAmortiAlaFin) : '—'}</span>,
     },
     {
       id: 'dateProchaineAmorti',
@@ -382,22 +404,22 @@ const Amortissements = () => {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Date prochaine d'amortissement" />
       ),
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateProchaineAmorti)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.dateProchaineAmorti)}</span>,
     },
     {
       accessorKey: 'compteComptable',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Compte' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.compteComptable || '-'}</div>,
+      cell: ({ row }) => row.original.compteComptable ? <Chip className='font-mono'>{row.original.compteComptable}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'compteGeneral',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Sous Compte' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.compteGeneral || '-'}</div>,
+      cell: ({ row }) => row.original.compteGeneral ? <Chip className='font-mono'>{row.original.compteGeneral}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'nAffectation',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Affectation' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nAffectation || '-'}</div>,
+      cell: ({ row }) => row.original.nAffectation ? <Chip className='font-mono'>{row.original.nAffectation}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'titreFoncier',
@@ -408,30 +430,7 @@ const Amortissements = () => {
       id: 'actions',
       header: () => <div className='text-right'>Actions</div>,
       cell: ({ row }) => (
-        <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`modifier/${row.original.numero}`);
-            }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-red-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row.original);
-            }}
-          >
-            <Trash2 className='h-4 w-4 text-red-600' />
-          </Button>
-        </div>
+        <RowActions onEdit={() => navigate(`modifier/${row.original.numero}`)} onDelete={() => handleDelete(row.original)} />
       ),
     },
   ];
@@ -455,6 +454,30 @@ const Amortissements = () => {
             title="Tableau d'amortissement"
             description="Suivi des amortissements des immobilisations"
           />
+
+          <KpiStrip>
+            <KpiCard
+              icon={ClipboardList}
+              label='Immobilisations'
+              value={kpis ? String(kpis.total) : '—'}
+              hint="tableaux d'amortissement"
+              tone={KPI_TONES.primary}
+            />
+            <KpiCard
+              icon={Wallet}
+              label='Valeur à amortir'
+              value={kpis ? `${fmtKpi(kpis.valeur)} MAD` : '—'}
+              hint="prix d'acquisition cumulé"
+              tone={KPI_TONES.sky}
+            />
+            <KpiCard
+              icon={TrendingDown}
+              label='Total amorti'
+              value={kpis ? `${fmtKpi(kpis.amorti)} MAD` : '—'}
+              hint={kpis && kpis.valeur ? `${Math.round((kpis.amorti / kpis.valeur) * 100)} % de la valeur` : undefined}
+              tone={KPI_TONES.green}
+            />
+          </KpiStrip>
         </div>
 
         <div className='overflow-x-auto'>
@@ -538,7 +561,7 @@ const Amortissements = () => {
             <button
               type='button'
               onClick={handleDownloadTemplate}
-              className='flex items-center gap-2 w-full rounded-md border bg-blue-50 px-4 py-3 text-sm text-blue-700 hover:bg-blue-100 text-left'
+              className='flex items-center gap-2 w-full rounded-md border bg-sky-500/10 px-4 py-3 text-sm text-sky-700 dark:text-sky-400 hover:bg-sky-500/10 text-left'
             >
               <Download className='h-4 w-4 shrink-0' />
               <span className='underline font-medium'>Téléchargez le modèle de fichier d&apos;importation.</span>

@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router';
 import { Card, CardContent } from '@/components/ui/card';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
@@ -33,6 +34,8 @@ const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString('fr-F
 const fmtMontant = (m: number) => m.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const ArchivesAnnulationsQuittances = () => {
+  const [searchParams] = useSearchParams();
+  const fromReporting = searchParams.get('from') === 'reporting';
   const dispatch = useAppDispatch();
   const { allItems, totalCount, pageNumber, pageSize, loading } = useAppSelector((state) => state.factures);
   const [search, setSearch] = useState('');
@@ -99,7 +102,7 @@ const ArchivesAnnulationsQuittances = () => {
     {
       accessorKey: 'montant',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Montant (MAD)' />,
-      cell: ({ row }) => <div className='font-bold text-red-700'>{fmtMontant(row.original.montant)}</div>,
+      cell: ({ row }) => <div className='font-bold text-red-700 dark:text-red-400'>{fmtMontant(row.original.montant)}</div>,
     },
   ];
 
@@ -141,7 +144,7 @@ const ArchivesAnnulationsQuittances = () => {
         <div className='space-y-4'>
           <Title
             icon={Archive}
-            title='Archives — Annulations Quittances'
+            title={fromReporting ? 'Reporting — Etat Annulation des Quittances' : 'Archives — Annulations Quittances'}
             description='Quittances / factures annulées'
             buttons={[{ label: 'Export PDF', icon: Download, variant: 'outline', onClick: handleExportPdf }]}
           />
