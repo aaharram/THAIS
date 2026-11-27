@@ -1,8 +1,17 @@
+import { fetchAllPages } from '@/components/export/export-menu';
 import { ExportTiles } from '@/components/export/export-tiles';
-import { BaseDialog } from '@/components/dialog/dialog';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
-import { Button } from '@/components/ui/button';
+import {
+  fmtMoney,
+  IconTile,
+  KPI_TONES,
+  KpiCard,
+  KpiStrip,
+  MoneyCell,
+  PrimarySecondary,
+  RowActions,
+} from '@/components/table/list-cells';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Title } from '@/components/ui/title';
@@ -10,7 +19,6 @@ import { getDashboardActifs } from '@/store/features/dashboard/dashboardSlice';
 import { lookupModules } from '@/store/features/configuration/lookupModules';
 import { BuildingResponse } from '@/store/features/patrimoine/building-schemas';
 import {
-  deleteBuilding,
   getAllBuildings,
   resetBuilding,
   setBuilding,
@@ -23,9 +31,10 @@ import { ACTIFS_IMPORT } from '@/utils/import/import-configs';
 import { formatSurface } from '@/utils/formatters';
 import { generateFicheSignaletique } from '@/utils/reports/ficheSignaletique';
 import { ColumnDef } from '@tanstack/react-table';
-import { Building2, CirclePlus, Download, ImageOff, Pencil, Plus, Trash2, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Banknote, Building2, CirclePlus, FileDown, Home, Percent, Plus, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
+import { BuildingThumb } from './BuildingThumb';
 
 const Buildings = () => {
   const dispatch = useAppDispatch();
@@ -34,10 +43,8 @@ const Buildings = () => {
   const { allItems, totalCount, pageNumber, pageSize, loading } = useAppSelector(
     (state) => state.buildings,
   );
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<BuildingResponse | null>(null);
   const [search, setSearch] = useState('');
-  const [noProprietaire, setNoProprietaire] = useState<string>('0');
+  const [noProprietaire, setNoProprietaire] = useState<string>(searchParams.get('proprietaire') ?? '0'); // ?proprietaire= : filtre d'Asset Management
   const { allItems: proprietaires } = useAppSelector((state) => state.cfgProprietaires);
   const { actifs } = useAppSelector((state) => state.dashboard);
 
@@ -50,6 +57,33 @@ const Buildings = () => {
     ...(noProprietaire !== '0' ? { NoProprietaire: [Number(noProprietaire)] } : {}),
   };
   const filters = Object.keys(filterMap).length > 0 ? filterMap : undefined;
+
+  // Tous les actifs (hors pagination, mêmes filtres) pour le bandeau de synthèse.
+  const [stats, setStats] = useState<BuildingResponse[] | null>(null);
+  const statsKey = JSON.stringify(filterMap);
+  const loadStats = useCallback(() => {
+    fetchAllPages<BuildingResponse>('/api/buildings', '', JSON.parse(statsKey))
+      .then(setStats)
+      .catch(() => setStats([]));
+  }, [statsKey]);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
+
+  const kpis = useMemo(() => {
+    if (!stats) return null;
+    const locaux = stats.reduce((sum, b) => sum + b.nbLocaux, 0);
+    const baux = stats.reduce((sum, b) => sum + b.nbBaux, 0);
+    return {
+      actifs: stats.length,
+      surface: stats.reduce((sum, b) => sum + (b.surfaceUtile ?? 0), 0),
+      locaux,
+      baux,
+      taux: locaux > 0 ? Math.round((baux / locaux) * 100) : 0,
+      revenu: stats.reduce((sum, b) => sum + b.revenuAnnuel, 0),
+    };
+  }, [stats]);
 
   useEffect(() => {
     dispatch(lookupModules.cfgProprietaires.getAll({ pageSize: 1000 }));
@@ -73,18 +107,6 @@ const Buildings = () => {
     });
   };
 
-  const handleDelete = (item: BuildingResponse) => {
-    setSelectedItem(item);
-    setDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = () => {
-    if (selectedItem) {
-      dispatch(deleteBuilding(selectedItem.numero));
-      setSelectedItem(null);
-      setDeleteDialogOpen(false);
-    }
-  };
 
   // Export : toute la liste (recherche + filtres inclus), pas seulement la page affichée.
   // Le backend plafonne pageSize à 100, donc on parcourt les pages.
@@ -200,34 +222,9 @@ const Buildings = () => {
   // Ordre dans l'en-tête (comme RMANew) : filtre propriétaire -> Export -> Ajouter.
   const headerActions = (
     <>
-      <div className='w-52'>
-        <Select
-          value={actifId ? actifId.toString() : '0'}
-          onValueChange={(v) =>
-            setSearchParams((prev) => {
-              const next = new URLSearchParams(prev);
-              if (v === '0') next.delete('actif');
-              else next.set('actif', v);
-              return next;
-            })
-          }
-        >
-          <SelectTrigger className='h-8'>
-            <SelectValue placeholder='Tous les actifs' />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value='0'>Tous les actifs</SelectItem>
-            {actifs.map((b) => (
-              <SelectItem key={b.numero} value={b.numero.toString()}>
-                {b.designation}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className='w-52'>
+      <div className='w-56'>
         <Select value={noProprietaire} onValueChange={setNoProprietaire}>
-          <SelectTrigger className='h-8'>
+          <SelectTrigger className='h-10 rounded-lg bg-card'>
             <SelectValue placeholder='Tous les propriétaires' />
           </SelectTrigger>
           <SelectContent>
@@ -243,191 +240,171 @@ const Buildings = () => {
       <ExportTiles onPdf={handleExportPdf} onExcel={handleExportExcel} />
       <ImportMenu
         config={ACTIFS_IMPORT}
-        onImported={() => dispatch(getAllBuildings({ pageNumber: 1, pageSize, search, filters }))}
+        onImported={() => {
+          dispatch(getAllBuildings({ pageNumber: 1, pageSize, search, filters }));
+          loadStats();
+        }}
       />
     </>
   );
 
+  const openBuilding = (building: BuildingResponse, mode: 'details' | 'modifier') => {
+    dispatch(setBuilding(building));
+    navigate(`${mode}/${building.numero}`);
+  };
+
+  // Compteur cliquable (locaux / baux) suivi du « + » d'ajout : mêmes liens que RMANew.
+  const CountLink = ({
+    label,
+    count,
+    to,
+    addTo,
+    addLabel,
+  }: {
+    label: string;
+    count: number;
+    to: string;
+    addTo: string;
+    addLabel: string;
+  }) => (
+    <div className='flex items-center gap-1.5'>
+      <button
+        type='button'
+        className='inline-flex h-6 items-center gap-1 rounded-full bg-primary/10 px-2.5 text-xs font-semibold text-primary hover:bg-primary/20 disabled:cursor-default disabled:hover:bg-primary/10'
+        disabled={count === 0}
+        onClick={(e) => {
+          e.stopPropagation();
+          navigate(to);
+        }}
+      >
+        {count} <span className='font-normal'>{label}</span>
+      </button>
+      <button
+        type='button'
+        className='text-primary hover:text-primary/70'
+        title={addLabel}
+        aria-label={addLabel}
+        onClick={(e) => {
+          e.stopPropagation();
+          navigate(addTo);
+        }}
+      >
+        <CirclePlus className='h-4 w-4' />
+      </button>
+    </div>
+  );
+
   const columns: ColumnDef<BuildingResponse>[] = [
     {
-      id: 'image',
-      size: 70,
-      header: 'Image',
-      cell: () => (
-        <div className='flex items-center justify-center h-9 w-9 rounded-md bg-gray-100 text-gray-400'>
-          <ImageOff className='h-4 w-4' />
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'codeImmeuble',
-      size: 120,
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Code Analytique' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.getValue('codeImmeuble')}</div>,
-    },
-    {
       accessorKey: 'designation',
-      size: 180,
       header: ({ column }) => <DataTableColumnHeader column={column} title='Actif' sorting />,
-      cell: ({ row }) => (
-        // RMANew (ListBuilding.vb, GenerateTable) : colonne "Immeuble" en
-        // white-space:nowrap + text-overflow:ellipsis (tooltip natif via title) plutôt
-        // que du texte qui retombe à la ligne.
-        <div className='font-medium truncate' title={row.getValue('designation')}>
-          {row.getValue('designation')}
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'nomBuildingType',
-      size: 100,
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Typologie' />,
-      cell: ({ row }) => <div className='font-medium truncate'>{row.original.nomBuildingType || '-'}</div>,
+      cell: ({ row }) => {
+        const b = row.original;
+        return (
+          // RMANew (ListBuilding.vb) : désignation sur une ligne (ellipse + tooltip) ; code, typologie et ville dessous.
+          <div className='flex min-w-[240px] items-center gap-3'>
+            <BuildingThumb fileName={b.buildingImage} />
+            <PrimarySecondary
+              primary={b.designation}
+              secondary={[b.codeImmeuble, b.nomBuildingType, b.nomCity].filter(Boolean).join(' · ')}
+            />
+          </div>
+        );
+      },
     },
     {
       accessorKey: 'titreFoncier',
-      size: 140,
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Titre Foncier' />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title='Titre foncier' />,
       cell: ({ row }) => (
-        <div className='font-medium truncate' title={row.original.titreFoncier ?? undefined}>
-          {row.original.titreFoncier || '-'}
+        <div className='max-w-[180px] truncate' title={row.original.titreFoncier ?? undefined}>
+          {row.original.titreFoncier || <span className='text-muted-foreground'>—</span>}
         </div>
       ),
-    },
-    {
-      accessorKey: 'nomCity',
-      size: 100,
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Ville' />,
-      cell: ({ row }) => <div className='font-medium truncate'>{row.original.nomCity || '-'}</div>,
     },
     {
       accessorKey: 'surfaceUtile',
-      size: 100,
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Superficie (m²)' />,
-      cell: ({ row }) => <div className='font-medium'>{formatSurface(row.original.surfaceUtile)}</div>,
+      header: ({ column }) => <DataTableColumnHeader column={column} title='Superficie' />,
+      cell: ({ row }) => (
+        <span className='whitespace-nowrap font-medium tabular-nums'>
+          {row.original.surfaceUtile != null ? `${formatSurface(row.original.surfaceUtile)} m²` : '—'}
+        </span>
+      ),
     },
     {
-      accessorKey: 'nbLocaux',
-      size: 90,
-      header: () => <div className='text-center'>Locaux</div>,
+      id: 'patrimoine',
+      accessorFn: (row) => `${row.nbLocaux} locaux ${row.nbBaux} baux`,
+      header: () => <div>Locaux / Baux</div>,
       cell: ({ row }) => (
-        <div className='flex items-center justify-center gap-1.5'>
-          <button
-            type='button'
-            className='inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary/10 px-2 text-xs font-semibold text-primary hover:bg-primary/20 disabled:cursor-default disabled:hover:bg-primary/10'
-            disabled={row.original.nbLocaux === 0}
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/patrimoine/locaux?building=${row.original.numero}`);
-            }}
-          >
-            {row.original.nbLocaux}
-          </button>
-          <button
-            type='button'
-            className='text-primary hover:text-primary/70'
-            title='Ajouter un local'
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/patrimoine/locaux/ajouter?building=${row.original.numero}`);
-            }}
-          >
-            <CirclePlus className='h-4 w-4' />
-          </button>
+        <div className='space-y-1.5'>
+          <CountLink
+            label='locaux'
+            count={row.original.nbLocaux}
+            to={`/patrimoine/locaux?building=${row.original.numero}`}
+            addTo={`/patrimoine/locaux/ajouter?building=${row.original.numero}`}
+            addLabel='Ajouter un local'
+          />
+          <CountLink
+            label='baux'
+            count={row.original.nbBaux}
+            to={`/leasing-management/baux?building=${row.original.numero}`}
+            addTo={`/leasing-management/baux/ajouter?building=${row.original.numero}`}
+            addLabel='Ajouter un bail'
+          />
         </div>
       ),
     },
     {
-      accessorKey: 'nbBaux',
-      size: 90,
-      header: () => <div className='text-center'>Baux</div>,
-      cell: ({ row }) => (
-        <div className='flex items-center justify-center gap-1.5'>
-          <button
-            type='button'
-            className='inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary/10 px-2 text-xs font-semibold text-primary hover:bg-primary/20 disabled:cursor-default disabled:hover:bg-primary/10'
-            disabled={row.original.nbBaux === 0}
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/leasing-management/baux?building=${row.original.numero}`);
-            }}
-          >
-            {row.original.nbBaux}
-          </button>
-          <button
-            type='button'
-            className='text-primary hover:text-primary/70'
-            title='Ajouter un bail'
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/leasing-management/baux/ajouter?building=${row.original.numero}`);
-            }}
-          >
-            <CirclePlus className='h-4 w-4' />
-          </button>
-        </div>
-      ),
-    },
-    {
-      // RMANew (ListBuilding.vb) : Taux = (NbBaux / NbLots) * 100 - la même formule
-      // simple qui alimente réellement cette colonne affichée, pas le taux pondéré par
-      // surface calculé ailleurs dans ce même fichier mais jamais utilisé ici.
+      // RMANew (ListBuilding.vb) : Taux = (NbBaux / NbLots) * 100 - la même formule simple qui alimente réellement
+      // cette colonne, pas le taux pondéré par surface calculé ailleurs dans ce même fichier mais jamais utilisé ici.
       id: 'tauxOccupation',
-      // "Taux d'occupation (%)" a 3 mots séparés par des espaces - en dessous de ~125px
-      // le libellé retombe sur 3 lignes ("Taux" / "d'occupation" / "(%)") au lieu de 2
-      // ("Taux d'occupation" / "(%)"), d'où cette largeur un peu plus généreuse.
-      size: 130,
       accessorFn: (row) => (row.nbLocaux > 0 ? (row.nbBaux / row.nbLocaux) * 100 : 0),
-      header: () => <div className='text-center'>Taux d&apos;occupation (%)</div>,
+      header: () => <div>Taux d&apos;occupation</div>,
       cell: ({ row }) => {
-        const taux = row.original.nbLocaux > 0 ? (row.original.nbBaux / row.original.nbLocaux) * 100 : 0;
-        return <div className='font-medium text-center'>{taux.toLocaleString('fr-FR', { maximumFractionDigits: 2 })}%</div>;
+        const { nbBaux, nbLocaux } = row.original;
+        const taux = nbLocaux > 0 ? (nbBaux / nbLocaux) * 100 : 0;
+        const barre = taux >= 90 ? 'bg-emerald-500' : taux >= 60 ? 'bg-amber-500' : 'bg-red-500';
+        return (
+          <div className='min-w-[130px] space-y-1.5'>
+            <div className='flex items-baseline justify-between gap-2'>
+              <span className='font-semibold tabular-nums'>{taux.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} %</span>
+              <span className='whitespace-nowrap text-xs text-muted-foreground'>
+                {nbBaux}/{nbLocaux} locaux
+              </span>
+            </div>
+            <div className='h-1.5 w-full overflow-hidden rounded-full bg-muted'>
+              <div className={`h-full rounded-full ${barre}`} style={{ width: `${Math.min(100, taux)}%` }} />
+            </div>
+          </div>
+        );
       },
     },
     {
       accessorKey: 'revenuAnnuel',
-      size: 130,
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Revenu annuel (MAD)' />,
+      header: () => <div className='text-right'>Revenu annuel</div>,
       cell: ({ row }) => (
-        <div className='font-medium text-right'>
-          {row.original.revenuAnnuel.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-        </div>
+        <MoneyCell
+          value={row.original.revenuAnnuel}
+          secondary={row.original.revenuAnnuel > 0 ? `${fmtMoney(row.original.revenuAnnuel / 12)} / mois` : null}
+        />
       ),
     },
     {
+      // RMANew (ListBuilding.vb) : colonne « Rendement » - le calcul n'est pas encore migré.
       id: 'rendement',
-      size: 90,
-      header: 'Rendement (%)',
-      cell: () => <div className='font-medium text-center'>-</div>,
+      header: () => <div className='text-right'>Rendement (%)</div>,
+      cell: () => <div className='text-right text-muted-foreground'>—</div>,
     },
     {
+      // RMANew (ListBuilding.vb) : colonne « Charges annuelles » - le module Charges n'alimente pas encore cette liste.
       id: 'chargesAnnuelles',
-      // Même raison que "Taux d'occupation" ci-dessus : "Charges annuelles (MAD)" a 3
-      // mots, "Charges annuelles" a besoin d'assez de place pour tenir sur une seule
-      // ligne, laissant "(MAD)" seul sur la deuxième.
-      size: 145,
-      header: 'Charges annuelles (MAD)',
-      cell: () => <div className='font-medium text-right'>-</div>,
+      header: () => <div className='text-right'>Charges annuelles (MAD)</div>,
+      cell: () => <div className='text-right text-muted-foreground'>—</div>,
     },
     {
       id: 'ficheSignaletique',
-      size: 100,
       header: () => <div className='text-center'>Fiche signalétique</div>,
       cell: ({ row }) => (
-        <div className='flex justify-center'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0'
-            title='Télécharger la fiche signalétique'
-            onClick={(e) => {
-              e.stopPropagation();
-              generateFicheSignaletique(row.original);
-            }}
-          >
-            <Download className='h-4 w-4 text-primary' />
-          </Button>
-        </div>
+        <IconTile icon={FileDown} label='Télécharger la fiche signalétique' tone='sky' onClick={() => generateFicheSignaletique(row.original)} />
       ),
     },
     {
@@ -435,31 +412,7 @@ const Buildings = () => {
       size: 100,
       header: () => <div className='text-right'>Détails</div>,
       cell: ({ row }) => (
-        <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              dispatch(setBuilding(row.original));
-              navigate(`modifier/${row.original.numero}`);
-            }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-red-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row.original);
-            }}
-          >
-            <Trash2 className='h-4 w-4 text-red-600' />
-          </Button>
-        </div>
+        <RowActions onEdit={() => openBuilding(row.original, 'modifier')} />
       ),
     },
   ];
@@ -499,6 +452,22 @@ const Buildings = () => {
               },
             ]}
           />
+          {actifId > 0 && (
+            <button
+              type='button'
+              onClick={() =>
+                setSearchParams((prev) => {
+                  const next = new URLSearchParams(prev);
+                  next.delete('actif');
+                  return next;
+                })
+              }
+              className='inline-flex items-center gap-1.5 text-sm text-primary bg-primary/10 hover:bg-primary/20 rounded-full px-3 py-1'
+            >
+              Filtré par actif : {actifs.find((b) => b.numero === actifId)?.designation ?? actifId}
+              <X className='h-3.5 w-3.5' />
+            </button>
+          )}
           {prospectionId > 0 && (
             <button
               type='button'
@@ -509,6 +478,37 @@ const Buildings = () => {
               <X className='h-3.5 w-3.5' />
             </button>
           )}
+
+          <KpiStrip>
+            <KpiCard
+              icon={Building2}
+              label={prospectionId ? 'Biens' : 'Actifs'}
+              value={kpis ? String(kpis.actifs) : '—'}
+              hint={kpis ? `${fmtMoney(kpis.surface)} m² de superficie` : undefined}
+              tone={KPI_TONES.primary}
+            />
+            <KpiCard
+              icon={Home}
+              label='Locaux'
+              value={kpis ? String(kpis.locaux) : '—'}
+              hint={kpis ? `${kpis.baux} sous bail` : undefined}
+              tone={KPI_TONES.sky}
+            />
+            <KpiCard
+              icon={Percent}
+              label="Taux d'occupation"
+              value={kpis ? `${kpis.taux} %` : '—'}
+              hint='baux / locaux'
+              tone={kpis && kpis.taux < 60 ? KPI_TONES.red : kpis && kpis.taux < 90 ? KPI_TONES.amber : KPI_TONES.green}
+            />
+            <KpiCard
+              icon={Banknote}
+              label='Revenu annuel'
+              value={kpis ? `${fmtMoney(kpis.revenu)} MAD` : '—'}
+              hint={kpis ? `soit ${fmtMoney(kpis.revenu / 12)} MAD / mois` : undefined}
+              tone={KPI_TONES.green}
+            />
+          </KpiStrip>
         </div>
 
         <DataTable
@@ -517,28 +517,10 @@ const Buildings = () => {
           searchableColumns={[{ id: 'designation', title: 'Actif' }]}
           onSearchChange={handleSearchChange}
           isLoading={loading}
-          onRowDoubleClick={(item) => {
-            dispatch(setBuilding(item));
-            navigate(`details/${item.numero}`);
-          }}
+          onRowClick={(building) => openBuilding(building, 'details')}
           pagination={pagination}
         />
 
-        <BaseDialog
-          open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
-          title='Confirmer la suppression'
-          description={`Êtes-vous sûr de vouloir désactiver "${selectedItem?.designation || ''}" ?`}
-        >
-          <div className='flex justify-end gap-2'>
-            <Button variant='outline' onClick={() => setDeleteDialogOpen(false)}>
-              Annuler
-            </Button>
-            <Button variant='destructive' onClick={confirmDelete}>
-              Désactiver
-            </Button>
-          </div>
-        </BaseDialog>
       </CardContent>
     </Card>
   );

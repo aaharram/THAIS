@@ -339,3 +339,23 @@ html[data-theme='sombre'] .hub-card { background-color: hsl(var(--primary) / 0.5
 html[data-theme='sombre'] .hub-card:hover { background-color: hsl(var(--primary) / 0.8); }
 html[data-theme='sombre'] .hub-card-icon { color: hsl(var(--primary) / 1); }
 html[data-theme='sombre'] .hub-card-title { color: hsl(0 0% 100% / 0.9); }
+
+/* Champs date : l'icône du calendrier est collée au bord droit du champ (Chrome / Edge). */
+input[type='date'],
+input[type='datetime-local'],
+input[type='month'] {
+  position: relative;
+}
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='datetime-local']::-webkit-calendar-picker-indicator,
+input[type='month']::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 0.75rem;
+  cursor: pointer;
+  opacity: 0.7;
+}
+input[type='date']::-webkit-calendar-picker-indicator:hover,
+input[type='datetime-local']::-webkit-calendar-picker-indicator:hover,
+input[type='month']::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}

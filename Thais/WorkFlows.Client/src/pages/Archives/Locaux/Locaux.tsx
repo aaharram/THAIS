@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { ActionButton } from '@/components/table/list-cells';
 import { BaseDialog } from '@/components/dialog/dialog';
 import { Title } from '@/components/ui/title';
 import { LocalResponse } from '@/store/features/patrimoine/local-schemas';
@@ -52,7 +53,7 @@ const ArchivesLocaux = () => {
       id: 'image',
       header: 'Image',
       cell: () => (
-        <div className='flex items-center justify-center h-9 w-9 rounded-md bg-gray-100 text-gray-400'>
+        <div className='flex items-center justify-center h-9 w-9 rounded-md bg-gray-100 text-muted-foreground'>
           <ImageOff className='h-4 w-4' />
         </div>
       ),
@@ -96,23 +97,19 @@ const ArchivesLocaux = () => {
       header: () => <div className='text-right'>Actions</div>,
       cell: ({ row }) => (
         <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            title='Modifier'
-            onClick={(e) => {
-              e.stopPropagation();
+          <ActionButton
+            icon={Pencil}
+            label='Modifier'
+            onClick={() => {
               dispatch(setLocal(row.original));
               navigate(`/patrimoine/locaux/modifier/${row.original.numero}`);
             }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
+            className='text-yellow-600 hover:bg-yellow-500/10 hover:text-yellow-600'
+          />
           <Button
             variant='ghost'
             size='sm'
-            className='h-8 px-2 gap-1.5 hover:bg-green-100 text-green-700'
+            className='h-8 gap-1.5 rounded-lg bg-emerald-500/10 px-3 text-emerald-700 hover:bg-emerald-500/20 hover:text-emerald-700 dark:text-emerald-400'
             title='Réactiver ce local'
             onClick={(e) => {
               e.stopPropagation();

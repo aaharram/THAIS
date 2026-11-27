@@ -398,7 +398,7 @@ const Form = ({ details }: { details?: boolean }) => {
               <h3 className='text-base font-semibold text-gray-900'>Informations</h3>
             </div>
 
-            <div className={`p-4 sm:p-6 grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-x-8 gap-y-4`}>
+            <div className={`p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-4 [&_input:not([type=checkbox])]:w-full [&_[role=combobox]]:w-full [&_textarea]:w-full`}>
               <div className='space-y-2'>
                 <Label htmlFor='firstName' className='text-sm font-medium'>
                   <span className='text-red-500'>* </span>Prenom
@@ -725,7 +725,7 @@ const Form = ({ details }: { details?: boolean }) => {
               <h3 className='text-base font-semibold text-gray-900'>Options</h3>
             </div>
 
-            <div className='p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4'>
+            <div className='p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-4 [&_input:not([type=checkbox])]:w-full [&_[role=combobox]]:w-full [&_textarea]:w-full'>
               <div>
                 <p className='font-semibold text-sm mb-2'>Achat :</p>
                 <div className='space-y-2'>
@@ -787,7 +787,7 @@ const Form = ({ details }: { details?: boolean }) => {
                   <span className='text-primary font-semibold'>
                     Ajouté par {members.nameAddUser}
                   </span>
-                  <span className='text-gray-400'>
+                  <span className='text-muted-foreground'>
                     le{' '}
                     {new Date(members.addDate).toLocaleDateString('fr-FR', {
                       weekday: 'short',
@@ -804,7 +804,7 @@ const Form = ({ details }: { details?: boolean }) => {
                   <span className='text-primary font-semibold'>
                     Mis à jour par {members.nameModUser}
                   </span>
-                  <span className='text-gray-400'>
+                  <span className='text-muted-foreground'>
                     le{' '}
                     {new Date(members.modDate).toLocaleDateString('fr-FR', {
                       weekday: 'short',

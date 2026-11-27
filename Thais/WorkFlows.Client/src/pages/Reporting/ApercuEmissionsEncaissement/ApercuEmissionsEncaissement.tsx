@@ -79,7 +79,7 @@ const ApercuEmissionsEncaissement = () => {
               <div className='border rounded-lg p-4 space-y-1'>
                 <div className='text-xs text-gray-500 uppercase tracking-wide'>Émissions</div>
                 <div className='text-2xl font-bold'>{fmtMontant(apercu.totalEmissions)}</div>
-                <div className='text-xs text-gray-400'>{apercu.nbFactures} facture(s)</div>
+                <div className='text-xs text-muted-foreground'>{apercu.nbFactures} facture(s)</div>
               </div>
               <div className='border rounded-lg p-4 space-y-1'>
                 <div className='text-xs text-gray-500 uppercase tracking-wide'>Encaissement</div>

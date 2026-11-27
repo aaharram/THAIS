@@ -1,4 +1,4 @@
-import { BaseDialog } from '@/components/dialog/dialog';
+import { GridSection as Section, FormGroupTitle } from '@/components/form/form-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -24,39 +24,20 @@ import {
 } from '@/store/features/patrimoine/local-schemas';
 import {
   createLocal,
-  deleteLocal,
   editLocal,
   getLocalById,
   resetLocal,
 } from '@/store/features/patrimoine/locauxSlice';
 import { getAllBuildings } from '@/store/features/patrimoine/buildingsSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { DollarSign, Home, Info, ArrowLeft, Save } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ArrowLeft, DollarSign, Download, FolderOpen, Home, Info, Loader2, Save } from 'lucide-react';
+import { downloadAttachment, uploadAttachment } from '@/store/services/attachments';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { z } from 'zod';
 
 const backPath = '/patrimoine/locaux';
-
-const Section = ({
-  icon: Icon,
-  title,
-  children,
-}: {
-  icon: typeof Info;
-  title: string;
-  children: React.ReactNode;
-}) => (
-  <div className='border rounded-lg overflow-hidden'>
-    <div className='bg-gray-50 px-4 py-3 flex items-center gap-2 border-b'>
-      <div className='flex items-center justify-center h-7 w-7 rounded-full bg-blue-100 text-blue-600'>
-        <Icon className='h-4 w-4' />
-      </div>
-      <h3 className='text-base font-semibold text-gray-900'>{title}</h3>
-    </div>
-    <div className='p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4'>{children}</div>
-  </div>
-);
+const ATTACHMENT_FOLDER = 'locaux';
 
 const emptyForm: LocalRequest = {
   noBuilding: 0,
@@ -98,9 +79,22 @@ const Form = ({ details }: { details?: boolean }) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const userId = useAppSelector((state) => state.auth.auth!.id);
-  const [changeToDetails, setChangeToDetails] = useState<boolean>(details ?? false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [changeToDetails] = useState<boolean>(details ?? false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  // Image et plan du local (RMANew DataEntryLocaux : LXImage / LXPlan)
+  const [pickedNames, setPickedNames] = useState<Partial<Record<'image' | 'planLocal', string>>>({});
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
+  const fileInputs = useRef<Record<string, HTMLInputElement | null>>({});
+  const handleFile = async (field: 'image' | 'planLocal', file: File) => {
+    setUploadingField(field);
+    try {
+      const stored = await uploadAttachment(ATTACHMENT_FOLDER, file);
+      setFormData((prev) => ({ ...prev, [field]: stored }));
+      setPickedNames((prev) => ({ ...prev, [field]: file.name }));
+    } finally {
+      setUploadingField(null);
+    }
+  };
 
   const item = useAppSelector((state: RootState) => state.locaux.item);
   const { allItems: buildings } = useAppSelector((state) => state.buildings);
@@ -155,6 +149,8 @@ const Form = ({ details }: { details?: boolean }) => {
         valeurInventaire: item.valeurInventaire ?? null,
         valeurRealisation: item.valeurRealisation ?? null,
         observation: item.observation ?? '',
+        image: item.image ?? null,
+        planLocal: item.planLocal ?? null,
         etat: item.etat ?? null,
         demande: item.demande ?? null,
         suggestion: item.suggestion ?? '',
@@ -210,15 +206,6 @@ const Form = ({ details }: { details?: boolean }) => {
     navigate(backPath);
   };
 
-  const confirmDelete = () => {
-    if (item) {
-      dispatch(deleteLocal(item.numero));
-      dispatch(resetLocal());
-      navigate(backPath);
-      setDeleteDialogOpen(false);
-    }
-  };
-
   return (
     <Card className='mt-4'>
       <CardHeader>
@@ -232,23 +219,15 @@ const Form = ({ details }: { details?: boolean }) => {
                 : 'Ajouter un local'
             }
           />
-          {item && (
-            <div className='flex justify-end gap-2'>
-              <Button onClick={() => setChangeToDetails(!changeToDetails)}>
-                {changeToDetails ? 'Modifier' : 'Détails'}
-              </Button>
-              <Button variant='destructive' onClick={() => setDeleteDialogOpen(true)}>
-                Supprimer
-              </Button>
-            </div>
-          )}
         </CardTitle>
       </CardHeader>
       <Separator />
       <CardContent className='py-6 px-4 sm:px-6 space-y-6'>
         <form onSubmit={handleSubmit} className='space-y-6'>
           <Section icon={Home} title='Informations'>
-            <div className='space-y-2'>
+            <FormGroupTitle>Rattachement</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='noBuilding' className='text-sm font-medium'>
                 <span className='text-red-500'>* </span>Actif
               </Label>
@@ -271,7 +250,7 @@ const Form = ({ details }: { details?: boolean }) => {
               {errors.noBuilding && <p className='text-red-600 text-sm'>{errors.noBuilding}</p>}
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='noLocalType' className='text-sm font-medium'>
                 Type Local
               </Label>
@@ -294,7 +273,7 @@ const Form = ({ details }: { details?: boolean }) => {
               </Select>
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='designation' className='text-sm font-medium'>
                 <span className='text-red-500'>* </span>Nom du local
               </Label>
@@ -308,52 +287,21 @@ const Form = ({ details }: { details?: boolean }) => {
               {errors.designation && <p className='text-red-600 text-sm'>{errors.designation}</p>}
             </div>
 
-            <div className='col-span-full grid grid-cols-2 sm:grid-cols-4 gap-3'>
-              {(
-                [
-                  ['enExploitation', 'En exploitation'],
-                  ['nondisponible', 'Non disponible'],
-                  ['moyensGeneraux', 'Moyens Généraux'],
-                  ['mettreEnLocation', 'Mettre en location'],
-                ] as const
-              ).map(([field, label]) => (
-                <label key={field} className='flex items-center gap-2 text-sm'>
-                  <Checkbox
-                    checked={formData[field]}
-                    onCheckedChange={(c) => handleChange(field, c === true)}
-                    disabled={changeToDetails}
-                  />
-                  {label}
-                </label>
-              ))}
-            </div>
+            <FormGroupTitle>Caractéristiques</FormGroupTitle>
 
-            <div className='space-y-2'>
-              <Label htmlFor='responsable' className='text-sm font-medium'>
-                Gestionnaire
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='etage' className='text-sm font-medium'>
+                Etage
               </Label>
               <Input
-                id='responsable'
-                value={formData.responsable ?? ''}
-                onChange={(e) => handleChange('responsable', e.target.value)}
+                id='etage'
+                value={formData.etage ?? ''}
+                onChange={(e) => handleChange('etage', e.target.value)}
                 disabled={changeToDetails}
               />
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='nbrePiece' className='text-sm font-medium'>
-                Nbr place parking
-              </Label>
-              <Input
-                id='nbrePiece'
-                type='number'
-                value={formData.nbrePiece ?? ''}
-                onChange={(e) => handleChange('nbrePiece', numOrNull(e.target.value) as number | null)}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='surface' className='text-sm font-medium'>
                 Superficie
               </Label>
@@ -367,7 +315,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='terrasse' className='text-sm font-medium'>
                 Terrasse/Mezzanine
               </Label>
@@ -381,24 +329,25 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label className='text-sm font-medium'>Surface pondérée</Label>
               <Input value={surfacePonderee || '-'} readOnly disabled className='bg-gray-50' />
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='address1' className='text-sm font-medium'>
-                Adresse
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='nbrePiece' className='text-sm font-medium'>
+                Nbr place parking
               </Label>
               <Input
-                id='address1'
-                value={formData.address1 ?? ''}
-                onChange={(e) => handleChange('address1', e.target.value)}
+                id='nbrePiece'
+                type='number'
+                value={formData.nbrePiece ?? ''}
+                onChange={(e) => handleChange('nbrePiece', numOrNull(e.target.value) as number | null)}
                 disabled={changeToDetails}
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='titreFoncier' className='text-sm font-medium'>
                 Titre Foncier
               </Label>
@@ -421,19 +370,19 @@ const Form = ({ details }: { details?: boolean }) => {
               </div>
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='etage' className='text-sm font-medium'>
-                Etage
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='responsable' className='text-sm font-medium'>
+                Gestionnaire
               </Label>
               <Input
-                id='etage'
-                value={formData.etage ?? ''}
-                onChange={(e) => handleChange('etage', e.target.value)}
+                id='responsable'
+                value={formData.responsable ?? ''}
+                onChange={(e) => handleChange('responsable', e.target.value)}
                 disabled={changeToDetails}
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='dateModificationValeur' className='text-sm font-medium'>
                 Date Modification
               </Label>
@@ -446,7 +395,96 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2 col-span-full'>
+            <div className='col-span-12'>
+            <div className='grid grid-cols-2 gap-3 sm:pt-8'>
+              {(
+                [
+                  ['enExploitation', 'En exploitation'],
+                  ['nondisponible', 'Non disponible'],
+                  ['moyensGeneraux', 'Moyens Généraux'],
+                  ['mettreEnLocation', 'Mettre en location'],
+                ] as const
+              ).map(([field, label]) => (
+                <label key={field} className='flex items-center gap-2 text-sm'>
+                  <Checkbox
+                    checked={formData[field]}
+                    onCheckedChange={(c) => handleChange(field, c === true)}
+                    disabled={changeToDetails}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+            </div>
+
+            <FormGroupTitle>Adresse et documents</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12'>
+              <Label htmlFor='address1' className='text-sm font-medium'>
+                Adresse
+              </Label>
+              <Input
+                id='address1'
+                value={formData.address1 ?? ''}
+                onChange={(e) => handleChange('address1', e.target.value)}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            {(
+              [
+                ['image', 'Image'],
+                ['planLocal', 'Plan'],
+              ] as const
+            ).map(([field, label]) => (
+              <div key={field} className='min-w-0 space-y-1.5 col-span-12 md:col-span-6'>
+                <Label htmlFor={field} className='text-sm font-medium'>
+                  {label}
+                </Label>
+                <div className='flex items-center gap-1'>
+                  <Input id={field} readOnly value={pickedNames[field] ?? (formData[field] ? label : '')} className='flex-1 min-w-0 bg-gray-50' />
+                  {formData[field] && (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='h-8 w-8 shrink-0'
+                      title='Télécharger'
+                      onClick={() => downloadAttachment(ATTACHMENT_FOLDER, formData[field]!, pickedNames[field])}
+                    >
+                      <Download className='h-4 w-4' />
+                    </Button>
+                  )}
+                  {!changeToDetails && (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='sm'
+                      className='h-8 px-2 shrink-0 text-blue-600 hover:text-sky-700 dark:text-sky-400 hover:bg-sky-500/10'
+                      disabled={uploadingField === field}
+                      onClick={() => fileInputs.current[field]?.click()}
+                    >
+                      {uploadingField === field ? <Loader2 className='h-4 w-4 mr-1 animate-spin' /> : <FolderOpen className='h-4 w-4 mr-1' />}
+                      Parcourir
+                    </Button>
+                  )}
+                  <input
+                    ref={(el) => {
+                      fileInputs.current[field] = el;
+                    }}
+                    type='file'
+                    className='hidden'
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      e.target.value = '';
+                      if (file) handleFile(field, file);
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+
+            <div className='min-w-0 space-y-1.5 col-span-12'>
               <Label htmlFor='notes' className='text-sm font-medium'>
                 Description
               </Label>
@@ -461,12 +499,9 @@ const Form = ({ details }: { details?: boolean }) => {
           </Section>
 
           <Section icon={Info} title="En complément d'information">
-            <div className='space-y-2'>
-              <Label className='text-sm font-medium'>Dernier Loyer</Label>
-              <Input value={formData.dernierLoyer ?? '-'} readOnly disabled className='bg-gray-50' />
-            </div>
+            <FormGroupTitle>Valeurs</FormGroupTitle>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='valeurEntree' className='text-sm font-medium'>
                 Valeur d'entrée
               </Label>
@@ -480,7 +515,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='valeurInventaire' className='text-sm font-medium'>
                 Valeur inventaire
               </Label>
@@ -494,7 +529,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='valeurRealisation' className='text-sm font-medium'>
                 Valeur réalisation
               </Label>
@@ -508,20 +543,28 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2 col-span-full'>
-              <Label htmlFor='observation' className='text-sm font-medium'>
-                Observation
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='montantAmenagement' className='text-sm font-medium'>
+                Montant Aménagement
               </Label>
-              <Textarea
-                id='observation'
-                rows={3}
-                value={formData.observation ?? ''}
-                onChange={(e) => handleChange('observation', e.target.value)}
+              <Input
+                id='montantAmenagement'
+                type='number'
+                step='0.01'
+                value={formData.montantAmenagement ?? ''}
+                onChange={(e) => handleChange('montantAmenagement', numOrNull(e.target.value))}
                 disabled={changeToDetails}
               />
             </div>
 
-            <div className='space-y-2'>
+            <FormGroupTitle>Exploitation</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label className='text-sm font-medium'>Dernier Loyer</Label>
+              <Input value={formData.dernierLoyer ?? '-'} readOnly disabled className='bg-gray-50' />
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='etat' className='text-sm font-medium'>
                 Etat
               </Label>
@@ -543,7 +586,7 @@ const Form = ({ details }: { details?: boolean }) => {
               </Select>
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='demande' className='text-sm font-medium'>
                 Demande
               </Label>
@@ -565,7 +608,7 @@ const Form = ({ details }: { details?: boolean }) => {
               </Select>
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='suggestion' className='text-sm font-medium'>
                 Suggestion
               </Label>
@@ -577,23 +620,22 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='montantAmenagement' className='text-sm font-medium'>
-                Montant Aménagement
+            <div className='min-w-0 space-y-1.5 col-span-12'>
+              <Label htmlFor='observation' className='text-sm font-medium'>
+                Observation
               </Label>
-              <Input
-                id='montantAmenagement'
-                type='number'
-                step='0.01'
-                value={formData.montantAmenagement ?? ''}
-                onChange={(e) => handleChange('montantAmenagement', numOrNull(e.target.value))}
+              <Textarea
+                id='observation'
+                rows={3}
+                value={formData.observation ?? ''}
+                onChange={(e) => handleChange('observation', e.target.value)}
                 disabled={changeToDetails}
               />
             </div>
           </Section>
 
           <Section icon={DollarSign} title='Offre financière'>
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='offreLoyerHT' className='text-sm font-medium'>
                 Loyer HTHC
               </Label>
@@ -607,7 +649,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='offreCharge' className='text-sm font-medium'>
                 Charges
               </Label>
@@ -621,7 +663,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='tva' className='text-sm font-medium'>
                 TVA
               </Label>
@@ -635,7 +677,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='offreTSC' className='text-sm font-medium'>
                 TSC 10,5%
               </Label>
@@ -649,7 +691,7 @@ const Form = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label className='text-sm font-medium'>Loyer TCTC</Label>
               <Input value={item?.offreLoyerTTC ?? '-'} readOnly disabled className='bg-gray-50' />
             </div>
@@ -658,30 +700,19 @@ const Form = ({ details }: { details?: boolean }) => {
       </CardContent>
       <Separator />
       <CardFooter className='flex justify-end gap-2 mt-6'>
-        <Button variant='secondary' onClick={() => navigate(backPath)}>
+        <Button variant='outline'
+          className='border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary' onClick={() => navigate(backPath)}>
           <ArrowLeft />
           Retour
         </Button>
         {!changeToDetails && (
-          <Button onClick={handleSubmit}><Save />{item ? 'Mettre à jour' : 'Sauvegarder'}</Button>
+          <Button onClick={handleSubmit}>
+            <Save />
+            Sauvegarder
+          </Button>
         )}
       </CardFooter>
 
-      <BaseDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        title='Confirmer la suppression'
-        description={`Êtes-vous sûr de vouloir désactiver "${formData.designation}" ?`}
-      >
-        <div className='flex justify-end gap-2'>
-          <Button variant='outline' onClick={() => setDeleteDialogOpen(false)}>
-            Annuler
-          </Button>
-          <Button variant='destructive' onClick={confirmDelete}>
-            Désactiver
-          </Button>
-        </div>
-      </BaseDialog>
     </Card>
   );
 };

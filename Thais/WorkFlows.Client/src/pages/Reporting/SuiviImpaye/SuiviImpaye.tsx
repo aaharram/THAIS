@@ -147,7 +147,7 @@ const SuiviImpaye = () => {
     {
       accessorKey: 'montantImpaye',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Montant Loyers Impayés' />,
-      cell: ({ row }) => <div className='font-medium text-red-700'>{fmtMontant(row.original.montantImpaye)}</div>,
+      cell: ({ row }) => <div className='font-medium text-red-700 dark:text-red-400'>{fmtMontant(row.original.montantImpaye)}</div>,
     },
     {
       accessorKey: 'contentieux',
@@ -182,7 +182,7 @@ const SuiviImpaye = () => {
             toolbar={
               <div className='flex items-center gap-2'>
                 <Select value={noProprietaire.toString()} onValueChange={(v) => setNoProprietaire(Number(v))}>
-                  <SelectTrigger className='h-8 w-48'>
+                  <SelectTrigger className='h-10 w-64 rounded-lg bg-card'>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -196,7 +196,7 @@ const SuiviImpaye = () => {
                 </Select>
 
                 <Select value={noEncaisseur.toString()} onValueChange={(v) => setNoEncaisseur(Number(v))}>
-                  <SelectTrigger className='h-8 w-48'>
+                  <SelectTrigger className='h-10 w-64 rounded-lg bg-card'>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -210,7 +210,7 @@ const SuiviImpaye = () => {
                 </Select>
 
                 <Select value={etatFiltre} onValueChange={(v) => setEtatFiltre(v as EtatFiltre)}>
-                  <SelectTrigger className='h-8 w-40'>
+                  <SelectTrigger className='h-10 w-56 rounded-lg bg-card'>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -234,7 +234,7 @@ const SuiviImpaye = () => {
             </span>
             <span className='text-sm text-muted-foreground'>
               Total Montant Impayé :{' '}
-              <span className='font-semibold text-red-700'>{fmtMontant(totalMontantImpaye)}</span>
+              <span className='font-semibold text-red-700 dark:text-red-400'>{fmtMontant(totalMontantImpaye)}</span>
             </span>
           </div>
         )}

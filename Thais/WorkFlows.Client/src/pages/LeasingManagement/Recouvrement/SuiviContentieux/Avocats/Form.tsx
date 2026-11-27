@@ -1,3 +1,4 @@
+import { GridSection as Section, FormGroupTitle } from '@/components/form/form-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,33 +10,13 @@ import { AvocatRequest, AvocatRequestSchema } from '@/store/features/leasing/avo
 import { createAvocat, editAvocat, getAvocatById, resetAvocat } from '@/store/features/leasing/avocatSlice';
 import { useAppSelector } from '@/store/hooks';
 import { downloadAttachment, uploadAttachment } from '@/store/services/attachments';
-import { Download, FolderOpen, Info, Loader2, Scale, ArrowLeft, Save } from 'lucide-react';
+import { Download, FolderOpen, Loader2, Scale, ArrowLeft, Save } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
 import { z } from 'zod';
 
 const ATTACHMENT_FOLDER = 'avocats';
-
-const Section = ({
-  icon: Icon,
-  title,
-  children,
-}: {
-  icon: typeof Info;
-  title: string;
-  children: React.ReactNode;
-}) => (
-  <div className='border rounded-lg overflow-hidden'>
-    <div className='bg-gray-50 px-4 py-3 flex items-center gap-2 border-b'>
-      <div className='flex items-center justify-center h-7 w-7 rounded-full bg-blue-100 text-blue-600'>
-        <Icon className='h-4 w-4' />
-      </div>
-      <h3 className='text-base font-semibold text-gray-900'>{title}</h3>
-    </div>
-    <div className='p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4'>{children}</div>
-  </div>
-);
 
 const Form = () => {
   const { id, avocatId } = useParams();
@@ -146,7 +127,9 @@ const Form = () => {
       <CardContent className='py-6 px-4 sm:px-6 space-y-6'>
         <form onSubmit={handleSubmit} className='space-y-6'>
           <Section icon={Scale} title='Informations'>
-            <div className='space-y-2'>
+            <FormGroupTitle>Avocat</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='nom' className='text-sm font-medium'>
                 Nom
               </Label>
@@ -159,21 +142,23 @@ const Form = () => {
               {errors.nom && <p className='text-red-600 text-sm'>{errors.nom}</p>}
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='prenom' className='text-sm font-medium'>
                 Prénom
               </Label>
               <Input id='prenom' value={formData.prenom ?? ''} onChange={(e) => handleChange('prenom', e.target.value)} />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='cabinet' className='text-sm font-medium'>
                 Cabinet
               </Label>
               <Input id='cabinet' value={formData.cabinet ?? ''} onChange={(e) => handleChange('cabinet', e.target.value)} />
             </div>
 
-            <div className='space-y-2'>
+            <FormGroupTitle>Contrat</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='contrat' className='text-sm font-medium'>
                 Contrat
               </Label>
@@ -182,7 +167,8 @@ const Form = () => {
 
             {/* RMANew (champ "Pieces jointe") : stockage physique + nom généré en base,
                 sur le même modèle que ProfileController (photo de profil). */}
-            <div className='space-y-2'>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 md:col-span-8'>
               <Label htmlFor='pieceJointe' className='text-sm font-medium'>
                 Pieces jointe
               </Label>
@@ -210,7 +196,7 @@ const Form = () => {
                     type='button'
                     variant='ghost'
                     size='sm'
-                    className='h-7 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+                    className='h-7 px-2 text-blue-600 hover:text-sky-700 dark:text-sky-400 hover:bg-sky-500/10'
                     disabled={uploading}
                     onClick={() => fileInputRef.current?.click()}
                   >
@@ -227,7 +213,8 @@ const Form = () => {
       </CardContent>
       <Separator />
       <CardFooter className='flex justify-end gap-2 mt-6'>
-        <Button variant='secondary' onClick={() => navigate(backPath)}>
+        <Button variant='outline'
+          className='border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary' onClick={() => navigate(backPath)}>
           <ArrowLeft />
           Retour
         </Button>

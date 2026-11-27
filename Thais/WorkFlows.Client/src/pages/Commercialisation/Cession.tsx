@@ -578,9 +578,8 @@ const Cession = () => {
       </Card>
 
       <div className='flex justify-end'>
-        <Button variant='secondary' onClick={() => navigate('/commercialisation')}>
-          <ArrowLeft className='h-4 w-4 mr-2' />
-          <ArrowLeft />
+        <Button variant='outline' onClick={() => navigate('/commercialisation')}>
+          <ArrowLeft className='h-4 w-4 mr-2 border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary' />
           Retour
         </Button>
       </div>

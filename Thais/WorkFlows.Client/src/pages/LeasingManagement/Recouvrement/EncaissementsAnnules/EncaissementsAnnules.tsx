@@ -1,6 +1,7 @@
 import { ExportTiles } from '@/components/export/export-tiles';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { AvatarCell, Chip, MoneyCell, PrimarySecondary } from '@/components/table/list-cells';
 import { Card, CardContent } from '@/components/ui/card';
 import { Title } from '@/components/ui/title';
 import { PaiementResponse } from '@/store/features/leasing/paiement-schemas';
@@ -104,45 +105,45 @@ const EncaissementsAnnules = () => {
     {
       accessorKey: 'nomBuilding',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Actif' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomBuilding || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomBuilding} />,
     },
     {
       accessorKey: 'numContratLocations',
       header: ({ column }) => <DataTableColumnHeader column={column} title='N°Contrat' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.numContratLocations || '-'}</div>,
+      cell: ({ row }) => row.original.numContratLocations ? <Chip className='font-mono'>{row.original.numContratLocations}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'nomLocataire',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Locataire' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomLocataire || '-'}</div>,
+      cell: ({ row }) => <AvatarCell name={row.original.nomLocataire} />,
     },
     {
       accessorKey: 'numero',
       header: ({ column }) => <DataTableColumnHeader column={column} title='N° Encaissement' />,
-      cell: ({ row }) => <div className='font-medium'>ENC{row.original.numero}</div>,
+      cell: ({ row }) => <Chip className='font-mono'>ENC{row.original.numero}</Chip>,
     },
     {
       id: 'datePaiement',
       accessorFn: (row) => fmtDate(row.datePaiement),
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date Encaissement' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.datePaiement)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.datePaiement)}</span>,
     },
     {
       id: 'periode',
       accessorFn: (row) => fmtPeriode(row),
       header: () => <div>Période</div>,
-      cell: ({ row }) => <div className='font-medium'>{fmtPeriode(row.original)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtPeriode(row.original)}</span>,
     },
     {
       id: 'dateAnnulation',
       accessorFn: (row) => fmtDate(row.dateAnnulation),
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date Annulation' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateAnnulation)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.dateAnnulation)}</span>,
     },
     {
       accessorKey: 'montant',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Encaissement (MAD)' />,
-      cell: ({ row }) => <div className='font-bold text-red-700'>{fmtMontant(row.original.montant)}</div>,
+      header: () => <div className='text-right'>Encaissement</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.montant} tone='danger' />,
     },
   ];
 
@@ -160,7 +161,7 @@ const EncaissementsAnnules = () => {
         <div className='space-y-4'>
           <div className='flex flex-wrap items-center justify-between gap-2'>
             <Title icon={XCircle} title='Encaissements annulés' description='Historique des encaissements annulés' />
-            <div className='rounded-md bg-red-50 px-4 py-2 text-sm font-semibold text-red-700'>
+            <div className='rounded-lg bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-700 dark:text-red-400'>
               Total : {fmtMontant(totalMontant)} MAD
             </div>
           </div>

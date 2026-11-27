@@ -20,12 +20,18 @@ export const FactureRequestSchema = z.object({
 
 export const FactureResponseSchema = z.object({
   numero: z.number().int(),
+  reference: z.string().nullable().optional(),
   noLocation: z.number().int(),
   numContratLocations: z.string().nullable().optional(),
   nomLocataire: z.string().nullable().optional(),
   nomBuilding: z.string().nullable().optional(),
   nomLocal: z.string().nullable().optional(),
   nomProprietaire: z.string().nullable().optional(),
+  noBuilding: z.number().int().nullable().optional(),
+  noProprietaire: z.number().int().nullable().optional(),
+  codeLocataire: z.string().nullable().optional(),
+  compteGeneral: z.string().nullable().optional(),
+  etage: z.string().nullable().optional(),
 
   periode: z.string(),
   dateEmission: z.string(),

@@ -133,7 +133,7 @@ const Dashboard = () => {
   return (
     <div className='space-y-5'>
       {/* Périmètre */}
-      <div className='flex flex-wrap items-center gap-3 rounded-2xl border bg-card p-3'>
+      <div className='flex flex-wrap items-center justify-center gap-3'>
         <Select
           value={noProprietaire.toString()}
           onValueChange={(v) => {

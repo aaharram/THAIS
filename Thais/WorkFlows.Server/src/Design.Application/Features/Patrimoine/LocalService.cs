@@ -21,9 +21,30 @@ public class LocalService(DbDesignContext context, ILogger<LocalService> logger)
             ? null
             : await context.LocalTypes.Where(x => x.Numero == entity.NoLocalType).Select(x => x.Designation).FirstOrDefaultAsync();
 
+        // RMANew (ListLocal) : le local est « Loué » quand il a un bail en cours ; on affiche alors son locataire et
+        // le loyer net de ce bail (getLocalMontantBruteLocation). Sinon « Vacant », sans locataire, montant 0.
+        var bail = await context.Baux
+            .Where(b => b.NoLocal == entity.Numero && !b.Inactif && b.Etat == "En cours de location")
+            .OrderByDescending(b => b.Numero)
+            .Select(b => new { b.NoLocataire, b.LoyerNet, b.Montant })
+            .FirstOrDefaultAsync();
+        string? locataire = null;
+        if (bail is not null)
+        {
+            var l = await context.Locataires
+                .Where(x => x.Numero == bail.NoLocataire)
+                .Select(x => new { x.TypeLocataire, x.DesignationEntreprise, x.Nom, x.Prenom })
+                .FirstOrDefaultAsync();
+            locataire = l is null ? null : l.TypeLocataire == 1 ? l.DesignationEntreprise : $"{l.Nom} {l.Prenom}".Trim();
+        }
+
         return new LocalResponse
         {
             Numero = entity.Numero,
+            Occupe = bail is not null,
+            Locataire = locataire,
+            // Colonne « Montant (CC/TC) » : le montant total du bail ; les baux importés n'ont que ce champ (LoyerNet vide).
+            MontantLoyer = bail?.Montant ?? bail?.LoyerNet ?? 0,
             NoBuilding = entity.NoBuilding,
             NomBuilding = nomBuilding,
             NoLocalType = entity.NoLocalType,
@@ -48,6 +69,8 @@ public class LocalService(DbDesignContext context, ILogger<LocalService> logger)
             ValeurInventaire = entity.ValeurInventaire,
             ValeurRealisation = entity.ValeurRealisation,
             Observation = entity.Observation,
+            Image = entity.Image,
+            PlanLocal = entity.PlanLocal,
             Etat = entity.Etat,
             Demande = entity.Demande,
             Suggestion = entity.Suggestion,
@@ -259,6 +282,8 @@ public class LocalService(DbDesignContext context, ILogger<LocalService> logger)
             ValeurInventaire = request.ValeurInventaire,
             ValeurRealisation = request.ValeurRealisation,
             Observation = request.Observation,
+            Image = request.Image,
+            PlanLocal = request.PlanLocal,
             Etat = request.Etat,
             Demande = request.Demande,
             Suggestion = request.Suggestion,
@@ -322,6 +347,8 @@ public class LocalService(DbDesignContext context, ILogger<LocalService> logger)
         entity.ValeurInventaire = request.ValeurInventaire;
         entity.ValeurRealisation = request.ValeurRealisation;
         entity.Observation = request.Observation;
+        entity.Image = request.Image;
+        entity.PlanLocal = request.PlanLocal;
         entity.Etat = request.Etat;
         entity.Demande = request.Demande;
         entity.Suggestion = request.Suggestion;

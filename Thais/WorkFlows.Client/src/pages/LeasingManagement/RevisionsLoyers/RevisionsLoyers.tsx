@@ -82,7 +82,7 @@ const RevisionsLoyers = () => {
       accessorKey: 'loyerApresRevision',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Loyer après révision' />,
       cell: ({ row }) => (
-        <div className='font-medium text-blue-700'>{fmtMontant(row.original.loyerApresRevision)}</div>
+        <div className='font-medium text-sky-700 dark:text-sky-400'>{fmtMontant(row.original.loyerApresRevision)}</div>
       ),
     },
     {
@@ -97,8 +97,8 @@ const RevisionsLoyers = () => {
       header: ({ column }) => <DataTableColumnHeader column={column} title='Prochaine échéance' />,
       cell: ({ row }) => (
         <span
-          className={`inline-block text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${
-            row.original.eligibleRevision ? 'text-red-700 bg-red-100' : 'text-gray-600 bg-gray-100'
+          className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${
+            row.original.eligibleRevision ? 'bg-red-500/10 text-red-700 dark:text-red-400' : 'text-gray-600 bg-gray-100'
           }`}
         >
           {fmtDate(row.original.dateProchaineRevision)}
@@ -158,7 +158,7 @@ const RevisionsLoyers = () => {
     {
       accessorKey: 'nouveauLoyer',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Nouveau loyer' />,
-      cell: ({ row }) => <div className='font-medium text-blue-700'>{fmtMontant(row.original.nouveauLoyer)}</div>,
+      cell: ({ row }) => <div className='font-medium text-sky-700 dark:text-sky-400'>{fmtMontant(row.original.nouveauLoyer)}</div>,
     },
     {
       accessorKey: 'tauxRevision',

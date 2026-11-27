@@ -121,7 +121,7 @@ const PatrimoineOpci = () => {
                       ))}
                       {section.rows.length === 0 && (
                         <tr>
-                          <td colSpan={5} className='py-4 px-4 text-center text-gray-400'>
+                          <td colSpan={5} className='py-4 px-4 text-center text-muted-foreground'>
                             Aucun actif
                           </td>
                         </tr>

@@ -94,7 +94,7 @@ function MonCompte() {
   const isValid = form.firstName.trim() && form.lastName.trim() && form.email.trim();
 
   return (
-    <div className='space-y-4 max-w-2xl'>
+    <div className='mx-auto w-full max-w-4xl space-y-5 [&_input]:w-full'>
       <Title title='Mon compte' description='Gérer vos informations personnelles' />
 
       <Card>
@@ -146,7 +146,7 @@ function MonCompte() {
         </CardHeader>
         <Separator />
         <CardContent className='pt-5 space-y-4'>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5'>
             <div className='space-y-1'>
               <Label>Nom d'utilisateur</Label>
               <Input value={profile?.username ?? ''} disabled />

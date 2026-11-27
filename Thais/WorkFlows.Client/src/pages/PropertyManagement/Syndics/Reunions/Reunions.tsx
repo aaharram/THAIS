@@ -2,6 +2,7 @@ import { ExportTiles } from '@/components/export/export-tiles';
 import { BaseDialog } from '@/components/dialog/dialog';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { Chip, MoneyCell, PrimarySecondary, RowActions, StatusPill } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Title } from '@/components/ui/title';
@@ -14,7 +15,7 @@ import {
 } from '@/store/features/property-management/syndicReunionsSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { ColumnDef } from '@tanstack/react-table';
-import { Pencil, Plus, Trash2, Users } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
@@ -125,23 +126,23 @@ const Reunions = () => {
     {
       accessorKey: 'nomBuilding',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Actif' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomBuilding || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomBuilding} />,
     },
     {
       accessorKey: 'type',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Type' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.type || '-'}</div>,
+      cell: ({ row }) => row.original.type ? <Chip>{row.original.type}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'nomVille',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Lieu' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomVille || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomVille} />,
     },
     {
       id: 'dateReunion',
       accessorFn: (row) => fmtDate(row.dateReunion),
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateReunion)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.dateReunion)}</span>,
     },
     {
       accessorKey: 'pjConvocation',
@@ -155,8 +156,8 @@ const Reunions = () => {
     },
     {
       accessorKey: 'appelFondsAnnuel',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Appel de fonds annuel' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.appelFondsAnnuel ?? 0}</div>,
+      header: () => <div className='text-right'>Appel de fonds annuel</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.appelFondsAnnuel} />,
     },
     {
       accessorKey: 'pjAppelFonds',
@@ -165,8 +166,8 @@ const Reunions = () => {
     },
     {
       accessorKey: 'quotePartAppelFonds',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Quote part Appel de fonds' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.quotePartAppelFonds ?? 0}</div>,
+      header: () => <div className='text-right'>Quote part Appel de fonds</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.quotePartAppelFonds} />,
     },
     {
       accessorKey: 'nombreQuotePart',
@@ -175,44 +176,26 @@ const Reunions = () => {
     },
     {
       accessorKey: 'reglee',
-      header: () => <div className='text-center'>Réglé</div>,
-      cell: ({ row }) => <div className='text-center'>{row.original.reglee ? 'Oui' : 'Non'}</div>,
+      header: () => <div>Réglé</div>,
+      cell: ({ row }) => <StatusPill label={row.original.reglee ? 'Réglé' : 'Non réglé'} tone={row.original.reglee ? 'success' : 'warning'} />,
     },
     {
       id: 'dateReglement',
       accessorFn: (row) => fmtDate(row.dateReglement),
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date règlement' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateReglement)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.dateReglement)}</span>,
     },
     {
       id: 'details',
       header: () => <div className='text-right'>Détails</div>,
       cell: ({ row }) => (
-        <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              dispatch(setSyndicReunion(row.original));
-              navigate(`${basePath}/modifier/${row.original.numero}`);
-            }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-red-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row.original);
-            }}
-          >
-            <Trash2 className='h-4 w-4 text-red-600' />
-          </Button>
-        </div>
+        <RowActions
+          onEdit={() => {
+            dispatch(setSyndicReunion(row.original));
+            navigate(`${basePath}/modifier/${row.original.numero}`);
+          }}
+          onDelete={() => handleDelete(row.original)}
+        />
       ),
     },
   ];

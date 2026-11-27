@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { ActionButton } from '@/components/table/list-cells';
 import { BaseDialog } from '@/components/dialog/dialog';
 import { Title } from '@/components/ui/title';
 import { BailResponse } from '@/store/features/leasing/bail-schemas';
@@ -18,8 +19,8 @@ import { useNavigate } from 'react-router';
 // cours", avec réactivation ("Activer" → UPDATE Location SET EtatLocation=1, inactif=0).
 // "Location" (RMANew) = "Bail" (nouvelle app).
 const etatBadgeClass = (etat: string) => {
-  if (etat === 'En cours de location') return 'text-green-700 bg-green-100';
-  if (etat === 'Suspendu') return 'text-amber-700 bg-amber-100';
+  if (etat === 'En cours de location') return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
+  if (etat === 'Suspendu') return 'bg-amber-500/10 text-amber-700 dark:text-amber-400';
   return 'text-gray-600 bg-gray-100';
 };
 
@@ -112,7 +113,7 @@ const ArchivesLocations = () => {
       cell: ({ row }) => (
         <div className='flex justify-center'>
           <span
-            className={`inline-block whitespace-nowrap text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${etatBadgeClass(row.original.etat)}`}
+            className={`inline-block whitespace-nowrap text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${etatBadgeClass(row.original.etat)}`}
           >
             {row.original.etat}
           </span>
@@ -124,23 +125,19 @@ const ArchivesLocations = () => {
       header: () => <div className='text-right'>Actions</div>,
       cell: ({ row }) => (
         <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            title='Modifier'
-            onClick={(e) => {
-              e.stopPropagation();
+          <ActionButton
+            icon={Pencil}
+            label='Modifier'
+            onClick={() => {
               dispatch(setBail(row.original));
               navigate(`/leasing-management/baux/modifier/${row.original.numero}`);
             }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
+            className='text-yellow-600 hover:bg-yellow-500/10 hover:text-yellow-600'
+          />
           <Button
             variant='ghost'
             size='sm'
-            className='h-8 px-2 gap-1.5 hover:bg-green-100 text-green-700'
+            className='h-8 gap-1.5 rounded-lg bg-emerald-500/10 px-3 text-emerald-700 hover:bg-emerald-500/20 hover:text-emerald-700 dark:text-emerald-400'
             title='Réactiver ce bail'
             onClick={(e) => {
               e.stopPropagation();

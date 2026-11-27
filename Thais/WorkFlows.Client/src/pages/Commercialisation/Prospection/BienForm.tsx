@@ -1,3 +1,4 @@
+import { GridSection as Section, FormGroupTitle } from '@/components/form/form-layout';
 import { BaseDialog } from '@/components/dialog/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,36 +33,11 @@ import {
 } from '@/store/features/patrimoine/building-schemas';
 import { createBuilding, editBuilding, getBuildingById } from '@/store/features/patrimoine/buildingsSlice';
 import { useAppSelector } from '@/store/hooks';
-import { Building2, FileText, Home, Info, MapPin, Plus, ArrowLeft, Save } from 'lucide-react';
+import { Building2, FileText, Home, MapPin, Plus, ArrowLeft, Save } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { z } from 'zod';
-
-const Section = ({
-  icon: Icon,
-  title,
-  children,
-  action,
-}: {
-  icon: typeof Info;
-  title: string;
-  children: React.ReactNode;
-  action?: React.ReactNode;
-}) => (
-  <div className='border rounded-lg overflow-hidden'>
-    <div className='bg-gray-50 px-4 py-3 flex items-center justify-between gap-2 border-b'>
-      <div className='flex items-center gap-2'>
-        <div className='flex items-center justify-center h-7 w-7 rounded-full bg-blue-100 text-blue-600'>
-          <Icon className='h-4 w-4' />
-        </div>
-        <h3 className='text-base font-semibold text-gray-900'>{title}</h3>
-      </div>
-      {action}
-    </div>
-    <div className='p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4'>{children}</div>
-  </div>
-);
 
 const emptyForm: BuildingRequest = {
   codeImmeuble: '',
@@ -395,7 +371,45 @@ const BienForm = ({ details }: { details?: boolean }) => {
         )}
         <form onSubmit={handleSubmit} className='space-y-6'>
           <Section icon={Building2} title='Actif'>
-            <div className='space-y-2'>
+            <FormGroupTitle>Bien</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='designation' className='text-sm font-medium'>
+                <span className='text-red-500'>* </span>Désignation
+              </Label>
+              <Input
+                id='designation'
+                value={formData.designation}
+                onChange={(e) => handleChange('designation', e.target.value)}
+                disabled={changeToDetails}
+                className={errors.designation ? 'border-red-300' : ''}
+              />
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='noBuildingType' className='text-sm font-medium'>
+                Destination
+              </Label>
+              <Select
+                value={formData.noBuildingType?.toString() || '0'}
+                onValueChange={(value) => handleChange('noBuildingType', value === '0' ? null : Number(value))}
+                disabled={changeToDetails}
+              >
+                <SelectTrigger id='noBuildingType'>
+                  <SelectValue placeholder='Sélectionnez...' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='0'>Aucune</SelectItem>
+                  {buildingTypes.map((b) => (
+                    <SelectItem key={b.numero} value={b.numero.toString()}>
+                      {b.designation}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='noAgenceImmobiliere' className='text-sm font-medium'>
                 Agence Immobilière
               </Label>
@@ -425,146 +439,7 @@ const BienForm = ({ details }: { details?: boolean }) => {
               </button>
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='designation' className='text-sm font-medium'>
-                <span className='text-red-500'>* </span>Désignation
-              </Label>
-              <Input
-                id='designation'
-                value={formData.designation}
-                onChange={(e) => handleChange('designation', e.target.value)}
-                disabled={changeToDetails}
-                className={errors.designation ? 'border-red-300' : ''}
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='noBuildingType' className='text-sm font-medium'>
-                Destination
-              </Label>
-              <Select
-                value={formData.noBuildingType?.toString() || '0'}
-                onValueChange={(value) => handleChange('noBuildingType', value === '0' ? null : Number(value))}
-                disabled={changeToDetails}
-              >
-                <SelectTrigger id='noBuildingType'>
-                  <SelectValue placeholder='Sélectionnez...' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='0'>Aucune</SelectItem>
-                  {buildingTypes.map((b) => (
-                    <SelectItem key={b.numero} value={b.numero.toString()}>
-                      {b.designation}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='noProprietaire' className='text-sm font-medium'>
-                Direction Réseau
-              </Label>
-              <Select
-                value={formData.noProprietaire?.toString() || '0'}
-                onValueChange={(value) => handleChange('noProprietaire', value === '0' ? null : Number(value))}
-                disabled={changeToDetails}
-              >
-                <SelectTrigger id='noProprietaire'>
-                  <SelectValue placeholder='Sélectionnez...' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='0'>Aucune</SelectItem>
-                  {proprietaires.map((p) => (
-                    <SelectItem key={p.numero} value={p.numero.toString()}>
-                      {p.designation}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='proprietaire' className='text-sm font-medium'>
-                Proprietaire
-              </Label>
-              <Input
-                id='proprietaire'
-                value={formData.proprietaire ?? ''}
-                onChange={(e) => handleChange('proprietaire', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='contactProprietaire' className='text-sm font-medium'>
-                Contact Proprietaire
-              </Label>
-              <Input
-                id='contactProprietaire'
-                value={formData.contactProprietaire ?? ''}
-                onChange={(e) => handleChange('contactProprietaire', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='address1' className='text-sm font-medium'>
-                Adresse
-              </Label>
-              <Input
-                id='address1'
-                value={formData.address1 ?? ''}
-                onChange={(e) => handleChange('address1', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='noCity' className='text-sm font-medium'>
-                <span className='text-red-500'>* </span>Ville
-              </Label>
-              <Select
-                value={formData.noCity?.toString() || '0'}
-                onValueChange={(value) => handleChange('noCity', value === '0' ? null : Number(value))}
-                disabled={changeToDetails}
-              >
-                <SelectTrigger id='noCity' className={errors.noCity ? 'border-red-300' : ''}>
-                  <SelectValue placeholder='Sélectionnez...' />
-                </SelectTrigger>
-                <SelectContent>
-                  {villes.map((v) => (
-                    <SelectItem key={v.numero} value={v.numero.toString()}>
-                      {v.designation}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='noCountry' className='text-sm font-medium'>
-                <span className='text-red-500'>* </span>Pays
-              </Label>
-              <Select
-                value={formData.noCountry?.toString() || '0'}
-                onValueChange={(value) => handleChange('noCountry', value === '0' ? null : Number(value))}
-                disabled={changeToDetails}
-              >
-                <SelectTrigger id='noCountry' className={errors.noCountry ? 'border-red-300' : ''}>
-                  <SelectValue placeholder='Sélectionnez...' />
-                </SelectTrigger>
-                <SelectContent>
-                  {paysList.map((p) => (
-                    <SelectItem key={p.numero} value={p.numero.toString()}>
-                      {p.designation}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='titreFoncier' className='text-sm font-medium'>
                 Titre foncier
               </Label>
@@ -576,6 +451,28 @@ const BienForm = ({ details }: { details?: boolean }) => {
               />
             </div>
 
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='statusProspect' className='text-sm font-medium'>
+                Sort
+              </Label>
+              <Select
+                value={(formData.statusProspect ?? 0).toString()}
+                onValueChange={(value) => handleChange('statusProspect', Number(value))}
+                disabled={changeToDetails}
+              >
+                <SelectTrigger id='statusProspect'>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SORTS_PROSPECT.map((s) => (
+                    <SelectItem key={s.value} value={s.value.toString()}>
+                      {s.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {(
               [
                 { key: 'buildingImage', label: 'Image' },
@@ -583,7 +480,7 @@ const BienForm = ({ details }: { details?: boolean }) => {
                 { key: 'pjExpertiseTechnique', label: 'Expertise Technique' },
               ] as const
             ).map(({ key, label }) => (
-              <div className='space-y-2' key={key}>
+              <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4' key={key}>
                 <Label htmlFor={key} className='text-sm font-medium'>
                   {label}
                 </Label>
@@ -615,20 +512,116 @@ const BienForm = ({ details }: { details?: boolean }) => {
               </div>
             ))}
 
-            <div className='space-y-2'>
-              <Label htmlFor='dateExpertiseTechnique' className='text-sm font-medium'>
-                Date Expertise
+            <FormGroupTitle>Propriétaire</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='noProprietaire' className='text-sm font-medium'>
+                Direction Réseau
+              </Label>
+              <Select
+                value={formData.noProprietaire?.toString() || '0'}
+                onValueChange={(value) => handleChange('noProprietaire', value === '0' ? null : Number(value))}
+                disabled={changeToDetails}
+              >
+                <SelectTrigger id='noProprietaire'>
+                  <SelectValue placeholder='Sélectionnez...' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='0'>Aucune</SelectItem>
+                  {proprietaires.map((p) => (
+                    <SelectItem key={p.numero} value={p.numero.toString()}>
+                      {p.designation}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='proprietaire' className='text-sm font-medium'>
+                Proprietaire
               </Label>
               <Input
-                id='dateExpertiseTechnique'
-                type='date'
-                value={formData.dateExpertiseTechnique ?? ''}
-                onChange={(e) => handleChange('dateExpertiseTechnique', e.target.value)}
+                id='proprietaire'
+                value={formData.proprietaire ?? ''}
+                onChange={(e) => handleChange('proprietaire', e.target.value)}
                 disabled={changeToDetails}
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='contactProprietaire' className='text-sm font-medium'>
+                Contact Proprietaire
+              </Label>
+              <Input
+                id='contactProprietaire'
+                value={formData.contactProprietaire ?? ''}
+                onChange={(e) => handleChange('contactProprietaire', e.target.value)}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <FormGroupTitle>Adresse</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12'>
+              <Label htmlFor='address1' className='text-sm font-medium'>
+                Adresse
+              </Label>
+              <Input
+                id='address1'
+                value={formData.address1 ?? ''}
+                onChange={(e) => handleChange('address1', e.target.value)}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 md:col-span-6'>
+              <Label htmlFor='noCity' className='text-sm font-medium'>
+                <span className='text-red-500'>* </span>Ville
+              </Label>
+              <Select
+                value={formData.noCity?.toString() || '0'}
+                onValueChange={(value) => handleChange('noCity', value === '0' ? null : Number(value))}
+                disabled={changeToDetails}
+              >
+                <SelectTrigger id='noCity' className={errors.noCity ? 'border-red-300' : ''}>
+                  <SelectValue placeholder='Sélectionnez...' />
+                </SelectTrigger>
+                <SelectContent>
+                  {villes.map((v) => (
+                    <SelectItem key={v.numero} value={v.numero.toString()}>
+                      {v.designation}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 md:col-span-6'>
+              <Label htmlFor='noCountry' className='text-sm font-medium'>
+                <span className='text-red-500'>* </span>Pays
+              </Label>
+              <Select
+                value={formData.noCountry?.toString() || '0'}
+                onValueChange={(value) => handleChange('noCountry', value === '0' ? null : Number(value))}
+                disabled={changeToDetails}
+              >
+                <SelectTrigger id='noCountry' className={errors.noCountry ? 'border-red-300' : ''}>
+                  <SelectValue placeholder='Sélectionnez...' />
+                </SelectTrigger>
+                <SelectContent>
+                  {paysList.map((p) => (
+                    <SelectItem key={p.numero} value={p.numero.toString()}>
+                      {p.designation}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <FormGroupTitle>Expertise technique</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='dateDemandeExpertiseTechnique' className='text-sm font-medium'>
                 Date Demande Expertise
               </Label>
@@ -641,7 +634,20 @@ const BienForm = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='dateExpertiseTechnique' className='text-sm font-medium'>
+                Date Expertise
+              </Label>
+              <Input
+                id='dateExpertiseTechnique'
+                type='date'
+                value={formData.dateExpertiseTechnique ?? ''}
+                onChange={(e) => handleChange('dateExpertiseTechnique', e.target.value)}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='statusExpertiseTechnique' className='text-sm font-medium'>
                 Status Expertise
               </Label>
@@ -663,29 +669,7 @@ const BienForm = ({ details }: { details?: boolean }) => {
               </Select>
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='statusProspect' className='text-sm font-medium'>
-                Sort
-              </Label>
-              <Select
-                value={(formData.statusProspect ?? 0).toString()}
-                onValueChange={(value) => handleChange('statusProspect', Number(value))}
-                disabled={changeToDetails}
-              >
-                <SelectTrigger id='statusProspect'>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SORTS_PROSPECT.map((s) => (
-                    <SelectItem key={s.value} value={s.value.toString()}>
-                      {s.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className='space-y-2 col-span-full'>
+            <div className='min-w-0 space-y-1.5 col-span-12'>
               <Label htmlFor='notes' className='text-sm font-medium'>
                 Descriptif
               </Label>
@@ -700,7 +684,9 @@ const BienForm = ({ details }: { details?: boolean }) => {
           </Section>
 
           <Section icon={Home} title='Indicateurs'>
-            <div className='space-y-2'>
+            <FormGroupTitle>Capacité</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='unitCode' className='text-sm font-medium'>
                 Code terrain
               </Label>
@@ -711,45 +697,8 @@ const BienForm = ({ details }: { details?: boolean }) => {
                 disabled={changeToDetails}
               />
             </div>
-            <div className='space-y-2'>
-              <Label htmlFor='superficieRDC' className='text-sm font-medium'>
-                Superficie RDC
-              </Label>
-              <Input
-                id='superficieRDC'
-                type='number'
-                value={formData.superficieRDC ?? 0}
-                onChange={(e) => handleChange('superficieRDC', numOrNull(e.target.value))}
-                disabled={changeToDetails}
-              />
-            </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='superficieSS' className='text-sm font-medium'>
-                Superficie sous sol
-              </Label>
-              <Input
-                id='superficieSS'
-                type='number'
-                value={formData.superficieSS ?? 0}
-                onChange={(e) => handleChange('superficieSS', numOrNull(e.target.value))}
-                disabled={changeToDetails}
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='superficieSP' className='text-sm font-medium'>
-                Mezzanine
-              </Label>
-              <Input
-                id='superficieSP'
-                type='number'
-                value={formData.superficieSP ?? 0}
-                onChange={(e) => handleChange('superficieSP', numOrNull(e.target.value))}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='nombreEtages' className='text-sm font-medium'>
                 Nombre d&apos;étages
               </Label>
@@ -771,8 +720,62 @@ const BienForm = ({ details }: { details?: boolean }) => {
               </Select>
             </div>
 
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='nombrePlacesParking' className='text-sm font-medium'>
+                Place parking
+              </Label>
+              <Input
+                id='nombrePlacesParking'
+                type='number'
+                value={formData.nombrePlacesParking ?? 0}
+                onChange={(e) => handleChange('nombrePlacesParking', numOrNull(e.target.value))}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <FormGroupTitle>Surfaces</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='superficieRDC' className='text-sm font-medium'>
+                Superficie RDC
+              </Label>
+              <Input
+                id='superficieRDC'
+                type='number'
+                value={formData.superficieRDC ?? 0}
+                onChange={(e) => handleChange('superficieRDC', numOrNull(e.target.value))}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='superficieSS' className='text-sm font-medium'>
+                Superficie sous sol
+              </Label>
+              <Input
+                id='superficieSS'
+                type='number'
+                value={formData.superficieSS ?? 0}
+                onChange={(e) => handleChange('superficieSS', numOrNull(e.target.value))}
+                disabled={changeToDetails}
+              />
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='superficieSP' className='text-sm font-medium'>
+                Mezzanine
+              </Label>
+              <Input
+                id='superficieSP'
+                type='number'
+                value={formData.superficieSP ?? 0}
+                onChange={(e) => handleChange('superficieSP', numOrNull(e.target.value))}
+                disabled={changeToDetails}
+              />
+            </div>
+
             {FLOOR_FIELDS.slice(0, nbEtagesAffiches).map((key, i) => (
-              <div className='space-y-2' key={key}>
+              <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4' key={key}>
                 <Label htmlFor={key} className='text-sm font-medium'>
                   {FLOOR_LABELS[i]}
                 </Label>
@@ -786,7 +789,7 @@ const BienForm = ({ details }: { details?: boolean }) => {
               </div>
             ))}
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='superficieGlobale' className='text-sm font-medium'>
                 Superficie Globale
               </Label>
@@ -797,7 +800,8 @@ const BienForm = ({ details }: { details?: boolean }) => {
                 className='bg-gray-50 text-gray-500'
               />
             </div>
-            <div className='space-y-2'>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='surfaceTerrain' className='text-sm font-medium'>
                 Surface Terrain
               </Label>
@@ -809,23 +813,10 @@ const BienForm = ({ details }: { details?: boolean }) => {
                 disabled={changeToDetails}
               />
             </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='nombrePlacesParking' className='text-sm font-medium'>
-                Place parking
-              </Label>
-              <Input
-                id='nombrePlacesParking'
-                type='number'
-                value={formData.nombrePlacesParking ?? 0}
-                onChange={(e) => handleChange('nombrePlacesParking', numOrNull(e.target.value))}
-                disabled={changeToDetails}
-              />
-            </div>
           </Section>
 
           <Section icon={FileText} title='Façade'>
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='facadePrincipale' className='text-sm font-medium'>
                 Façade Principale
               </Label>
@@ -837,7 +828,8 @@ const BienForm = ({ details }: { details?: boolean }) => {
                 disabled={changeToDetails}
               />
             </div>
-            <div className='space-y-2'>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='facadeArriere' className='text-sm font-medium'>
                 Façade Arrière
               </Label>
@@ -850,7 +842,7 @@ const BienForm = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='facadeLateraleDroite' className='text-sm font-medium'>
                 Façade Latérale Droite
               </Label>
@@ -862,7 +854,8 @@ const BienForm = ({ details }: { details?: boolean }) => {
                 disabled={changeToDetails}
               />
             </div>
-            <div className='space-y-2'>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='facadeLateraleGauche' className='text-sm font-medium'>
                 Façade Latérale Gauche
               </Label>
@@ -875,7 +868,7 @@ const BienForm = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='facadeEnBiais' className='text-sm font-medium'>
                 Façade En Biais
               </Label>
@@ -887,7 +880,8 @@ const BienForm = ({ details }: { details?: boolean }) => {
                 disabled={changeToDetails}
               />
             </div>
-            <div className='space-y-2'>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='longueurFacade' className='text-sm font-medium'>
                 Longueur Façade
               </Label>
@@ -899,7 +893,7 @@ const BienForm = ({ details }: { details?: boolean }) => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='nbFacade' className='text-sm font-medium'>
                 Nombre Façade
               </Label>
@@ -971,7 +965,7 @@ const BienForm = ({ details }: { details?: boolean }) => {
           </div>
 
           <Section icon={MapPin} title='Géolocalisation'>
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 md:col-span-6'>
               <Label htmlFor='latitude' className='text-sm font-medium'>
                 Latitude
               </Label>
@@ -983,7 +977,8 @@ const BienForm = ({ details }: { details?: boolean }) => {
                 disabled={changeToDetails}
               />
             </div>
-            <div className='space-y-2'>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 md:col-span-6'>
               <Label htmlFor='longitude' className='text-sm font-medium'>
                 Longitude
               </Label>
@@ -1000,7 +995,8 @@ const BienForm = ({ details }: { details?: boolean }) => {
       </CardContent>
       <Separator />
       <CardFooter className='flex justify-end gap-2 mt-6'>
-        <Button variant='secondary' onClick={() => navigate(backPath)}>
+        <Button variant='outline'
+          className='border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary' onClick={() => navigate(backPath)}>
           <ArrowLeft />
           Retour
         </Button>

@@ -8,8 +8,21 @@ import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
 import { BailRequest, BailResponse } from './bail-schemas';
 
-const DATE_FIELDS: (keyof BailRequest)[] = ['dateDebut', 'dateGestion', 'dateFin'];
-const sanitizeBailPayload = (payload: BailRequest): BailRequest => nullifyEmptyDates(payload, DATE_FIELDS);
+const DATE_FIELDS: (keyof BailRequest)[] = [
+  'dateDebut',
+  'dateGestion',
+  'dateFin',
+  'dateReglement',
+  'debutImpayes',
+  'finImpayes',
+  'debutArriere',
+  'finArriere',
+];
+// Dates vides -> null (sinon le serveur refuse le JSON), et chaînes vides -> null pour ne pas écrire '' en base.
+const sanitizeBailPayload = (payload: BailRequest): BailRequest =>
+  Object.fromEntries(
+    Object.entries(nullifyEmptyDates(payload, DATE_FIELDS)).map(([key, value]) => [key, value === '' ? null : value]),
+  ) as BailRequest;
 
 interface ErrorResponse {
   message?: string;

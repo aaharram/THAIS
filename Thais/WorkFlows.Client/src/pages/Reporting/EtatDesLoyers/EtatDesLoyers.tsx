@@ -210,7 +210,7 @@ const EtatDesLoyers = () => {
 
           <div className='flex flex-wrap items-end justify-between gap-4'>
             <div className='flex flex-wrap items-end gap-4'>
-              <div className='space-y-2 w-full sm:w-48'>
+              <div className='space-y-2 w-full sm:w-64'>
                 <Select value={noProprietaire} onValueChange={setNoProprietaire}>
                   <SelectTrigger>
                     <SelectValue placeholder='Propriétaire' />
@@ -226,7 +226,7 @@ const EtatDesLoyers = () => {
                 </Select>
               </div>
 
-              <div className='space-y-2 w-full sm:w-48'>
+              <div className='space-y-2 w-full sm:w-64'>
                 <Select value={noBuilding} onValueChange={setNoBuilding}>
                   <SelectTrigger>
                     <SelectValue placeholder='Actif' />
@@ -294,7 +294,7 @@ const EtatDesLoyers = () => {
           </div>
 
           {etat?.valide && (
-            <div className='flex items-center gap-2 text-sm text-green-700 bg-green-50 px-3 py-1.5 rounded-full w-fit'>
+            <div className='flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-400 bg-green-50 px-3 py-1.5 rounded-full w-fit'>
               Période validée{etat.dateValidation ? ` le ${new Date(etat.dateValidation).toLocaleDateString('fr-FR')}` : ''}
             </div>
           )}

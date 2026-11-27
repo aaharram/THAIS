@@ -1,3 +1,4 @@
+import { GridSection as Section, FormGroupTitle } from '@/components/form/form-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,7 +24,7 @@ import {
   getContentieuxHorsLocationById,
 } from '@/store/features/leasing/contentieuxHorsLocationSlice';
 import { useAppSelector } from '@/store/hooks';
-import { Gavel, Info, ArrowLeft, Save } from 'lucide-react';
+import { Gavel, ArrowLeft, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
@@ -31,26 +32,6 @@ import { z } from 'zod';
 import { AppDispatch } from '@/store';
 
 const backPath = '/archives/contentieux-hors-location';
-
-const Section = ({
-  icon: Icon,
-  title,
-  children,
-}: {
-  icon: typeof Info;
-  title: string;
-  children: React.ReactNode;
-}) => (
-  <div className='border rounded-lg overflow-hidden'>
-    <div className='bg-gray-50 px-4 py-3 flex items-center gap-2 border-b'>
-      <div className='flex items-center justify-center h-7 w-7 rounded-full bg-blue-100 text-blue-600'>
-        <Icon className='h-4 w-4' />
-      </div>
-      <h3 className='text-base font-semibold text-gray-900'>{title}</h3>
-    </div>
-    <div className='p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4'>{children}</div>
-  </div>
-);
 
 const emptyForm: ContentieuxHorsLocationRequest = {
   locataire: '',
@@ -151,7 +132,9 @@ const Form = () => {
       <CardContent className='py-6 px-4 sm:px-6 space-y-6'>
         <form onSubmit={handleSubmit}>
           <Section icon={Gavel} title='Informations'>
-            <div className='space-y-2'>
+            <FormGroupTitle>Locataire</FormGroupTitle>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='locataire' className='text-sm font-medium'>
                 Locataire
               </Label>
@@ -162,7 +145,7 @@ const Form = () => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='codeLocataire' className='text-sm font-medium'>
                 Code Locataire
               </Label>
@@ -173,7 +156,7 @@ const Form = () => {
               />
             </div>
 
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='immeuble' className='text-sm font-medium'>
                 Actif
               </Label>
@@ -184,61 +167,9 @@ const Form = () => {
               />
             </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='loyerMensuelTTC' className='text-sm font-medium'>
-                Loyer mensuel TTC (MAD)
-              </Label>
-              <Input
-                id='loyerMensuelTTC'
-                type='number'
-                step='0.01'
-                value={formData.loyerMensuelTTC ?? ''}
-                onChange={(e) => handleChange('loyerMensuelTTC', numOrNull(e.target.value))}
-              />
-            </div>
+            <FormGroupTitle>Contentieux et impayés</FormGroupTitle>
 
-            <div className='space-y-2'>
-              <Label htmlFor='dateDebutImpaye' className='text-sm font-medium'>
-                <span className='text-red-500'>* </span>Début impayés
-              </Label>
-              <Input
-                id='dateDebutImpaye'
-                type='date'
-                value={formData.dateDebutImpaye}
-                onChange={(e) => handleChange('dateDebutImpaye', e.target.value)}
-                className={errors.dateDebutImpaye ? 'border-red-300' : ''}
-              />
-              {errors.dateDebutImpaye && <p className='text-red-600 text-sm'>{errors.dateDebutImpaye}</p>}
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='dateFinImpaye' className='text-sm font-medium'>
-                <span className='text-red-500'>* </span>Fin impayés
-              </Label>
-              <Input
-                id='dateFinImpaye'
-                type='date'
-                value={formData.dateFinImpaye}
-                onChange={(e) => handleChange('dateFinImpaye', e.target.value)}
-                className={errors.dateFinImpaye ? 'border-red-300' : ''}
-              />
-              {errors.dateFinImpaye && <p className='text-red-600 text-sm'>{errors.dateFinImpaye}</p>}
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='montantLoyerImpaye' className='text-sm font-medium'>
-                Montant Loyer impayé (MAD)
-              </Label>
-              <Input
-                id='montantLoyerImpaye'
-                type='number'
-                step='0.01'
-                value={formData.montantLoyerImpaye ?? ''}
-                onChange={(e) => handleChange('montantLoyerImpaye', numOrNull(e.target.value))}
-              />
-            </div>
-
-            <div className='space-y-2'>
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
               <Label htmlFor='type' className='text-sm font-medium'>
                 Type
               </Label>
@@ -258,12 +189,67 @@ const Form = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='loyerMensuelTTC' className='text-sm font-medium'>
+                Loyer mensuel TTC (MAD)
+              </Label>
+              <Input
+                id='loyerMensuelTTC'
+                type='number'
+                step='0.01'
+                value={formData.loyerMensuelTTC ?? ''}
+                onChange={(e) => handleChange('loyerMensuelTTC', numOrNull(e.target.value))}
+              />
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='dateDebutImpaye' className='text-sm font-medium'>
+                <span className='text-red-500'>* </span>Début impayés
+              </Label>
+              <Input
+                id='dateDebutImpaye'
+                type='date'
+                value={formData.dateDebutImpaye}
+                onChange={(e) => handleChange('dateDebutImpaye', e.target.value)}
+                className={errors.dateDebutImpaye ? 'border-red-300' : ''}
+              />
+              {errors.dateDebutImpaye && <p className='text-red-600 text-sm'>{errors.dateDebutImpaye}</p>}
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='dateFinImpaye' className='text-sm font-medium'>
+                <span className='text-red-500'>* </span>Fin impayés
+              </Label>
+              <Input
+                id='dateFinImpaye'
+                type='date'
+                value={formData.dateFinImpaye}
+                onChange={(e) => handleChange('dateFinImpaye', e.target.value)}
+                className={errors.dateFinImpaye ? 'border-red-300' : ''}
+              />
+              {errors.dateFinImpaye && <p className='text-red-600 text-sm'>{errors.dateFinImpaye}</p>}
+            </div>
+
+            <div className='min-w-0 space-y-1.5 col-span-12 sm:col-span-6 md:col-span-4'>
+              <Label htmlFor='montantLoyerImpaye' className='text-sm font-medium'>
+                Montant Loyer impayé (MAD)
+              </Label>
+              <Input
+                id='montantLoyerImpaye'
+                type='number'
+                step='0.01'
+                value={formData.montantLoyerImpaye ?? ''}
+                onChange={(e) => handleChange('montantLoyerImpaye', numOrNull(e.target.value))}
+              />
+            </div>
           </Section>
         </form>
       </CardContent>
       <Separator />
       <CardFooter className='flex justify-end gap-2 mt-6'>
-        <Button variant='secondary' onClick={() => navigate(backPath)}>
+        <Button variant='outline'
+          className='border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary' onClick={() => navigate(backPath)}>
           <ArrowLeft />
           Retour
         </Button>

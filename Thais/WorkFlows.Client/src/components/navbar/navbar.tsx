@@ -28,6 +28,21 @@ const LABEL_MAP: Record<string, string> = {
   fiche: 'Fiche projet',
   planning: 'Planification',
   'qr-codes': 'QR Codes',
+  // Blocs du Reporting : mêmes noms que sur le hub (accents compris).
+  'revision-loyer': 'Révision Loyer',
+  'etat-des-loyers': 'Etat des loyers Comptables',
+  'etat-par-immeuble': 'Etat des loyers / Actif',
+  'impayes-par-age': 'Etat des loyers impayés par période',
+  'etat-impaye': 'Etat Impayé',
+  'suivi-impaye': 'Suivi Impayé',
+  'apercu-emissions-encaissement': 'Etat globale Emissions / Encaissements',
+  'suivi-encaissement': 'Suivi Encaissement',
+  'nouveaux-baux': 'Etat des Nouveaux Baux',
+  'cpc-immobilier': 'CPC Immobilier',
+  'patrimoine-opci': 'Patrimoine OPCI',
+  'etats-reglementaires': 'États réglementaires',
+  'taxe-habitation': 'Taxe d’habitation',
+  'rapport-encaisseur': 'Rapport encaisseur',
   materiaux: 'Matériaux',
   'familles-materiaux': 'Familles de matériaux',
   contrats: 'Contrats',
@@ -229,8 +244,17 @@ const Navbar = () => {
       last.label = 'Biens';
     }
   }
+  // Une page d'Archives ouverte depuis un bloc du Reporting (?from=reporting) garde le fil d'ariane du Reporting.
+  const fromReporting =
+    location.pathname === '/archives/annulations-quittances' &&
+    new URLSearchParams(location.search).get('from') === 'reporting';
   // La première miette correspond déjà à la section racine affichée ci-dessus : on l'enlève pour éviter le doublon.
-  const breadcrumbs = fullOverrideEntry
+  const breadcrumbs = fromReporting
+    ? [
+        { label: 'Reporting', path: '/reporting' },
+        { label: 'Etat Annulation des Quittances', path: location.pathname },
+      ]
+    : fullOverrideEntry
     ? [
         ...fullOverrideEntry[1].crumbs,
         // Segments après la base (ex: "ajouter", "modifier/:id") : repris tels quels depuis

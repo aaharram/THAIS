@@ -1,8 +1,17 @@
 import { BaseDialog } from '@/components/dialog/dialog';
+import {
+  Field,
+  FormErrorBanner,
+  FormGrid,
+  FormGroupTitle,
+  FormSection,
+  SelectField,
+  TextAreaField,
+  TextField,
+} from '@/components/form/form-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -11,7 +20,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Textarea } from '@/components/ui/textarea';
 import { Title } from '@/components/ui/title';
 import { AppDispatch, RootState } from '@/store';
 import { lookupModules } from '@/store/features/configuration/lookupModules';
@@ -29,40 +37,13 @@ import {
   resetLocataire,
 } from '@/store/features/leasing/locatairesSlice';
 import { useAppSelector } from '@/store/hooks';
-import { FileText, Info, Plus, User, Users, ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, FileText, MapPin, Paperclip, Plus, Save, StickyNote, User, Users } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router';
 import { z } from 'zod';
 
 const backPath = '/leasing-management/locataires';
-
-const Section = ({
-  icon: Icon,
-  title,
-  children,
-}: {
-  icon: typeof Info;
-  title: string;
-  children: React.ReactNode;
-}) => (
-  <div className='border rounded-lg overflow-hidden'>
-    <div className='bg-gray-50 px-4 py-3 flex items-center gap-2 border-b'>
-      <div className='flex items-center justify-center h-7 w-7 rounded-full bg-blue-100 text-blue-600'>
-        <Icon className='h-4 w-4' />
-      </div>
-      <h3 className='text-base font-semibold text-gray-900'>{title}</h3>
-    </div>
-    <div className='p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4'>{children}</div>
-  </div>
-);
-
-const RequiredLabel = ({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) => (
-  <Label htmlFor={htmlFor} className='text-sm font-medium'>
-    <span className='text-red-500'>* </span>
-    {children}
-  </Label>
-);
 
 const emptyForm: LocataireRequest = {
   codeLocataire: '',
@@ -247,396 +228,320 @@ const Form = ({ details }: { details?: boolean }) => {
       </CardHeader>
       <Separator />
       <CardContent className='py-6 px-4 sm:px-6 space-y-6'>
-        {Object.keys(errors).length > 0 && (
-          <div className='rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600'>
-            {Object.values(errors).join(' ')}
-          </div>
-        )}
+        <FormErrorBanner errors={errors} />
         <form onSubmit={handleSubmit} className='space-y-6'>
-          <Section icon={Users} title='Locataire'>
-            <div className='space-y-2'>
-              <Label htmlFor='codeLocataire' className='text-sm font-medium'>
-                Code Locataire
-              </Label>
-              <Input
-                id='codeLocataire'
-                value={formData.codeLocataire ?? ''}
-                onChange={(e) => handleChange('codeLocataire', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-            <div className='space-y-2'>
-              <RequiredLabel htmlFor='typeLocataire'>Type</RequiredLabel>
-              <Select
+          {/* ------------------------------------------------ 1. qui est le locataire */}
+          <FormSection icon={Users} title='Identité' description='Type, nom et identification légale du locataire'>
+            <FormGrid>
+              <FormGroupTitle>Locataire</FormGroupTitle>
+              <SelectField
+                id='typeLocataire'
+                label='Type'
+                required
+                span={4}
                 value={formData.typeLocataire.toString()}
-                onValueChange={(value) => handleChange('typeLocataire', Number(value))}
+                onChange={(value) => handleChange('typeLocataire', Number(value))}
+                options={TYPES_LOCATAIRE.map((t) => ({ value: t.value.toString(), label: t.label }))}
                 disabled={changeToDetails}
-              >
-                <SelectTrigger id='typeLocataire'>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TYPES_LOCATAIRE.map((t) => (
-                    <SelectItem key={t.value} value={t.value.toString()}>
-                      {t.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                error={errors.typeLocataire}
+              />
+                  <TextField
+                    id='codeLocataire'
+                    label='Code locataire'
+                    span={4}
+                    value={formData.codeLocataire}
+                    onChange={(v) => handleChange('codeLocataire', v)}
+                    disabled={changeToDetails}
+                    error={errors.codeLocataire}
+                  />
+                  <TextField
+                    id='designationEntreprise'
+                    label='Raison sociale'
+                    span={4}
+                    value={formData.designationEntreprise}
+                    onChange={(v) => handleChange('designationEntreprise', v)}
+                    disabled={changeToDetails}
+                    error={errors.designationEntreprise}
+                  />
+                  <TextField
+                    id='prenom'
+                    label='Prénom'
+                    span={4}
+                    value={formData.prenom}
+                    onChange={(v) => handleChange('prenom', v)}
+                    disabled={changeToDetails}
+                    error={errors.prenom}
+                  />
+                  <TextField
+                    id='nom'
+                    label='Nom'
+                    span={4}
+                    value={formData.nom}
+                    onChange={(v) => handleChange('nom', v)}
+                    disabled={changeToDetails}
+                    error={errors.nom}
+                  />
+                  <TextField
+                    id='noCIN'
+                    label='CIN'
+                    span={4}
+                    required
+                    value={formData.noCIN}
+                    onChange={(v) => handleChange('noCIN', v)}
+                    disabled={changeToDetails}
+                    error={errors.noCIN}
+                  />
+              <FormGroupTitle>Identification légale</FormGroupTitle>
+                  <TextField
+                    id='ice'
+                    label='ICE'
+                    span={4}
+                    required
+                    value={formData.ice}
+                    onChange={(v) => handleChange('ice', v)}
+                    disabled={changeToDetails}
+                    error={errors.ice}
+                  />
+                  <TextField
+                    id='rc'
+                    label='RC'
+                    span={4}
+                    value={formData.rc}
+                    onChange={(v) => handleChange('rc', v)}
+                    disabled={changeToDetails}
+                    error={errors.rc}
+                  />
+                  <TextField
+                    id='idF'
+                    label='IF'
+                    span={4}
+                    value={formData.idF}
+                    onChange={(v) => handleChange('idF', v)}
+                    disabled={changeToDetails}
+                    error={errors.idF}
+                  />
+            </FormGrid>
+          </FormSection>
 
-            <div className='space-y-2'>
-              <Label htmlFor='designationEntreprise' className='text-sm font-medium'>
-                Raison sociale
-              </Label>
-              <Input
-                id='designationEntreprise'
-                value={formData.designationEntreprise ?? ''}
-                onChange={(e) => handleChange('designationEntreprise', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='rc' className='text-sm font-medium'>
-                RC
-              </Label>
-              <Input
-                id='rc'
-                value={formData.rc ?? ''}
-                onChange={(e) => handleChange('rc', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='idF' className='text-sm font-medium'>
-                IF
-              </Label>
-              <Input
-                id='idF'
-                value={formData.idF ?? ''}
-                onChange={(e) => handleChange('idF', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-            <div className='space-y-2'>
-              <RequiredLabel htmlFor='noCIN'>CIN</RequiredLabel>
-              <Input
-                id='noCIN'
-                value={formData.noCIN ?? ''}
-                onChange={(e) => handleChange('noCIN', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <RequiredLabel htmlFor='ice'>ICE</RequiredLabel>
-              <Input
-                id='ice'
-                value={formData.ice ?? ''}
-                onChange={(e) => handleChange('ice', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='prenom' className='text-sm font-medium'>
-                Prénom
-              </Label>
-              <Input
-                id='prenom'
-                value={formData.prenom ?? ''}
-                onChange={(e) => handleChange('prenom', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='nom' className='text-sm font-medium'>
-                Nom
-              </Label>
-              <Input
-                id='nom'
-                value={formData.nom ?? ''}
-                onChange={(e) => handleChange('nom', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='telephone' className='text-sm font-medium'>
-                Téléphone
-              </Label>
-              <Input
-                id='telephone'
-                value={formData.telephone ?? ''}
-                onChange={(e) => handleChange('telephone', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='email' className='text-sm font-medium'>
-                Email
-              </Label>
-              <Input
-                id='email'
-                value={formData.email ?? ''}
-                onChange={(e) => handleChange('email', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='adresse' className='text-sm font-medium'>
-                Adresse
-              </Label>
-              <Input
-                id='adresse'
-                value={formData.adresse ?? ''}
-                onChange={(e) => handleChange('adresse', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='postalCode' className='text-sm font-medium'>
-                Code postal
-              </Label>
-              <Input
-                id='postalCode'
-                value={formData.postalCode ?? ''}
-                onChange={(e) => handleChange('postalCode', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='noCity' className='text-sm font-medium'>
-                Ville
-              </Label>
-              <Select
+          {/* ------------------------------------------------ 2. comment le joindre */}
+          <FormSection icon={MapPin} title='Coordonnées' description='Téléphone, e-mail et adresse'>
+            <FormGrid>
+              <FormGroupTitle>Contact</FormGroupTitle>
+                  <TextField
+                    id='telephone'
+                    label='Téléphone'
+                    span={4}
+                    inputMode='tel'
+                    value={formData.telephone}
+                    onChange={(v) => handleChange('telephone', v)}
+                    disabled={changeToDetails}
+                    error={errors.telephone}
+                  />
+                  <TextField
+                    id='email'
+                    label='Email'
+                    span={8}
+                    inputMode='email'
+                    value={formData.email}
+                    onChange={(v) => handleChange('email', v)}
+                    disabled={changeToDetails}
+                    error={errors.email}
+                  />
+              <FormGroupTitle>Adresse</FormGroupTitle>
+                  <TextField
+                    id='adresse'
+                    label='Adresse'
+                    span={12}
+                    value={formData.adresse}
+                    onChange={(v) => handleChange('adresse', v)}
+                    disabled={changeToDetails}
+                    error={errors.adresse}
+                  />
+                  <TextField
+                    id='postalCode'
+                    label='Code postal'
+                    span={4}
+                    value={formData.postalCode}
+                    onChange={(v) => handleChange('postalCode', v)}
+                    disabled={changeToDetails}
+                    error={errors.postalCode}
+                  />
+              <SelectField
+                id='noCity'
+                label='Ville'
+                span={4}
                 value={formData.noCity?.toString() || '0'}
-                onValueChange={(value) => handleChange('noCity', value === '0' ? null : Number(value))}
+                onChange={(v) => handleChange('noCity', v === '0' ? null : Number(v))}
+                options={[{ value: '0', label: 'Aucune' }, ...villes.map((v) => ({ value: v.numero.toString(), label: v.designation }))]}
                 disabled={changeToDetails}
-              >
-                <SelectTrigger id='noCity'>
-                  <SelectValue placeholder='Sélectionnez...' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='0'>Aucune</SelectItem>
-                  {villes.map((v) => (
-                    <SelectItem key={v.numero} value={v.numero.toString()}>
-                      {v.designation}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='noCountry' className='text-sm font-medium'>
-                Pays
-              </Label>
-              <Select
+              />
+              <SelectField
+                id='noCountry'
+                label='Pays'
+                span={4}
                 value={formData.noCountry?.toString() || '0'}
-                onValueChange={(value) => handleChange('noCountry', value === '0' ? null : Number(value))}
+                onChange={(v) => handleChange('noCountry', v === '0' ? null : Number(v))}
+                options={[{ value: '0', label: 'Aucun' }, ...paysList.map((p) => ({ value: p.numero.toString(), label: p.designation }))]}
                 disabled={changeToDetails}
-              >
-                <SelectTrigger id='noCountry'>
-                  <SelectValue placeholder='Sélectionnez...' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='0'>Aucun</SelectItem>
-                  {paysList.map((p) => (
-                    <SelectItem key={p.numero} value={p.numero.toString()}>
-                      {p.designation}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div />
+              />
+            </FormGrid>
+          </FormSection>
 
-            <div className='space-y-2 col-span-full'>
-              <Label htmlFor='notes' className='text-sm font-medium'>
-                Note
-              </Label>
-              <Textarea
+          {/* ------------------------------------------------ 3. second contact */}
+          <FormSection icon={User} title='Autre contact' description='Personne à joindre en second'>
+            <FormGrid>
+                  <TextField
+                    id='autreContactPrenom'
+                    label='Prénom'
+                    span={4}
+                    value={formData.autreContactPrenom}
+                    onChange={(v) => handleChange('autreContactPrenom', v)}
+                    disabled={changeToDetails}
+                    error={errors.autreContactPrenom}
+                  />
+                  <TextField
+                    id='autreContactNom'
+                    label='Nom'
+                    span={4}
+                    value={formData.autreContactNom}
+                    onChange={(v) => handleChange('autreContactNom', v)}
+                    disabled={changeToDetails}
+                    error={errors.autreContactNom}
+                  />
+                  <TextField
+                    id='autreContactPoste'
+                    label='Poste'
+                    span={4}
+                    value={formData.autreContactPoste}
+                    onChange={(v) => handleChange('autreContactPoste', v)}
+                    disabled={changeToDetails}
+                    error={errors.autreContactPoste}
+                  />
+                  <TextField
+                    id='autreContactTelephone'
+                    label='Téléphone'
+                    span={4}
+                    inputMode='tel'
+                    value={formData.autreContactTelephone}
+                    onChange={(v) => handleChange('autreContactTelephone', v)}
+                    disabled={changeToDetails}
+                    error={errors.autreContactTelephone}
+                  />
+                  <TextField
+                    id='autreContactEmail'
+                    label='Email'
+                    span={8}
+                    inputMode='email'
+                    value={formData.autreContactEmail}
+                    onChange={(v) => handleChange('autreContactEmail', v)}
+                    disabled={changeToDetails}
+                    error={errors.autreContactEmail}
+                  />
+            </FormGrid>
+          </FormSection>
+
+          <FormSection icon={StickyNote} title='Notes'>
+            <FormGrid>
+              <TextAreaField
                 id='notes'
-                rows={3}
-                value={formData.notes ?? ''}
-                onChange={(e) => handleChange('notes', e.target.value)}
+                label='Note'
+                value={formData.notes}
+                onChange={(v) => handleChange('notes', v)}
                 disabled={changeToDetails}
+                error={errors.notes}
               />
-            </div>
-          </Section>
+            </FormGrid>
+          </FormSection>
 
-          <div className='border rounded-lg overflow-hidden'>
-            <div className='bg-gray-50 px-4 py-3 flex items-center justify-between gap-2 border-b'>
-              <div className='flex items-center gap-2'>
-                <div className='flex items-center justify-center h-7 w-7 rounded-full bg-blue-100 text-blue-600'>
-                  <FileText className='h-4 w-4' />
-                </div>
-                <h3 className='text-base font-semibold text-gray-900'>Dossier Administratif</h3>
-              </div>
-              <span className='inline-block text-xs font-bold px-2.5 py-1 rounded-full bg-blue-100 text-blue-700'>
-                Taux d'avancement {tauxAvancement}%
+          {/* ------------------------------------------------ pièces du dossier, sur toute la largeur */}
+          <FormSection
+            icon={FileText}
+            title='Dossier administratif'
+            description='Pièces à fournir par le locataire'
+            aside={
+              <span className='rounded-full bg-sky-500/10 px-2.5 py-1 text-xs font-medium text-sky-700 dark:text-sky-400'>
+                Taux d'avancement {tauxAvancement} %
               </span>
+            }
+          >
+            <div className='mb-4 h-1.5 w-full overflow-hidden rounded-full bg-muted'>
+              <div className='h-full rounded-full bg-primary transition-all' style={{ width: `${tauxAvancement}%` }} />
             </div>
-            <div className='p-4 sm:p-6 overflow-x-auto'>
-              <table className='w-full text-sm'>
-                <thead>
-                  <tr className='text-left text-gray-500 border-b'>
-                    <th className='py-2 pr-4 font-medium'>Documents</th>
-                    <th className='py-2 pr-4 font-medium'>Etat du document</th>
-                    <th className='py-2 font-medium'>Joindre le document</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(
-                    [
-                      { key: 'statutsDispo', label: 'Statuts' },
-                      { key: 'rcDispo', label: 'RC' },
-                      { key: 'pieceIdentiteDispo', label: 'Copie CIN' },
-                      { key: 'autresDispo', label: 'Autres documents' },
-                    ] as const
-                  ).map((row) => (
-                    <tr key={row.key} className='border-b last:border-b-0'>
-                      <td className='py-3 pr-4'>{row.label}</td>
-                      <td className='py-3 pr-4'>
-                        <Select
-                          value={formData[row.key] ? 'true' : 'false'}
-                          onValueChange={(value) => handleChange(row.key, value === 'true')}
-                          disabled={changeToDetails}
-                        >
-                          <SelectTrigger className='w-48'>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {ETATS_DOCUMENT.map((e) => (
-                              <SelectItem key={e.label} value={e.value.toString()}>
-                                {e.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </td>
-                      <td className='py-3'>
-                        <div className='flex items-center gap-2'>
-                          <Input
-                            readOnly
-                            value={documentFiles[row.key]?.name ?? ''}
-                            placeholder='Aucun fichier sélectionné'
-                            className='bg-gray-50 text-gray-500'
-                          />
-                          <Button
-                            type='button'
-                            variant='outline'
-                            disabled={changeToDetails}
-                            onClick={() => fileInputRefs.current[row.key]?.click()}
-                          >
-                            Parcourir
-                          </Button>
-                          <input
-                            type='file'
-                            ref={(el) => {
-                              fileInputRefs.current[row.key] = el;
-                            }}
-                            className='hidden'
-                            onChange={(e) =>
-                              setDocumentFiles((prev) => ({ ...prev, [row.key]: e.target.files?.[0] ?? null }))
-                            }
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className='hidden grid-cols-12 gap-3 pb-2 text-xs font-medium text-muted-foreground md:grid'>
+              <div className='col-span-3'>Documents</div>
+              <div className='col-span-3'>État du document</div>
+              <div className='col-span-6'>Joindre le document</div>
             </div>
-          </div>
+            <div className='divide-y'>
+              {(
+                [
+                  { key: 'statutsDispo', label: 'Statuts' },
+                  { key: 'rcDispo', label: 'RC' },
+                  { key: 'pieceIdentiteDispo', label: 'Copie CIN' },
+                  { key: 'autresDispo', label: 'Autres documents' },
+                ] as const
+              ).map((row) => (
+                <div key={row.key} className='grid grid-cols-12 items-center gap-3 py-3'>
+                  <div className='col-span-12 text-sm font-medium md:col-span-3'>{row.label}</div>
+                  <div className='col-span-12 sm:col-span-5 md:col-span-3'>
+                    <Select
+                      value={formData[row.key] ? 'true' : 'false'}
+                      onValueChange={(value) => handleChange(row.key, value === 'true')}
+                      disabled={changeToDetails}
+                    >
+                      <SelectTrigger className='w-full'>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ETATS_DOCUMENT.map((e) => (
+                          <SelectItem key={e.label} value={e.value.toString()}>
+                            {e.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className='col-span-12 flex items-center gap-2 sm:col-span-7 md:col-span-6'>
+                    <Input
+                      readOnly
+                      value={documentFiles[row.key]?.name ?? ''}
+                      placeholder='Aucun fichier sélectionné'
+                      className='w-full bg-muted/40'
+                    />
+                    <Button
+                      type='button'
+                      variant='outline'
+                      disabled={changeToDetails}
+                      onClick={() => fileInputRefs.current[row.key]?.click()}
+                    >
+                      Parcourir
+                    </Button>
+                    <input
+                      type='file'
+                      ref={(el) => {
+                        fileInputRefs.current[row.key] = el;
+                      }}
+                      className='hidden'
+                      onChange={(e) => setDocumentFiles((prev) => ({ ...prev, [row.key]: e.target.files?.[0] ?? null }))}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </FormSection>
 
-          <Section icon={User} title='Autre Contact'>
-            <div className='space-y-2'>
-              <Label htmlFor='autreContactPrenom' className='text-sm font-medium'>
-                Prénom
-              </Label>
-              <Input
-                id='autreContactPrenom'
-                value={formData.autreContactPrenom ?? ''}
-                onChange={(e) => handleChange('autreContactPrenom', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='autreContactNom' className='text-sm font-medium'>
-                Nom
-              </Label>
-              <Input
-                id='autreContactNom'
-                value={formData.autreContactNom ?? ''}
-                onChange={(e) => handleChange('autreContactNom', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='autreContactPoste' className='text-sm font-medium'>
-                Code postal
-              </Label>
-              <Input
-                id='autreContactPoste'
-                value={formData.autreContactPoste ?? ''}
-                onChange={(e) => handleChange('autreContactPoste', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='autreContactTelephone' className='text-sm font-medium'>
-                Téléphone
-              </Label>
-              <Input
-                id='autreContactTelephone'
-                value={formData.autreContactTelephone ?? ''}
-                onChange={(e) => handleChange('autreContactTelephone', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='autreContactEmail' className='text-sm font-medium'>
-                Email
-              </Label>
-              <Input
-                id='autreContactEmail'
-                value={formData.autreContactEmail ?? ''}
-                onChange={(e) => handleChange('autreContactEmail', e.target.value)}
-                disabled={changeToDetails}
-              />
-            </div>
-          </Section>
-
-          <div className='border rounded-lg overflow-hidden'>
-            <div className='bg-gray-50 px-4 py-3 flex items-center gap-2 border-b'>
-              <div className='flex items-center justify-center h-7 w-7 rounded-full bg-blue-100 text-blue-600'>
-                <FileText className='h-4 w-4' />
-              </div>
-              <h3 className='text-base font-semibold text-gray-900'>Autre documents</h3>
-            </div>
-            <div className='p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4'>
-              <div className='space-y-2'>
-                <Label htmlFor='autreDocumentFichier' className='text-sm font-medium'>
-                  Fichier
-                </Label>
+          <FormSection icon={Paperclip} title='Autres documents' description='Documents complémentaires'>
+            <FormGrid>
+              <Field label='Fichier' htmlFor='autreDocumentFichier' span={6}>
                 <div className='flex items-center gap-2'>
                   <Input
                     id='autreDocumentFichier'
                     readOnly
                     value={autreDocumentFichier?.name ?? ''}
                     placeholder='Aucun fichier sélectionné'
-                    className='bg-gray-50 text-gray-500'
+                    className='w-full bg-muted/40'
                   />
-                  <Button
-                    type='button'
-                    variant='outline'
-                    disabled={changeToDetails}
-                    onClick={() => autreDocumentInputRef.current?.click()}
-                  >
+                  <Button type='button' variant='outline' disabled={changeToDetails} onClick={() => autreDocumentInputRef.current?.click()}>
                     Parcourir
                   </Button>
                   <input
@@ -658,20 +563,28 @@ const Form = ({ details }: { details?: boolean }) => {
                     <Plus className='h-4 w-4' />
                   </Button>
                 </div>
-              </div>
-              <div className='space-y-2'>
-                <Label className='text-sm font-medium'>Document joint</Label>
-                <div className='min-h-10 rounded-md border px-3 py-2 text-sm text-gray-600'>
-                  {autresDocuments.length > 0 ? autresDocuments.join(', ') : '-'}
+              </Field>
+              <Field label='Documents joints' span={6}>
+                <div className='flex min-h-10 flex-wrap items-center gap-1.5 rounded-md border bg-muted/20 px-3 py-2 text-sm'>
+                  {autresDocuments.length > 0 ? (
+                    autresDocuments.map((name, i) => (
+                      <span key={i} className='inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium'>
+                        {name}
+                      </span>
+                    ))
+                  ) : (
+                    <span className='text-muted-foreground'>Aucun document joint</span>
+                  )}
                 </div>
-              </div>
-            </div>
-          </div>
+              </Field>
+            </FormGrid>
+          </FormSection>
         </form>
       </CardContent>
       <Separator />
       <CardFooter className='flex justify-end gap-2 mt-6'>
-        <Button variant='secondary' onClick={() => navigate(backPath)}>
+        <Button variant='outline'
+          className='border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary' onClick={() => navigate(backPath)}>
           <ArrowLeft />
           Retour
         </Button>

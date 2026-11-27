@@ -1,6 +1,8 @@
 import { BaseDialog } from '@/components/dialog/dialog';
+import { fetchAllPages } from '@/components/export/export-menu';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { Chip, KPI_TONES, KpiCard, KpiStrip, MoneyCell, PrimarySecondary, RowActions, fmtMoney as fmtKpi } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ImportMenu } from '@/components/import/import-menu';
@@ -10,13 +12,13 @@ import { ChargeResponse } from '@/store/features/property-management/charge-sche
 import { deleteCharge, getAllCharges, resetCharge, setCharge } from '@/store/features/property-management/chargesSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { ColumnDef } from '@tanstack/react-table';
-import { Banknote, Pencil, Plus, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Banknote, Plus, Receipt, TrendingUp, Wallet } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 const ecartClass = (ecart?: number | null) => {
   if (ecart == null) return 'text-gray-500';
-  return ecart > 0 ? 'text-red-600' : 'text-green-700';
+  return ecart > 0 ? 'text-red-600' : 'text-emerald-700 dark:text-emerald-400';
 };
 
 const Charges = () => {
@@ -26,6 +28,25 @@ const Charges = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ChargeResponse | null>(null);
   const [search, setSearch] = useState('');
+  // Tous les enregistrements (hors pagination) pour le bandeau de synthèse.
+  const [stats, setStats] = useState<ChargeResponse[] | null>(null);
+  const loadStats = useCallback(() => {
+    fetchAllPages<ChargeResponse>('/api/charges')
+      .then(setStats)
+      .catch(() => setStats([]));
+  }, []);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
+
+  const kpis = useMemo(() => {
+    if (!stats) return null;
+    const prevu = stats.reduce((s, c) => s + (c.montant ?? 0), 0);
+    const reel = stats.reduce((s, c) => s + (c.realisation ?? 0), 0);
+    // Même règle que la colonne « Écart » : seules les lignes déjà réalisées comptent.
+    return { total: stats.length, prevu, reel, ecart: stats.reduce((s, c) => s + (c.ecart ?? 0), 0) };
+  }, [stats]);
 
   useEffect(() => {
     dispatch(getAllCharges({ pageNumber: 1, pageSize: 10, search }));
@@ -43,7 +64,7 @@ const Charges = () => {
 
   const confirmDelete = () => {
     if (selectedItem) {
-      dispatch(deleteCharge(selectedItem.numero));
+      dispatch(deleteCharge(selectedItem.numero)).then(() => loadStats());
       setSelectedItem(null);
       setDeleteDialogOpen(false);
     }
@@ -56,17 +77,17 @@ const Charges = () => {
     {
       accessorKey: 'codeCharge',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Code' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.codeCharge || '-'}</div>,
+      cell: ({ row }) => row.original.codeCharge ? <Chip className='font-mono'>{row.original.codeCharge}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'nomBuilding',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Actif' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomBuilding || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomBuilding} />,
     },
     {
       accessorKey: 'nomTypologieCharge',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Typologie' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomTypologieCharge || '-'}</div>,
+      cell: ({ row }) => row.original.nomTypologieCharge ? <Chip>{row.original.nomTypologieCharge}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'annee',
@@ -75,13 +96,13 @@ const Charges = () => {
     },
     {
       accessorKey: 'montant',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Prévu' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtMoney(row.original.montant)}</div>,
+      header: () => <div className='text-right'>Prévu</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.montant} />,
     },
     {
       accessorKey: 'realisation',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Réel' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtMoney(row.original.realisation)}</div>,
+      header: () => <div className='text-right'>Réel</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.realisation} />,
     },
     {
       accessorKey: 'ecart',
@@ -96,37 +117,19 @@ const Charges = () => {
       id: 'dateDecaissement',
       accessorFn: (row) => fmtDate(row.dateDecaissement),
       header: ({ column }) => <DataTableColumnHeader column={column} title='Décaissement' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateDecaissement)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.dateDecaissement)}</span>,
     },
     {
       id: 'actions',
       header: () => <div className='text-right'>Actions</div>,
       cell: ({ row }) => (
-        <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              dispatch(setCharge(row.original));
-              navigate(`modifier/${row.original.numero}`);
-            }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-red-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row.original);
-            }}
-          >
-            <Trash2 className='h-4 w-4 text-red-600' />
-          </Button>
-        </div>
+        <RowActions
+          onEdit={() => {
+            dispatch(setCharge(row.original));
+            navigate(`modifier/${row.original.numero}`);
+          }}
+          onDelete={() => handleDelete(row.original)}
+        />
       ),
     },
   ];
@@ -160,6 +163,37 @@ const Charges = () => {
               },
             ]}
           />
+
+          <KpiStrip>
+            <KpiCard
+              icon={Receipt}
+              label='Lignes de charges'
+              value={kpis ? String(kpis.total) : '—'}
+              hint={'au total'}
+              tone={KPI_TONES.primary}
+            />
+            <KpiCard
+              icon={Wallet}
+              label='Budget prévu'
+              value={kpis ? `${fmtKpi(kpis.prevu)} MAD` : '—'}
+              hint={'toutes années'}
+              tone={KPI_TONES.sky}
+            />
+            <KpiCard
+              icon={Banknote}
+              label='Réalisé'
+              value={kpis ? `${fmtKpi(kpis.reel)} MAD` : '—'}
+              hint={'montants décaissés'}
+              tone={KPI_TONES.green}
+            />
+            <KpiCard
+              icon={TrendingUp}
+              label='Écart'
+              value={kpis ? `${fmtKpi(kpis.ecart)} MAD` : '—'}
+              hint={kpis && kpis.ecart > 0 ? 'dépassement du budget' : 'sous le budget'}
+              tone={kpis && kpis.ecart > 0 ? KPI_TONES.red : KPI_TONES.green}
+            />
+          </KpiStrip>
         </div>
 
         <DataTable

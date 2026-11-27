@@ -1,6 +1,7 @@
 import { BaseDialog } from '@/components/dialog/dialog';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { AvatarCell, Chip, PrimarySecondary, RowActions } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ImportMenu } from '@/components/import/import-menu';
@@ -15,7 +16,7 @@ import {
 } from '@/store/features/property-management/prestatairesSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { ColumnDef } from '@tanstack/react-table';
-import { FileText, Handshake, Pencil, Plus, Trash2 } from 'lucide-react';
+import { FileText, Handshake, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -53,52 +54,34 @@ const Prestataires = () => {
     {
       accessorKey: 'designation',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Désignation' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.designation}</div>,
+      cell: ({ row }) => <AvatarCell name={row.original.designation} />,
     },
     {
       accessorKey: 'activite',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Activité' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.activite || '-'}</div>,
+      cell: ({ row }) => row.original.activite ? <Chip>{row.original.activite}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'ice',
       header: ({ column }) => <DataTableColumnHeader column={column} title='ICE' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.ice || '-'}</div>,
+      cell: ({ row }) => row.original.ice ? <Chip className='font-mono'>{row.original.ice}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'nomVille',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Ville' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomVille || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomVille} />,
     },
     {
       id: 'actions',
       header: () => <div className='text-right'>Actions</div>,
       cell: ({ row }) => (
-        <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              dispatch(setPrestataire(row.original));
-              navigate(`modifier/${row.original.numero}`);
-            }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-red-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row.original);
-            }}
-          >
-            <Trash2 className='h-4 w-4 text-red-600' />
-          </Button>
-        </div>
+        <RowActions
+          onEdit={() => {
+            dispatch(setPrestataire(row.original));
+            navigate(`modifier/${row.original.numero}`);
+          }}
+          onDelete={() => handleDelete(row.original)}
+        />
       ),
     },
   ];

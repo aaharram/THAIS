@@ -8,6 +8,11 @@ public class LocalResponse
     public string? NomBuilding { get; init; }
     public int? NoLocalType { get; init; }
     public string? NomLocalType { get; init; }
+
+    // RMANew (ListLocal) : Occupation (Loué / Vacant), Locataire et Montant (CC/TC) du bail en cours.
+    public bool Occupe { get; init; }
+    public string? Locataire { get; init; }
+    public decimal? MontantLoyer { get; init; }
     public string Designation { get; init; } = null!;
     public bool EnExploitation { get; init; }
     public bool Nondisponible { get; init; }
@@ -30,6 +35,8 @@ public class LocalResponse
     public decimal? ValeurInventaire { get; init; }
     public decimal? ValeurRealisation { get; init; }
     public string? Observation { get; init; }
+    public string? Image { get; init; }
+    public string? PlanLocal { get; init; }
     public string? Etat { get; init; }
     public string? Demande { get; init; }
     public string? Suggestion { get; init; }

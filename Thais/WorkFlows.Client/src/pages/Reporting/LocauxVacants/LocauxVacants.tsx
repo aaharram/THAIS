@@ -119,7 +119,7 @@ const LocauxVacants = () => {
           toolbar={
             <div className='flex items-center gap-2'>
               <Select value={noProprietaire.toString()} onValueChange={handleProprietaireChange}>
-                <SelectTrigger className='h-8 w-48'>
+                <SelectTrigger className='h-10 w-64 rounded-lg bg-card'>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

@@ -1,5 +1,6 @@
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { PrimarySecondary } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Title } from '@/components/ui/title';
@@ -34,7 +35,7 @@ const Syndics = () => {
     {
       accessorKey: 'nomBuilding',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Actif' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomBuilding}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomBuilding} />,
     },
     {
       accessorKey: 'nombreQuotePart',
@@ -47,7 +48,7 @@ const Syndics = () => {
       cell: ({ row }) => (
         <div className='flex items-center gap-2'>
           <button
-            className='inline-flex items-center justify-center h-6 min-w-6 px-1.5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold hover:bg-blue-200'
+            className='inline-flex items-center justify-center h-6 min-w-6 px-1.5 rounded-full bg-sky-500/10 text-sky-700 dark:text-sky-400 text-xs font-bold hover:bg-sky-500/20'
             onClick={(e) => {
               e.stopPropagation();
               navigate(`/property-management/syndics/${row.original.noBuilding}/reunions`);

@@ -2,6 +2,7 @@ import { ExportTiles } from '@/components/export/export-tiles';
 import { BaseDialog } from '@/components/dialog/dialog';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { AvatarCell, Chip, IconTile, MoneyCell, PrimarySecondary } from '@/components/table/list-cells';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Select,
@@ -136,28 +137,28 @@ const AnnulationEncaissement = () => {
     {
       accessorKey: 'numero',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Numéro' sorting />,
-      cell: ({ row }) => <div className='font-medium'>ENC{row.original.numero}</div>,
+      cell: ({ row }) => <Chip className='font-mono'>ENC{row.original.numero}</Chip>,
     },
     {
       accessorKey: 'nomLocataire',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Locataire' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomLocataire || '-'}</div>,
+      cell: ({ row }) => <AvatarCell name={row.original.nomLocataire} />,
     },
     {
       accessorKey: 'nomBuilding',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Actif' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomBuilding || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomBuilding} />,
     },
     {
       accessorKey: 'montant',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Encaissement (MAD)' />,
-      cell: ({ row }) => <div className='font-bold text-orange-600'>{fmtMontant(row.original.montant)}</div>,
+      header: () => <div className='text-right'>Encaissement</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.montant} />,
     },
     {
       id: 'datePaiement',
       accessorFn: (row) => fmtDate(row.datePaiement),
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date Encaissement' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.datePaiement)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.datePaiement)}</span>,
     },
     {
       id: 'periode',
@@ -175,32 +176,14 @@ const AnnulationEncaissement = () => {
       id: 'actionAnnulation',
       header: () => <div className='text-center'>Annuler</div>,
       cell: ({ row }) => (
-        <div className='flex justify-center'>
-          <button
-            type='button'
-            title="Annuler l'encaissement"
-            className='inline-flex h-7 w-7 items-center justify-center rounded-full bg-red-50 text-red-500 hover:bg-red-100'
-            onClick={() => setDialog({ item: row.original, action: 'confirmer' })}
-          >
-            <Ban className='h-4 w-4' />
-          </button>
-        </div>
+        <IconTile icon={Ban} label="Annuler l'encaissement" tone='amber' onClick={() => setDialog({ item: row.original, action: 'confirmer' })} />
       ),
     },
     {
       id: 'actionRejet',
       header: () => <div className='text-center'>Rejeter</div>,
       cell: ({ row }) => (
-        <div className='flex justify-center'>
-          <button
-            type='button'
-            title="Rejeter l'encaissement"
-            className='inline-flex h-7 w-7 items-center justify-center rounded-full bg-red-50 text-red-500 hover:bg-red-100'
-            onClick={() => setDialog({ item: row.original, action: 'rejeter' })}
-          >
-            <X className='h-4 w-4' />
-          </button>
-        </div>
+        <IconTile icon={X} label="Rejeter l'encaissement" tone='red' onClick={() => setDialog({ item: row.original, action: 'rejeter' })} />
       ),
     },
   ];
@@ -233,9 +216,9 @@ const AnnulationEncaissement = () => {
           pagination={pagination}
           toolbar={
             <div className='flex items-center gap-2'>
-              <div className='w-full sm:w-48'>
+              <div className='w-full sm:w-56'>
                 <Select value={noProprietaire} onValueChange={setNoProprietaire}>
-                  <SelectTrigger className='h-8'>
+                  <SelectTrigger className='h-10 rounded-lg bg-card'>
                     <SelectValue placeholder='Tous les Propriétaires' />
                   </SelectTrigger>
                   <SelectContent>

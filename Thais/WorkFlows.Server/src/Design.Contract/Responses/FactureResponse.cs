@@ -3,12 +3,20 @@ namespace Design.Contract.Responses;
 public class FactureResponse
 {
     public int Numero { get; init; }
+    // RMANew (ListFacture) : « Référence de Facture » = <propriétaire>/<année>/00<n° d'ordre dans l'année>
+    public string? Reference { get; init; }
     public int NoLocation { get; init; }
     public string? NumContratLocations { get; init; }
     public string? NomLocataire { get; init; }
     public string? NomBuilding { get; init; }
     public string? NomLocal { get; init; }
     public string? NomProprietaire { get; init; } // RMANew (Listetatannulationquittance.vb) : colonne "Entite"
+    // RMANew (JournalLoyer.vb) : colonnes du journal — N° locataire, Cpte Général (actif), Etage et App N° (local).
+    public int? NoBuilding { get; init; }
+    public int? NoProprietaire { get; init; }
+    public string? CodeLocataire { get; init; }
+    public string? CompteGeneral { get; init; }
+    public string? Etage { get; init; }
 
     public DateTime Periode { get; init; }
     public DateTime DateEmission { get; init; }

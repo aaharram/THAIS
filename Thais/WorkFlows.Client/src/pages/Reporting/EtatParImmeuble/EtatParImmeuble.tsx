@@ -24,9 +24,9 @@ const fmtMontant = (m: number) => m.toLocaleString('fr-FR', { minimumFractionDig
 // La nouvelle app n'a pas d'entité Affectation séparée - le code (N.A/GSR/GV/GG/AT/FP)
 // est un champ texte direct sur Building (NAffectation).
 const affectationLabel = (code?: string | null) => {
-  if (code === 'GV') return { label: 'Vie', className: 'text-blue-700 bg-blue-100' };
-  if (code === 'GG') return { label: 'Non vie', className: 'text-purple-700 bg-purple-100' };
-  if (code === 'GSR') return { label: 'GSR', className: 'text-teal-700 bg-teal-100' };
+  if (code === 'GV') return { label: 'Vie', className: 'bg-sky-500/10 text-sky-700 dark:text-sky-400' };
+  if (code === 'GG') return { label: 'Non vie', className: 'bg-violet-500/10 text-violet-700 dark:text-violet-400' };
+  if (code === 'GSR') return { label: 'GSR', className: 'bg-teal-500/10 text-teal-700 dark:text-teal-400' };
   return { label: code || 'N.A', className: 'text-gray-600 bg-gray-100' };
 };
 
@@ -147,7 +147,7 @@ const EtatParImmeuble = () => {
                       <td className='py-2 px-4'>{b.compteGeneral || '-'}</td>
                       <td className='py-2 px-4 text-center'>
                         <span
-                          className={`inline-block text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${affectation.className}`}
+                          className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${affectation.className}`}
                         >
                           {affectation.label}
                         </span>

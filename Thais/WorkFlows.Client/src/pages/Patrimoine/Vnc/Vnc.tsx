@@ -1,6 +1,7 @@
 import { BaseDialog } from '@/components/dialog/dialog';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { Chip, MoneyCell, PrimarySecondary, RowActions, fmtMoney as fmtKpi } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Title } from '@/components/ui/title';
@@ -8,7 +9,7 @@ import { VncResponse, VncSummary } from '@/store/features/patrimoine/vnc-schemas
 import { deleteVnc, getAllVnc, getVncSummary, resetVnc } from '@/store/features/patrimoine/vncSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowLeft, CirclePlus, Pencil, Plus, Trash2, TrendingUp } from 'lucide-react';
+import { ArrowLeft, CirclePlus, Plus, TrendingUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
@@ -59,19 +60,16 @@ const Vnc = () => {
 
   const backToSummary = () => setSearchParams({});
   const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString('fr-FR') : '-');
-  const fmtMontant = (m?: number | null) =>
-    m == null ? '-' : m.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
   const summaryColumns: ColumnDef<VncSummary>[] = [
     {
       accessorKey: 'codeImmeuble',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Code Immeuble' />,
-      cell: ({ row }) => <div className='font-medium'>{row.getValue('codeImmeuble')}</div>,
+      cell: ({ row }) => <Chip className='font-mono'>{row.original.codeImmeuble}</Chip>,
     },
     {
       accessorKey: 'nomBuilding',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Actif' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.getValue('nomBuilding')}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomBuilding} />,
     },
     {
       accessorKey: 'adresse',
@@ -81,17 +79,17 @@ const Vnc = () => {
     {
       accessorKey: 'affectation',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Affectation' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.affectation || '-'}</div>,
+      cell: ({ row }) => row.original.affectation ? <Chip>{row.original.affectation}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'usage',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Usage' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.usage || '-'}</div>,
+      cell: ({ row }) => row.original.usage ? <Chip>{row.original.usage}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'valeurBrut',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Valeur Brut' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtMontant(row.original.valeurBrut)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap tabular-nums'>{row.original.valeurBrut != null ? fmtKpi(row.original.valeurBrut) : '—'}</span>,
     },
     {
       id: 'provision',
@@ -125,18 +123,18 @@ const Vnc = () => {
     {
       accessorKey: 'derniereVnc',
       header: ({ column }) => <DataTableColumnHeader column={column} title='VNC / Provision' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtMontant(row.original.derniereVnc)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap tabular-nums'>{row.original.derniereVnc != null ? fmtKpi(row.original.derniereVnc) : '—'}</span>,
     },
     {
       id: 'valeurMarche',
       header: () => <div className='text-center'>Valeur Marché</div>,
-      cell: () => <div className='text-center font-medium'>-</div>,
+      cell: () => <div className='text-center text-muted-foreground'>—</div>,
     },
     {
       id: 'dateDerniereVnc',
       accessorFn: (row) => fmtDate(row.dateDerniereVnc),
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date VNC' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateDerniereVnc)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.dateDerniereVnc)}</span>,
     },
     {
       id: 'versions',
@@ -173,43 +171,20 @@ const Vnc = () => {
   const versionsColumns: ColumnDef<VncResponse>[] = [
     {
       accessorKey: 'montantVNC',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Montant VNC' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{fmtMontant(row.original.montantVNC)}</div>,
+      header: () => <div className='text-right'>Montant VNC</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.montantVNC} />,
     },
     {
       id: 'dateVNC',
       accessorFn: (row) => fmtDate(row.dateVNC),
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date VNC' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateVNC)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.dateVNC)}</span>,
     },
     {
       id: 'actions',
       header: () => <div className='text-right'>Actions</div>,
       cell: ({ row }) => (
-        <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/patrimoine/vnc/modifier/${row.original.numero}`);
-            }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-red-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row.original);
-            }}
-          >
-            <Trash2 className='h-4 w-4 text-red-600' />
-          </Button>
-        </div>
+        <RowActions onEdit={() => navigate(`/patrimoine/vnc/modifier/${row.original.numero}`)} onDelete={() => handleDelete(row.original)} />
       ),
     },
   ];

@@ -1,4 +1,3 @@
-import { BaseDialog } from '@/components/dialog/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -30,12 +29,10 @@ import {
 } from '@/store/features/patrimoine/building-schemas';
 import {
   createBuilding,
-  deleteBuilding,
   editBuilding,
   getBuildingById,
   resetBuilding,
 } from '@/store/features/patrimoine/buildingsSlice';
-import { getAllLocaux } from '@/store/features/patrimoine/locauxSlice';
 import { useAppSelector } from '@/store/hooks';
 import { downloadAttachment, uploadAttachment } from '@/store/services/attachments';
 import {
@@ -52,12 +49,10 @@ import {
   FolderOpen,
   Globe,
   Hammer,
-  Home,
   Info,
   Loader2,
   MapPin,
   Paperclip,
-  Pencil,
   Plus,
   RefreshCw,
   Ruler,
@@ -90,7 +85,7 @@ const emptyForm: BuildingRequest = {
   noEncaisseur: null,
   provenanceActif: null,
   ajouterContrainte: false,
-  noProprieteType: 'Immeuble',
+  noProprieteType: 'Mono-propriété',
   noProprietaire: null,
   responsable: '',
   contactResponsable: '',
@@ -190,7 +185,7 @@ const Box = ({
         )}
       </div>
       <div
-        className={`${open ? '' : 'hidden'} p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4 items-start`}
+        className={`${open ? '' : 'hidden'} p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-4 [&_input:not([type=checkbox])]:w-full [&_[role=combobox]]:w-full [&_textarea]:w-full items-start`}
       >
         {children}
       </div>
@@ -234,8 +229,7 @@ const Form = ({ details }: { details?: boolean }) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const userId = useAppSelector((state) => state.auth.auth!.id);
-  const [changeToDetails, setChangeToDetails] = useState<boolean>(details ?? false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [changeToDetails] = useState<boolean>(details ?? false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const item = useAppSelector((state: RootState) => state.buildings.item);
@@ -244,7 +238,6 @@ const Form = ({ details }: { details?: boolean }) => {
   const { allItems: proprietaires } = useAppSelector((state) => state.cfgProprietaires);
   const { allItems: villes } = useAppSelector((state) => state.cfgVilles);
   const { allItems: paysList } = useAppSelector((state) => state.cfgPays);
-  const { allItems: locaux } = useAppSelector((state) => state.locaux);
 
   const [formData, setFormData] = useState<BuildingRequest>({
     ...emptyForm,
@@ -294,12 +287,6 @@ const Form = ({ details }: { details?: boolean }) => {
       dispatch(getBuildingById(Number(id)));
     }
   }, [id, dispatch]);
-
-  useEffect(() => {
-    if (item) {
-      dispatch(getAllLocaux({ pageNumber: 1, pageSize: 100, filters: { NoBuilding: [item.numero] } }));
-    }
-  }, [item, dispatch]);
 
   const itemNumero = item?.numero;
   useEffect(() => {
@@ -508,15 +495,6 @@ const Form = ({ details }: { details?: boolean }) => {
     navigate(formData.noProspection ? `${backPath}?prospection=${formData.noProspection}` : backPath);
   };
 
-  const confirmDelete = () => {
-    if (item) {
-      dispatch(deleteBuilding(item.numero));
-      dispatch(resetBuilding());
-      navigate(backPath);
-      setDeleteDialogOpen(false);
-    }
-  };
-
   const numOrNull = (v: string) => (v === '' ? null : Number(v));
 
   // Valeur d'entrée = terrain + construction + aménagement (même somme que l'API, qui la
@@ -541,16 +519,6 @@ const Form = ({ details }: { details?: boolean }) => {
                 : 'Ajouter un actif'
             }
           />
-          {item && (
-            <div className='flex justify-end gap-2'>
-              <Button onClick={() => setChangeToDetails(!changeToDetails)}>
-                {changeToDetails ? 'Modifier' : 'Détails'}
-              </Button>
-              <Button variant='destructive' onClick={() => setDeleteDialogOpen(true)}>
-                Supprimer
-              </Button>
-            </div>
-          )}
         </CardTitle>
       </CardHeader>
       <Separator />
@@ -574,7 +542,7 @@ const Form = ({ details }: { details?: boolean }) => {
                 </Field>
 
                 {/* RMANew : « En Exploitation » est sur la même ligne que le nom de l'actif. */}
-                <Field label='Actif' htmlFor='designation' required error={errors.designation}>
+                <Field label='Nom propriété' htmlFor='designation' required error={errors.designation}>
                   <div className='flex items-center gap-3'>
                     <Input
                       id='designation'
@@ -730,9 +698,14 @@ const Form = ({ details }: { details?: boolean }) => {
                     disabled={changeToDetails}
                   >
                     <SelectTrigger id='noProprieteType'>
-                      <SelectValue />
+                      <SelectValue placeholder='Sélectionnez...' />
                     </SelectTrigger>
                     <SelectContent>
+                      {/* Ancienne valeur hors liste RMA (ex. « Immeuble ») : affichée pour ne pas la perdre. */}
+                      {formData.noProprieteType &&
+                        !(PROPRIETE_TYPES as readonly string[]).includes(formData.noProprieteType) && (
+                          <SelectItem value={formData.noProprieteType}>{formData.noProprieteType}</SelectItem>
+                        )}
                       {PROPRIETE_TYPES.map((p) => (
                         <SelectItem key={p} value={p}>
                           {p}
@@ -894,16 +867,6 @@ const Form = ({ details }: { details?: boolean }) => {
                   <Calculated id='valeurEntree' value={fmtMontant(valeurEntree)} />
                 </Field>
 
-                <Field label="Date d'acquisition" htmlFor='dateAcquisition'>
-                  <Input
-                    id='dateAcquisition'
-                    type='date'
-                    value={formData.dateAcquisition ?? ''}
-                    onChange={(e) => handleChange('dateAcquisition', e.target.value)}
-                    disabled={changeToDetails}
-                  />
-                </Field>
-
                 <Field label='Valeur Entrée Terrain' htmlFor='valeurEntreeTerrain'>
                   <Input
                     id='valeurEntreeTerrain'
@@ -911,6 +874,16 @@ const Form = ({ details }: { details?: boolean }) => {
                     step='0.01'
                     value={formData.valeurEntreeTerrain ?? ''}
                     onChange={(e) => handleChange('valeurEntreeTerrain', numOrNull(e.target.value))}
+                    disabled={changeToDetails}
+                  />
+                </Field>
+
+                <Field label="Date d'acquisition" htmlFor='dateAcquisition'>
+                  <Input
+                    id='dateAcquisition'
+                    type='date'
+                    value={formData.dateAcquisition ?? ''}
+                    onChange={(e) => handleChange('dateAcquisition', e.target.value)}
                     disabled={changeToDetails}
                   />
                 </Field>
@@ -1019,47 +992,6 @@ const Form = ({ details }: { details?: boolean }) => {
                 </Box>
               )}
 
-              {item && (
-                <Box icon={Home} title='Locaux'>
-                  <div className='col-span-full space-y-3'>
-                    <div className='flex justify-end'>
-                      <Button
-                        type='button'
-                        size='sm'
-                        onClick={() => navigate(`/patrimoine/locaux/ajouter?building=${item.numero}`)}
-                      >
-                        <Plus className='h-4 w-4 mr-2' />
-                        Ajouter un local
-                      </Button>
-                    </div>
-
-                    {locaux.length === 0 ? (
-                      <p className='text-sm text-gray-500'>Aucun local rattaché à cet actif.</p>
-                    ) : (
-                      <div className='border rounded-lg divide-y'>
-                        {locaux.map((l) => (
-                          <div
-                            key={l.numero}
-                            className='flex items-center justify-between px-4 py-2 hover:bg-gray-50 cursor-pointer'
-                            onClick={() => navigate(`/patrimoine/locaux/modifier/${l.numero}`)}
-                          >
-                            <div>
-                              <span className='font-medium'>{l.designation}</span>
-                              {l.nomLocalType && (
-                                <span className='text-sm text-gray-500 ml-2'>({l.nomLocalType})</span>
-                              )}
-                            </div>
-                            <div className='flex items-center gap-3 text-sm text-gray-500'>
-                              {l.surface != null && <span>{l.surface} m²</span>}
-                              <Pencil className='h-4 w-4 text-yellow-600' />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </Box>
-              )}
             </div>
 
             {/* ===================== COLONNE DROITE ===================== */}
@@ -1158,7 +1090,9 @@ const Form = ({ details }: { details?: boolean }) => {
                 </Field>
 
                 {/* RMANew : les 7 équipements à droite de « Nb Etages ». */}
-                <div className='grid grid-cols-2 sm:grid-cols-4 gap-x-5 gap-y-3 sm:pt-8 lg:col-span-2'>
+                <div className='space-y-1.5 sm:col-span-2'>
+                  <p className='text-sm font-semibold'>Équipements</p>
+                  <div className='grid grid-cols-2 sm:grid-cols-3 gap-2'>
                   {(
                     [
                       ['accueil', 'Accueil'],
@@ -1170,7 +1104,10 @@ const Form = ({ details }: { details?: boolean }) => {
                       ['climatisation', 'Climatisation'],
                     ] as const
                   ).map(([field, label]) => (
-                    <label key={field} className='flex items-center gap-2 text-sm'>
+                    <label
+                      key={field}
+                      className='flex cursor-pointer items-center gap-2 rounded-lg border bg-card px-2.5 py-1.5 text-sm transition-colors hover:bg-primary/5'
+                    >
                       <Checkbox
                         checked={formData[field]}
                         onCheckedChange={(c) => handleChange(field, c === true)}
@@ -1179,6 +1116,7 @@ const Form = ({ details }: { details?: boolean }) => {
                       {label}
                     </label>
                   ))}
+                  </div>
                 </div>
               </Box>
 
@@ -1227,7 +1165,7 @@ const Form = ({ details }: { details?: boolean }) => {
                             type='button'
                             variant='ghost'
                             size='sm'
-                            className='h-8 px-2 shrink-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+                            className='h-8 px-2 shrink-0 text-blue-600 hover:text-sky-700 dark:text-sky-400 hover:bg-sky-500/10'
                             disabled={uploadingField === field}
                             onClick={() => slotInputs.current[field]?.click()}
                           >
@@ -1273,7 +1211,7 @@ const Form = ({ details }: { details?: boolean }) => {
                           type='button'
                           variant='ghost'
                           size='sm'
-                          className='h-8 px-2 shrink-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+                          className='h-8 px-2 shrink-0 text-blue-600 hover:text-sky-700 dark:text-sky-400 hover:bg-sky-500/10'
                           onClick={() => docInput.current?.click()}
                         >
                           <FolderOpen className='h-4 w-4 mr-1' />
@@ -1369,8 +1307,8 @@ const Form = ({ details }: { details?: boolean }) => {
                   />
                 </Field>
 
-                <div className='col-span-full space-y-2'>
-                  <div ref={mapDivRef} className='w-full h-[300px] rounded-md border bg-gray-100' />
+                <div className='col-span-full space-y-1.5'>
+                  <div ref={mapDivRef} className='h-[460px] w-full rounded-lg border bg-muted' />
                   {mapError ? (
                     <p className='text-sm text-gray-500'>Carte indisponible : {mapError}</p>
                   ) : (
@@ -1388,8 +1326,15 @@ const Form = ({ details }: { details?: boolean }) => {
       </CardContent>
       <Separator />
       <CardFooter className='flex justify-end gap-2 mt-6'>
+        {!changeToDetails && (
+          <Button onClick={handleSubmit}>
+            <Save />
+            Sauvegarder
+          </Button>
+        )}
         <Button
-          variant='secondary'
+          variant='outline'
+          className='border-border bg-card text-foreground hover:bg-primary/10 hover:text-primary'
           onClick={() =>
             navigate(prospectionId ? `${backPath}?prospection=${prospectionId}` : backPath)
           }
@@ -1397,26 +1342,8 @@ const Form = ({ details }: { details?: boolean }) => {
           <ArrowLeft />
           Retour
         </Button>
-        {!changeToDetails && (
-          <Button onClick={handleSubmit}><Save />{item ? 'Mettre à jour' : 'Sauvegarder'}</Button>
-        )}
       </CardFooter>
 
-      <BaseDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        title='Confirmer la suppression'
-        description={`Êtes-vous sûr de vouloir désactiver "${formData.designation}" ?`}
-      >
-        <div className='flex justify-end gap-2'>
-          <Button variant='outline' onClick={() => setDeleteDialogOpen(false)}>
-            Annuler
-          </Button>
-          <Button variant='destructive' onClick={confirmDelete}>
-            Désactiver
-          </Button>
-        </div>
-      </BaseDialog>
     </Card>
   );
 };

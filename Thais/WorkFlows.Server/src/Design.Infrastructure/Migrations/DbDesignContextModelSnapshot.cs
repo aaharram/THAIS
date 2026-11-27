@@ -1059,6 +1059,70 @@ namespace Design.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Numero"));
 
+                    b.Property<string>("TypeSequenceComptable")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<decimal?>("TauxRevisionLoyer")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int?>("Duree")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("DepotGarantie")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("CautionFichier")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("DateReglement")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("ResteCaution")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("UtiliseeCaution")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Observation")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("LoyersImpayes")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("DebutImpayes")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FinImpayes")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("NbMoisImpayes")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("ArrieresAugmentation")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("Contentieux")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("DebutArriere")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FinArriere")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("FraisJustice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ContratFichier")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<DateTime>("AddDate")
                         .HasColumnType("datetime2");
 
@@ -1160,6 +1224,49 @@ namespace Design.Infrastructure.Migrations
                     b.HasIndex("NoLocataire");
 
                     b.ToTable("Location", (string)null);
+                });
+
+            modelBuilder.Entity("Design.Domain.Entities.Leasing.BailPieceJointe", b =>
+                {
+                    b.Property<int>("Numero")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Numero"));
+
+                    b.Property<DateTime>("AddDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("AddUser")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(260)
+                        .HasColumnType("nvarchar(260)");
+
+                    b.Property<DateTime>("ModDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ModUser")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NoLocation")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PieceJointe")
+                        .IsRequired()
+                        .HasMaxLength(260)
+                        .HasColumnType("nvarchar(260)");
+
+                    b.Property<long>("Taille")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Numero");
+
+                    b.HasIndex("NoLocation");
+
+                    b.ToTable("BailPieceJointe", (string)null);
                 });
 
             modelBuilder.Entity("Design.Domain.Entities.Leasing.ContentieuxHorsLocation", b =>
@@ -2724,6 +2831,14 @@ namespace Design.Infrastructure.Migrations
 
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Image")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("PlanLocal")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Observation")
                         .HasColumnType("nvarchar(max)");

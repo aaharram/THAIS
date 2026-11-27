@@ -16,6 +16,7 @@ import { logout } from '@/store/features/authentification/authSlice';
 import { getMyProfile } from '@/store/features/profile/profileSlice';
 import { API_BASE_URL } from '@/store/services/api';
 import { api } from '@/store/services/authConfig';
+import { cn } from '@/utils/lib/utils';
 import { THEMES, useTheme } from '@/utils/theme/theme';
 import { Check, ChevronsUpDown, LogOut, Settings, SquareUser } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -79,8 +80,8 @@ export function NavUser() {
   const avatarFallback = 'rounded-lg bg-gradient-to-br from-primary/70 to-primary text-sm font-semibold text-white';
   // Lignes du menu : survol et focus en rose THAIS, icône dans une petite tuile teintée.
   const itemClass =
-    'cursor-pointer gap-3 rounded-md px-2 py-2 text-sm font-medium focus:bg-primary/10 focus:text-primary';
-  const tile = 'flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary';
+    'cursor-pointer gap-3 rounded-lg px-2 py-2 text-sm font-medium focus:bg-primary/10 focus:text-primary';
+  const tile = 'flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary';
 
   return (
     <SidebarMenu>
@@ -108,77 +109,85 @@ export function NavUser() {
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className='w-72 overflow-hidden rounded-xl border-slate-200 bg-white p-0 shadow-[0_20px_50px_-12px_rgba(27,27,58,0.30)]'
+            className='w-80 overflow-hidden rounded-2xl border border-border bg-card p-0 text-card-foreground shadow-[0_24px_60px_-12px_rgba(0,0,0,0.35)]'
             side='bottom'
             align='end'
             sideOffset={8}
           >
-            {/* En-tête : fond rose très léger, filet framboise à gauche */}
-            <DropdownMenuLabel className='border-l-[3px] border-primary bg-primary/5 p-0 font-normal'>
-              <div className='flex items-center gap-3 px-4 py-3.5 text-left'>
-                <Avatar className='h-11 w-11 rounded-lg'>
+            {/* En-tête : dégradé léger aux couleurs du thème, grand avatar et profil */}
+            <DropdownMenuLabel className='relative overflow-hidden border-b border-border bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-0 font-normal'>
+              <div className='flex items-center gap-3.5 px-4 py-4 text-left'>
+                <Avatar className='h-12 w-12 rounded-xl ring-2 ring-primary/30 ring-offset-2 ring-offset-card'>
                   <AvatarImage src={photoUrl ?? undefined} alt={user.name} />
                   <AvatarFallback className={avatarFallback}>{initiales}</AvatarFallback>
                 </Avatar>
                 <div className='flex min-w-0 flex-col items-start gap-1'>
-                  <span className='truncate text-sm font-semibold text-foreground'>{user.name}</span>
+                  <span className='truncate text-base font-semibold leading-tight text-foreground'>{user.name}</span>
                   {profilLabel && (
-                    <span className='rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary'>
+                    <span className='rounded-full bg-primary/15 px-2.5 py-0.5 text-xs font-medium text-primary'>
                       {profilLabel}
                     </span>
                   )}
                 </div>
               </div>
             </DropdownMenuLabel>
-            <div className='p-1.5'>
-              <DropdownMenuGroup>
+            <div className='p-2'>
+              <DropdownMenuGroup className='space-y-0.5'>
                 <DropdownMenuItem className={itemClass} onClick={() => navigate('/mon-compte')}>
                   <span className={tile}>
-                    <SquareUser />
+                    <SquareUser className='h-4 w-4' />
                   </span>
                   Mon compte
                 </DropdownMenuItem>
                 <DropdownMenuItem className={itemClass} onClick={() => navigate('/configuration-globale')}>
                   <span className={tile}>
-                    <Settings />
+                    <Settings className='h-4 w-4' />
                   </span>
                   Configuration
                 </DropdownMenuItem>
               </DropdownMenuGroup>
-              <DropdownMenuSeparator className='my-1.5' />
-              {/* Apparence : thème de l'application, appliqué tout de suite et mémorisé dans le navigateur. */}
-              <div className='px-2 pb-1 pt-1 text-xs font-medium text-muted-foreground'>Apparence</div>
-              {THEMES.map((t) => (
-                <DropdownMenuItem
-                  key={t.id}
-                  className={itemClass}
-                  onSelect={(e) => {
-                    e.preventDefault(); // le menu reste ouvert pour essayer plusieurs thèmes
-                    chooseTheme(t.id);
-                  }}
-                >
-                  <span className='flex h-8 w-8 items-center justify-center'>
-                    <span
-                      className={`h-5 w-5 rounded-full shadow-sm ${
-                        // Sombre : la pastille marine disparaît sur le fond foncé du menu, on l'entoure de rose (couleur du thème).
-                        t.id === 'sombre' && theme === 'sombre'
-                          ? 'border-2 border-primary'
-                          : 'border border-black/10'
-                      }`}
-                      style={{ backgroundColor: t.swatch }}
-                    />
-                  </span>
-                  <span className='flex-1'>{t.label}</span>
-                  {theme === t.id && <Check className='h-4 w-4 text-primary' />}
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator className='my-1.5' />
+              <DropdownMenuSeparator className='my-2' />
+              {/* Apparence : trois pastilles côte à côte ; le thème est appliqué tout de suite et mémorisé. */}
+              <div className='px-2 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground'>
+                Apparence
+              </div>
+              <div className='grid grid-cols-3 gap-2 px-1 pb-1'>
+                {THEMES.map((t) => {
+                  const active = theme === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      type='button'
+                      onClick={() => chooseTheme(t.id)}
+                      aria-pressed={active}
+                      className={cn(
+                        'relative flex flex-col items-center gap-1.5 rounded-xl border px-2 py-2.5 text-xs font-medium transition-colors',
+                        active
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-foreground',
+                      )}
+                    >
+                      <span
+                        className='h-6 w-6 rounded-full border border-black/10 shadow-sm'
+                        style={{ backgroundColor: t.swatch }}
+                      />
+                      <span className='max-w-full truncate'>{t.label}</span>
+                      {active && (
+                        <span className='absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground'>
+                          <Check className='h-3 w-3' />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <DropdownMenuSeparator className='my-2' />
               <DropdownMenuItem
-                className={itemClass + ' text-red-600 focus:bg-red-50 focus:text-red-700'}
+                className={itemClass + ' text-red-600 focus:bg-red-500/10 focus:text-red-600 dark:text-red-400'}
                 onClick={handleLogout}
               >
-                <span className='flex h-8 w-8 items-center justify-center rounded-md bg-red-100 text-red-600'>
-                  <LogOut />
+                <span className='flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/10 text-red-600 dark:text-red-400'>
+                  <LogOut className='h-4 w-4' />
                 </span>
                 Se déconnecter
               </DropdownMenuItem>

@@ -1,6 +1,7 @@
 import { BaseDialog } from '@/components/dialog/dialog';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { Chip, InitialsAvatar, RowActions } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ImportMenu } from '@/components/import/import-menu';
@@ -10,7 +11,7 @@ import { SyndicResponse } from '@/store/features/property-management/syndic-sche
 import { deleteSyndic, getAllSyndics, resetSyndic, setSyndic } from '@/store/features/property-management/syndicsSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { ColumnDef } from '@tanstack/react-table';
-import { Pencil, Plus, Trash2, Users } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -50,12 +51,17 @@ const MembresSyndic = () => {
     {
       accessorKey: 'idSyndic',
       header: ({ column }) => <DataTableColumnHeader column={column} title='ID' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.idSyndic || '-'}</div>,
+      cell: ({ row }) => row.original.idSyndic ? <Chip className='font-mono'>{row.original.idSyndic}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'nom',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Nom' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nom}</div>,
+      cell: ({ row }) => (
+        <div className='flex items-center gap-3'>
+          <InitialsAvatar name={`${row.original.nom} ${row.original.prenom ?? ''}`} />
+          <span className='font-medium'>{row.original.nom}</span>
+        </div>
+      ),
     },
     {
       accessorKey: 'prenom',
@@ -65,52 +71,34 @@ const MembresSyndic = () => {
     {
       accessorKey: 'poste',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Poste' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.poste || '-'}</div>,
+      cell: ({ row }) => row.original.poste ? <Chip>{row.original.poste}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'telephone',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Téléphone' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.telephone || '-'}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{row.original.telephone || '—'}</span>,
     },
     {
       accessorKey: 'debutMandat',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Début mandat' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.debutMandat)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.debutMandat)}</span>,
     },
     {
       accessorKey: 'finMandat',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Fin mandat' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.finMandat)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.finMandat)}</span>,
     },
     {
       id: 'actions',
       header: () => <div className='text-right'>Actions</div>,
       cell: ({ row }) => (
-        <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              dispatch(setSyndic(row.original));
-              navigate(`modifier/${row.original.numero}`);
-            }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-red-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row.original);
-            }}
-          >
-            <Trash2 className='h-4 w-4 text-red-600' />
-          </Button>
-        </div>
+        <RowActions
+          onEdit={() => {
+            dispatch(setSyndic(row.original));
+            navigate(`modifier/${row.original.numero}`);
+          }}
+          onDelete={() => handleDelete(row.original)}
+        />
       ),
     },
   ];

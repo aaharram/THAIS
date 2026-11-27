@@ -17,6 +17,8 @@ public class LocalConfiguration : IEntityTypeConfiguration<Local>
         builder.Property(e => e.Etat).HasMaxLength(20);
         builder.Property(e => e.Demande).HasMaxLength(20);
         builder.Property(e => e.Suggestion).HasMaxLength(200);
+        builder.Property(e => e.Image).HasMaxLength(500);
+        builder.Property(e => e.PlanLocal).HasMaxLength(500);
 
         builder.Property(e => e.Surface).HasColumnType("decimal(12,2)");
         builder.Property(e => e.Terrasse).HasColumnType("decimal(12,2)");

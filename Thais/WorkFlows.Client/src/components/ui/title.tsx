@@ -1,5 +1,7 @@
-import { LucideIcon } from 'lucide-react';
+import { useToolbarSlot } from '@/components/table/toolbar-slot';
+import { LucideIcon, Plus } from 'lucide-react';
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from './button';
 import { Switch } from './switch';
 
@@ -25,13 +27,63 @@ interface TitleProps {
     isSwitch?: boolean;
     isSwitchOn?: boolean;
   }[];
-  // Éléments libres (filtre, menu d'export...) affichés à droite, AVANT les boutons.
+  // Éléments libres (filtre, menus Import / Export...) affichés à droite, dans la barre d'outils de la liste.
   actions?: React.ReactNode;
 }
 
 export const Title = ({ icon, img, title, description, buttons = [], actions }: TitleProps) => {
+  // Si la page contient une liste, les actions et boutons vont dans sa barre d'outils (sous le titre) ;
+  // sinon, ils restent à droite du titre.
+  const toolbarSlot = useToolbarSlot();
+
+  const right = (
+    <>
+      {actions}
+      {buttons.map((btn, index) =>
+        btn.isSwitch ? (
+          <div key={index} className='order-4 flex items-center space-x-2'>
+            {btn.icon && <btn.icon className='h-4 w-4' />}
+            <label htmlFor={`switch-${index}`} className='text-sm font-medium leading-none'>
+              {btn.label}
+            </label>
+            <Switch
+              id={`switch-${index}`}
+              checked={btn.isSwitchOn}
+              onCheckedChange={btn.onClick}
+              disabled={btn.isDisabled}
+            />
+          </div>
+        ) : btn.icon === Plus && btn.variant === 'default' ? (
+          // Ajout : bouton « + » carré, comme sur la liste des actifs.
+          <Button
+            key={index}
+            onClick={btn.onClick}
+            variant={btn.variant}
+            disabled={btn.isDisabled}
+            title={btn.label}
+            aria-label={btn.label}
+            className='order-4 h-10 w-10 rounded-lg p-0 shadow-sm'
+          >
+            <Plus className='h-5 w-5' />
+          </Button>
+        ) : (
+          <Button
+            key={index}
+            onClick={btn.onClick}
+            variant={btn.variant}
+            disabled={btn.isDisabled}
+            className='order-4 h-10 rounded-lg'
+          >
+            {btn.icon && <btn.icon className='mr-2 h-4 w-4' />}
+            {btn.label}
+          </Button>
+        ),
+      )}
+    </>
+  );
+
   return (
-    <div className='flex items-center justify-between flex-wrap gap-2 py-2'>
+    <div className='flex items-center flex-wrap gap-x-4 gap-y-2 py-2'>
       {/* Left side: icon + title + description */}
       <div className='flex items-center gap-3 flex-wrap'>
         {icon && (
@@ -50,40 +102,11 @@ export const Title = ({ icon, img, title, description, buttons = [], actions }: 
         </div>
       </div>
 
-      {/* Right side: recherche de la liste (déposée ici par DataTable), puis actions et boutons, sur une seule ligne */}
-      {
-        <div className='flex items-center gap-2 flex-wrap'>
-          <div data-title-search-slot className='flex items-center gap-2' />
-          {actions}
-          {buttons.map((btn, index) =>
-            btn.isSwitch ? (
-              <div key={index} className='flex items-center space-x-2'>
-                {btn.icon && <btn.icon className='h-4 w-4' />}
-                <label htmlFor={`switch-${index}`} className='text-sm font-medium leading-none'>
-                  {btn.label}
-                </label>
-                <Switch
-                  id={`switch-${index}`}
-                  checked={btn.isSwitchOn}
-                  onCheckedChange={btn.onClick}
-                  disabled={btn.isDisabled}
-                />
-              </div>
-            ) : (
-              <Button
-                key={index}
-                onClick={btn.onClick}
-                variant={btn.variant}
-                disabled={btn.isDisabled}
-                className='h-8'
-              >
-                {btn.icon && <btn.icon className='mr-2 h-4 w-4' />}
-                {btn.label}
-              </Button>
-            ),
-          )}
-        </div>
-      }
+      {toolbarSlot ? (
+        createPortal(right, toolbarSlot)
+      ) : (
+        <div className='ml-auto flex items-center gap-2 flex-wrap'>{right}</div>
+      )}
     </div>
   );
 };

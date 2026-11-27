@@ -24,6 +24,16 @@ public class BailConfiguration : IEntityTypeConfiguration<Bail>
         builder.Property(e => e.Garantie).HasColumnType("decimal(18,2)");
         builder.Property(e => e.Caution).HasColumnType("decimal(18,2)");
 
+        builder.Property(e => e.TypeSequenceComptable).HasMaxLength(20);
+        builder.Property(e => e.TauxRevisionLoyer).HasColumnType("decimal(18,4)");
+        builder.Property(e => e.CautionFichier).HasMaxLength(500);
+        builder.Property(e => e.Reference).HasMaxLength(100);
+        builder.Property(e => e.ResteCaution).HasColumnType("decimal(18,2)");
+        builder.Property(e => e.LoyersImpayes).HasColumnType("decimal(18,2)");
+        builder.Property(e => e.ArrieresAugmentation).HasColumnType("decimal(18,2)");
+        builder.Property(e => e.FraisJustice).HasColumnType("decimal(18,2)");
+        builder.Property(e => e.ContratFichier).HasMaxLength(500);
+
         builder.HasIndex(e => e.NoBuilding);
         builder.HasIndex(e => e.NoLocal);
         builder.HasIndex(e => e.NoLocataire);

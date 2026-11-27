@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { ActionButton } from '@/components/table/list-cells';
 import { Title } from '@/components/ui/title';
 import { CpcImmobilierResponse } from '@/store/features/patrimoine/cpc-immobilier-schemas';
 import {
@@ -83,29 +84,23 @@ const CpcImmobilier = () => {
       header: () => <div className='text-right'>Actions</div>,
       cell: ({ row }) => (
         <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            onClick={(e) => {
-              e.stopPropagation();
+          <ActionButton
+            icon={Pencil}
+            label="Modifier"
+            onClick={() => {
               dispatch(setCpcImmobilier(row.original));
               navigate(`modifier/${row.original.numero}`);
             }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-red-100'
-            onClick={(e) => {
-              e.stopPropagation();
+            className='text-yellow-600 hover:bg-yellow-500/10 hover:text-yellow-600'
+          />
+          <ActionButton
+            icon={Trash2}
+            label="Supprimer"
+            onClick={() => {
               handleDelete(row.original);
             }}
-          >
-            <Trash2 className='h-4 w-4 text-red-600' />
-          </Button>
+            className='text-red-600 hover:bg-red-500/10 hover:text-red-600'
+          />
         </div>
       ),
     },

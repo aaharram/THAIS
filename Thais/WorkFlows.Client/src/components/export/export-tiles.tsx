@@ -4,8 +4,8 @@ import { useState } from 'react';
 type Handler = () => void | Promise<unknown>;
 
 /**
- * Boutons d'export d'une page (PDF bleu, Excel vert) : remplace le menu déroulant « Export ». Chaque bouton appelle
- * le gestionnaire de la page ; s'il est asynchrone, le bouton affiche un indicateur le temps de l'export.
+ * Boutons d'export d'une page (PDF bleu, Excel vert). Chaque bouton appelle le gestionnaire de la page ;
+ * s'il est asynchrone, le bouton affiche un indicateur le temps de l'export.
  */
 export function ExportTiles({ onPdf, onExcel }: { onPdf?: Handler; onExcel?: Handler }) {
   const [busy, setBusy] = useState<'pdf' | 'excel' | null>(null);
@@ -20,7 +20,7 @@ export function ExportTiles({ onPdf, onExcel }: { onPdf?: Handler; onExcel?: Han
   };
 
   return (
-    <div className='flex items-center gap-2'>
+    <div className='order-3 flex items-center gap-2'>
       {onPdf && (
         <ActionTile
           color={TILE_COLORS.bleu}

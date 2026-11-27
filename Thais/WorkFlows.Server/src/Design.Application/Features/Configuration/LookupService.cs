@@ -37,9 +37,15 @@ public class LookupService<T>(DbDesignContext context, ILogger<LookupService<T>>
                 request.PageNumber = 1;
             }
 
-            if (request.PageSize is < 1 or > 100)
+            // Listes de référence (villes, pays...) : les formulaires les chargent en entier (pageSize 1000) ; au-delà
+            // de 100 on plafonnait à 10 lignes, ce qui tronquait les listes déroulantes (118 villes -> 10).
+            if (request.PageSize < 1)
             {
                 request.PageSize = 10;
+            }
+            else if (request.PageSize > 1000)
+            {
+                request.PageSize = 1000;
             }
 
             IQueryable<T> query = context.Set<T>().AsQueryable();

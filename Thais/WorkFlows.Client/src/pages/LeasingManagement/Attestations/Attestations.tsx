@@ -1,6 +1,7 @@
 import { BaseDialog } from '@/components/dialog/dialog';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { AvatarCell, Chip, fmtDate, RowActions } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Title } from '@/components/ui/title';
@@ -13,9 +14,11 @@ import {
 } from '@/store/features/leasing/attestationsSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { ColumnDef } from '@tanstack/react-table';
-import { FileText, Pencil, Plus, Trash2 } from 'lucide-react';
+import { FileText, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+
+const dateOrDash = (d?: string | null) => fmtDate(d) || '—';
 
 const Attestations = () => {
   const dispatch = useAppDispatch();
@@ -49,81 +52,76 @@ const Attestations = () => {
     }
   };
 
-  const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString('fr-FR') : '-');
+  const openAttestation = (item: AttestationResponse, mode: 'details' | 'modifier') => {
+    dispatch(setAttestation(item));
+    navigate(`${mode}/${item.numero}`);
+  };
 
+  // Colonnes de RMANew (ListAttestation) : Contrats, Clients, N° Facture, Type d'attestation, Date attestation,
+  // Date début, Date fin, Pièces jointes, Détails.
   const columns: ColumnDef<AttestationResponse>[] = [
     {
       accessorKey: 'numContratLocations',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Contrats' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.numContratLocations || '-'}</div>,
+      cell: ({ row }) =>
+        row.original.numContratLocations ? (
+          <Chip className='font-mono'>{row.original.numContratLocations}</Chip>
+        ) : (
+          <span className='text-muted-foreground'>—</span>
+        ),
     },
     {
       accessorKey: 'nomLocataire',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Clients' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomLocataire || '-'}</div>,
+      cell: ({ row }) => <AvatarCell name={row.original.nomLocataire} />,
     },
     {
       id: 'noFacture',
       header: () => <div>N° Facture</div>,
-      cell: () => <div className='font-medium text-gray-400' title='Module Facturation bientôt disponible'>-</div>,
+      cell: () => (
+        <span className='text-muted-foreground' title='Module Facturation bientôt disponible'>
+          —
+        </span>
+      ),
     },
     {
       accessorKey: 'typeAttestation',
       header: ({ column }) => <DataTableColumnHeader column={column} title="Type d'attestation" />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.typeAttestation}</div>,
+      cell: ({ row }) => <Chip>{row.original.typeAttestation}</Chip>,
     },
     {
       id: 'dateAttestation',
       accessorFn: (row) => fmtDate(row.dateAttestation),
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date attestation' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateAttestation)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap font-medium'>{dateOrDash(row.original.dateAttestation)}</span>,
     },
     {
       id: 'dateDebut',
       accessorFn: (row) => fmtDate(row.dateDebut),
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date début' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateDebut)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{dateOrDash(row.original.dateDebut)}</span>,
     },
     {
       id: 'dateFin',
       accessorFn: (row) => fmtDate(row.dateFin),
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date fin' />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.dateFin)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{dateOrDash(row.original.dateFin)}</span>,
     },
     {
       id: 'piecesJointes',
       header: () => <div>Pièces jointes</div>,
-      cell: () => <div className='font-medium text-gray-400'>-</div>,
+      cell: () => <span className='text-muted-foreground'>—</span>,
     },
     {
       id: 'details',
+      size: 96,
       header: () => <div className='text-right'>Détails</div>,
       cell: ({ row }) => (
-        <div className='flex justify-end gap-2'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-yellow-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              dispatch(setAttestation(row.original));
-              navigate(`modifier/${row.original.numero}`);
-            }}
-          >
-            <Pencil className='h-4 w-4 text-yellow-600' />
-          </Button>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='h-8 w-8 p-0 hover:bg-red-100'
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row.original);
-            }}
-          >
-            <Trash2 className='h-4 w-4 text-red-600' />
-          </Button>
-        </div>
+        <RowActions
+          onEdit={() => openAttestation(row.original, 'modifier')}
+          onDelete={() => handleDelete(row.original)}
+          deleteLabel='Désactiver'
+        />
       ),
     },
   ];
@@ -164,10 +162,7 @@ const Attestations = () => {
           searchableColumns={[{ id: 'nomLocataire', title: 'Client' }]}
           onSearchChange={handleSearchChange}
           isLoading={loading}
-          onRowDoubleClick={(item) => {
-            dispatch(setAttestation(item));
-            navigate(`details/${item.numero}`);
-          }}
+          onRowClick={(item) => openAttestation(item, 'details')}
           pagination={pagination}
         />
 

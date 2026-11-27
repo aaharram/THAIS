@@ -43,9 +43,25 @@ public class BailService(DbDesignContext context, ILogger<BailService> logger) :
             .ToDictionaryAsync(x => x.Numero, x => (string?)x.Designation);
         var locataires = (await context.Locataires
                 .Where(x => locataireIds.Contains(x.Numero))
-                .Select(x => new { x.Numero, x.TypeLocataire, x.DesignationEntreprise, x.Nom, x.Prenom })
+                .Select(x => new { x.Numero, x.TypeLocataire, x.DesignationEntreprise, x.Nom, x.Prenom, x.Adresse })
                 .ToListAsync())
             .ToDictionary(x => x.Numero);
+        // RMANew (ListLocation) : dates de la dernière révision du bail (la plus récente de RévisionLoyer).
+        var bailIds = baux.Select(b => b.Numero).ToList();
+        var revisions = (await context.RevisionsLoyer
+                .Where(r => bailIds.Contains(r.NoLocation))
+                .Select(r => new { r.Numero, r.NoLocation, r.DateRevision, r.DateProchaineRevision })
+                .ToListAsync())
+            .GroupBy(r => r.NoLocation)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(r => r.Numero).First());
+
+        // Montant Avoirs : somme des avoirs de chaque bail (une seule requête pour toute la liste).
+        Dictionary<int, decimal> avoirs = (await context.Avoirs
+                .Where(a => bailIds.Contains(a.NoLocation))
+                .GroupBy(a => a.NoLocation)
+                .Select(g => new { NoLocation = g.Key, Total = g.Sum(a => a.Montant) })
+                .ToListAsync())
+            .ToDictionary(x => x.NoLocation, x => x.Total);
 
         var result = new List<BailResponse>(baux.Count);
         foreach (Bail entity in baux)
@@ -60,7 +76,7 @@ public class BailService(DbDesignContext context, ILogger<BailService> logger) :
                     : $"{locataire.Nom} {locataire.Prenom}".Trim();
             }
 
-            result.Add(BuildResponse(
+            BailResponse reponse = BuildResponse(
                 entity,
                 buildings.GetValueOrDefault(entity.NoBuilding),
                 local?.Designation,
@@ -68,7 +84,15 @@ public class BailService(DbDesignContext context, ILogger<BailService> logger) :
                 local?.Surface,
                 entity.NoEncaisseur is { } ne ? encaisseurs.GetValueOrDefault(ne) : null,
                 entity.NoPeriodicity is { } np ? periodicites.GetValueOrDefault(np) : null,
-                nomLocataire));
+                nomLocataire);
+            reponse.AdresseLocataire = locataire?.Adresse;
+            reponse.MontantAvoirs = avoirs.GetValueOrDefault(entity.Numero);
+            if (revisions.TryGetValue(entity.Numero, out var revision))
+            {
+                reponse.DateDerniereRevision = revision.DateRevision;
+                reponse.DateProchaineRevision = revision.DateProchaineRevision;
+            }
+            result.Add(reponse);
         }
 
         return result;
@@ -118,6 +142,26 @@ public class BailService(DbDesignContext context, ILogger<BailService> logger) :
             ModeReglement = entity.ModeReglement,
             Etat = entity.Etat,
             Notes = entity.Notes,
+            TypeSequenceComptable = entity.TypeSequenceComptable,
+            TauxRevisionLoyer = entity.TauxRevisionLoyer,
+            Duree = entity.Duree,
+            DepotGarantie = entity.DepotGarantie,
+            CautionFichier = entity.CautionFichier,
+            Reference = entity.Reference,
+            DateReglement = entity.DateReglement,
+            ResteCaution = entity.ResteCaution,
+            UtiliseeCaution = entity.UtiliseeCaution,
+            Observation = entity.Observation,
+            LoyersImpayes = entity.LoyersImpayes,
+            DebutImpayes = entity.DebutImpayes,
+            FinImpayes = entity.FinImpayes,
+            NbMoisImpayes = entity.NbMoisImpayes,
+            ArrieresAugmentation = entity.ArrieresAugmentation,
+            Contentieux = entity.Contentieux,
+            DebutArriere = entity.DebutArriere,
+            FinArriere = entity.FinArriere,
+            FraisJustice = entity.FraisJustice,
+            ContratFichier = entity.ContratFichier,
             Inactif = entity.Inactif,
             AddUser = entity.AddUser,
             AddDate = entity.AddDate,
@@ -125,6 +169,10 @@ public class BailService(DbDesignContext context, ILogger<BailService> logger) :
             ModDate = entity.ModDate
         };
     }
+
+    // RMANew (DataEntryLocation.Validate) : Duree = DateDiff(Month, début, fin), 0 sans dates valides.
+    private static int DureeMois(DateTime? debut, DateTime? fin) =>
+        debut is { } d && fin is { } f ? (f.Year - d.Year) * 12 + f.Month - d.Month : 0;
 
     // Même logique que RMANew (LXMontant) : le loyer total est la somme de ses
     // composantes, jamais saisi directement.
@@ -196,8 +244,28 @@ public class BailService(DbDesignContext context, ILogger<BailService> logger) :
                     .Where(b => buildingIds.Contains(b.Numero))
                     .ToDictionaryAsync(b => b.Numero, b => b.Designation);
 
+                // La recherche porte sur le locataire, le local, le n° de contrat et l'actif (la liste affiche ces
+                // quatre informations ; seul le nom de l'actif était cherché jusque-là).
+                var localIds = allMatching.Select(b => b.NoLocal).Distinct().ToList();
+                var locataireIds = allMatching.Select(b => b.NoLocataire).Distinct().ToList();
+                Dictionary<int, string?> localNames = await context.Locaux
+                    .Where(x => localIds.Contains(x.Numero))
+                    .ToDictionaryAsync(x => x.Numero, x => (string?)x.Designation);
+                var locatairesRows = await context.Locataires
+                    .Where(x => locataireIds.Contains(x.Numero))
+                    .Select(x => new { x.Numero, x.TypeLocataire, x.DesignationEntreprise, x.Nom, x.Prenom })
+                    .ToListAsync();
+                Dictionary<int, string?> locataireNames = locatairesRows.ToDictionary(
+                    x => x.Numero,
+                    x => x.TypeLocataire == 1 ? x.DesignationEntreprise : $"{x.Nom} {x.Prenom}".Trim());
+
+                bool Matches(string? value) => value != null && value.ToLower().Contains(search);
+
                 allMatching = allMatching
-                    .Where(b => buildingNames.TryGetValue(b.NoBuilding, out string? name) && name.ToLower().Contains(search))
+                    .Where(b => Matches(buildingNames.GetValueOrDefault(b.NoBuilding))
+                                || Matches(localNames.GetValueOrDefault(b.NoLocal))
+                                || Matches(locataireNames.GetValueOrDefault(b.NoLocataire))
+                                || Matches(b.NumContratLocations))
                     .ToList();
             }
 
@@ -223,6 +291,71 @@ public class BailService(DbDesignContext context, ILogger<BailService> logger) :
             logger.LogError("Error fetching Baux: {ExMessage}", ex.Message);
             throw;
         }
+    }
+
+    // RMANew (DataEntryLocation.vb, « Pièces jointes », table LocationPieceJointe) : documents libres d'un bail.
+    public async Task<List<BailPieceJointeResponse>> GetPiecesJointesAsync(int bailId)
+    {
+        return await context.BauxPiecesJointes
+            .Where(x => x.NoLocation == bailId)
+            .OrderBy(x => x.Numero)
+            .Select(x => new BailPieceJointeResponse
+            {
+                Numero = x.Numero,
+                NoLocation = x.NoLocation,
+                FileName = x.FileName,
+                PieceJointe = x.PieceJointe,
+                Taille = x.Taille,
+                AddDate = x.AddDate
+            })
+            .ToListAsync();
+    }
+
+    public async Task<BailPieceJointeResponse> AddPieceJointeAsync(int bailId, BailPieceJointeRequest request)
+    {
+        if (!await context.Baux.AnyAsync(b => b.Numero == bailId))
+        {
+            throw new KeyNotFoundException("Bail not found");
+        }
+
+        int user = request.AddUser ?? 0;
+        var entity = new BailPieceJointe
+        {
+            NoLocation = bailId,
+            FileName = request.FileName.Trim(),
+            PieceJointe = request.PieceJointe,
+            Taille = request.Taille,
+            AddUser = user,
+            AddDate = DateTime.UtcNow,
+            ModUser = user,
+            ModDate = DateTime.UtcNow
+        };
+
+        context.BauxPiecesJointes.Add(entity);
+        await context.SaveChangesAsync();
+
+        return new BailPieceJointeResponse
+        {
+            Numero = entity.Numero,
+            NoLocation = entity.NoLocation,
+            FileName = entity.FileName,
+            PieceJointe = entity.PieceJointe,
+            Taille = entity.Taille,
+            AddDate = entity.AddDate
+        };
+    }
+
+    public async Task<int> DeletePieceJointeAsync(int bailId, int pieceJointeId)
+    {
+        BailPieceJointe? entity = await context.BauxPiecesJointes
+            .FirstOrDefaultAsync(x => x.Numero == pieceJointeId && x.NoLocation == bailId);
+        if (entity == null)
+        {
+            return 0;
+        }
+
+        context.BauxPiecesJointes.Remove(entity);
+        return await context.SaveChangesAsync();
     }
 
     public async Task<BailResponse> GetByIdAsync(int id)
@@ -264,6 +397,27 @@ public class BailService(DbDesignContext context, ILogger<BailService> logger) :
             ModeReglement = request.ModeReglement,
             Etat = request.Etat,
             Notes = request.Notes,
+            TypeSequenceComptable = request.TypeSequenceComptable,
+            TauxRevisionLoyer = request.TauxRevisionLoyer,
+            Duree = DureeMois(request.DateDebut, request.DateFin),
+            DepotGarantie = request.DepotGarantie,
+            CautionFichier = request.CautionFichier,
+            Reference = request.Reference,
+            DateReglement = request.DateReglement,
+            // RMANew : à la création, le reste de caution est le montant de la caution.
+            ResteCaution = request.ResteCaution ?? request.Garantie,
+            UtiliseeCaution = request.UtiliseeCaution,
+            Observation = request.Observation,
+            LoyersImpayes = request.LoyersImpayes,
+            DebutImpayes = request.DebutImpayes,
+            FinImpayes = request.FinImpayes,
+            NbMoisImpayes = request.NbMoisImpayes,
+            ArrieresAugmentation = request.ArrieresAugmentation,
+            Contentieux = request.Contentieux,
+            DebutArriere = request.DebutArriere,
+            FinArriere = request.FinArriere,
+            FraisJustice = request.FraisJustice,
+            ContratFichier = request.ContratFichier,
             Inactif = request.Inactif,
             AddUser = request.AddUser ?? 0,
             AddDate = DateTime.UtcNow,
@@ -305,13 +459,36 @@ public class BailService(DbDesignContext context, ILogger<BailService> logger) :
         entity.Taxe = request.Taxe;
         entity.LoyerGarage = request.LoyerGarage;
         entity.Autres = request.Autres;
-        entity.Montant = ComputeMontant(request);
+        // Baux importés : seul Montant est renseigné (aucune composante). On le conserve au lieu de l'écraser par null.
+        bool aComposantes = request.LoyerNet != null || request.Charges != null || request.TVA != null ||
+                            request.Taxe != null || request.LoyerGarage != null || request.Autres != null;
+        entity.Montant = aComposantes ? ComputeMontant(request) : entity.Montant;
         entity.GenererQuittance = request.GenererQuittance;
         entity.Garantie = request.Garantie;
         entity.Caution = request.Caution;
         entity.ModeReglement = request.ModeReglement;
         entity.Etat = request.Etat;
         entity.Notes = request.Notes;
+        entity.TypeSequenceComptable = request.TypeSequenceComptable;
+        entity.TauxRevisionLoyer = request.TauxRevisionLoyer;
+        entity.Duree = DureeMois(request.DateDebut, request.DateFin);
+        entity.DepotGarantie = request.DepotGarantie;
+        entity.CautionFichier = request.CautionFichier;
+        entity.Reference = request.Reference;
+        entity.DateReglement = request.DateReglement;
+        entity.ResteCaution = request.ResteCaution;
+        entity.UtiliseeCaution = request.UtiliseeCaution;
+        entity.Observation = request.Observation;
+        entity.LoyersImpayes = request.LoyersImpayes;
+        entity.DebutImpayes = request.DebutImpayes;
+        entity.FinImpayes = request.FinImpayes;
+        entity.NbMoisImpayes = request.NbMoisImpayes;
+        entity.ArrieresAugmentation = request.ArrieresAugmentation;
+        entity.Contentieux = request.Contentieux;
+        entity.DebutArriere = request.DebutArriere;
+        entity.FinArriere = request.FinArriere;
+        entity.FraisJustice = request.FraisJustice;
+        entity.ContratFichier = request.ContratFichier;
         entity.Inactif = request.Inactif;
         entity.ModUser = request.ModUser ?? entity.ModUser;
         entity.ModDate = DateTime.UtcNow;

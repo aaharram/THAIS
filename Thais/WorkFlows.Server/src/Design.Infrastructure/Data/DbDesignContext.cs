@@ -44,6 +44,7 @@ public class DbDesignContext(DbContextOptions<DbDesignContext> options) : DbCont
 
     public virtual DbSet<Locataire> Locataires { get; set; }
     public virtual DbSet<Bail> Baux { get; set; }
+    public virtual DbSet<BailPieceJointe> BauxPiecesJointes { get; set; }
     public virtual DbSet<RevisionLoyer> RevisionsLoyer { get; set; }
     public virtual DbSet<Facture> Factures { get; set; }
     public virtual DbSet<Avoir> Avoirs { get; set; }

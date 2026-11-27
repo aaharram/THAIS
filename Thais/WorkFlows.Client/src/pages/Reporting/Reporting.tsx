@@ -7,32 +7,22 @@ import { EtatRejetResponse } from '@/store/features/leasing/etat-rejet-schemas';
 import { API_BASE_URL } from '@/store/services/api';
 import { api } from '@/store/services/authConfig';
 import {
-  AlertTriangle,
   ArrowLeftRight,
-  Banknote,
   BarChart3,
-  Bookmark,
-  BookOpen,
+  BookOpenCheck,
   Building2,
-  Calculator,
-  Clock,
+  CalendarClock,
+  CircleX,
+  DoorOpen,
   FilePlus,
   FileWarning,
-  Folder,
-  FolderOpen,
+  FileX,
   Gavel,
-  Coins,
-  Home,
-  Inbox,
-  Landmark,
-  LineChart,
-  Percent,
-  Receipt,
+  HandCoins,
+  History,
   Scale,
-  Star,
-  Upload,
-  Wallet,
-  XCircle,
+  TrendingUp,
+  UserSearch,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -44,25 +34,9 @@ import { useNavigate } from 'react-router';
 // et enfin le journal comptable / interface SmartStream (le plus volumineux).
 const items = [
   {
-    key: 'amortissements',
-    name: 'Tableau Amortissement',
-    icon: Calculator,
-    link: '/patrimoine/amortissements',
-    description: 'Tableau d\'amortissement par actif, export Excel/PDF',
-    enabled: true,
-  },
-  {
-    key: 'typologies-immobilisation',
-    name: 'Typologie Immobilisation',
-    icon: Percent,
-    link: '/configuration-globale/reference-dediee/typologies-immobilisation',
-    description: 'Taux et durées d\'amortissement par typologie, export PDF',
-    enabled: true,
-  },
-  {
     key: 'revisions-loyers',
     name: 'Révision Loyer',
-    icon: LineChart,
+    icon: TrendingUp,
     link: '/reporting/revision-loyer',
     description: 'Historique de toutes les révisions de loyer, export Excel/PDF',
     enabled: true,
@@ -70,15 +44,15 @@ const items = [
   {
     key: 'annulations-quittances',
     name: 'Etat Annulation des Quittances',
-    icon: Receipt,
-    link: '/archives/annulations-quittances',
+    icon: FileX,
+    link: '/archives/annulations-quittances?from=reporting',
     description: 'Quittances (factures) annulées, export PDF',
     enabled: true,
   },
   {
     key: 'etat-des-loyers',
     name: 'Etat des loyers Comptables',
-    icon: Wallet,
+    icon: BookOpenCheck,
     link: '/reporting/etat-des-loyers',
     description: 'Loyers facturés vs encaissés par actif et par année',
     enabled: true,
@@ -86,39 +60,15 @@ const items = [
   {
     key: 'historique-etat-des-loyers',
     name: 'Historique Etat des loyers',
-    icon: Bookmark,
+    icon: History,
     link: '/reporting/etat-des-loyers/historique',
     description: 'Instantanés validés des états des loyers passés',
     enabled: true,
   },
   {
-    key: 'd21',
-    name: 'D21',
-    icon: FolderOpen,
-    link: '/reporting/etats-reglementaires?type=D21',
-    description: 'Déclaration réglementaire D21 (provisions techniques)',
-    enabled: true,
-  },
-  {
-    key: 'd05',
-    name: 'D05',
-    icon: Folder,
-    link: '/reporting/etats-reglementaires?type=D05',
-    description: 'Déclaration réglementaire D05 (placements immobiliers)',
-    enabled: true,
-  },
-  {
-    key: 'patrimoine-opci',
-    name: 'Patrimoine RMA-OPCI',
-    icon: Building2,
-    link: '/reporting/patrimoine-opci',
-    description: 'Listing du patrimoine au format OPCI',
-    enabled: true,
-  },
-  {
     key: 'etat-par-immeuble',
     name: 'Etat des loyers / Actif',
-    icon: Landmark,
+    icon: Building2,
     link: '/reporting/etat-par-immeuble',
     description: 'État comptable détaillé par immeuble',
     enabled: true,
@@ -126,7 +76,7 @@ const items = [
   {
     key: 'impayes-par-age',
     name: 'Etat des loyers impayés par période',
-    icon: FileWarning,
+    icon: CalendarClock,
     link: '/reporting/impayes-par-age',
     description: 'Répartition des impayés par tranche d\'ancienneté',
     enabled: true,
@@ -142,7 +92,7 @@ const items = [
   {
     key: 'suivi-impaye',
     name: 'Suivi Impayé',
-    icon: FileWarning,
+    icon: UserSearch,
     link: '/reporting/suivi-impaye',
     description: 'Détail des impayés par locataire, filtrable par Encaisseur',
     enabled: true,
@@ -158,7 +108,7 @@ const items = [
   {
     key: 'apercu-emissions-encaissement',
     name: 'Etat globale Emissions / Encaissements',
-    icon: LineChart,
+    icon: ArrowLeftRight,
     link: '/reporting/apercu-emissions-encaissement',
     description: 'Résumé global du mois : loyers facturés vs encaissés',
     enabled: true,
@@ -166,81 +116,17 @@ const items = [
   {
     key: 'suivi-encaissement',
     name: 'Suivi Encaissement',
-    icon: Banknote,
+    icon: HandCoins,
     link: '/reporting/suivi-encaissement',
     description: 'Détail des encaissements par immeuble',
     enabled: true,
   },
   {
-    key: 'rapport-encaisseur',
-    name: 'Rapport Encaisseur',
-    icon: Scale,
-    link: '/reporting/rapport-encaisseur?vue=rapport',
-    description: 'Performance annuelle par encaisseur',
-    enabled: true,
-  },
-  {
-    key: 'prime-encaisseur',
-    name: 'Prime Encaisseur',
-    icon: Star,
-    link: '/reporting/rapport-encaisseur?vue=prime',
-    description: 'Primes du mois, tous encaisseurs',
-    enabled: true,
-  },
-  {
-    key: 'cpc-immobilier',
-    name: 'CPC Immoblier',
-    icon: BarChart3,
-    link: '/reporting/cpc-immobilier',
-    description: 'Compte de produits et charges par actif',
-    enabled: true,
-  },
-  {
-    key: 'historique-journal-sequence-comptable',
-    name: 'Historique journal séquence comptable',
-    icon: Clock,
-    link: '/reporting/journal-comptable?vue=historique',
-    description: 'Historique des générations de journal comptable',
-    enabled: true,
-  },
-  {
-    key: 'journal-sequence-comptable',
-    name: 'Journal séquence comptable',
-    icon: BookOpen,
-    link: '/reporting/journal-comptable?vue=journal',
-    description: 'Écritures GL par période (émissions, annulations, encaissements)',
-    enabled: true,
-  },
-  {
-    key: 'historique-interfacage-smartstream',
-    name: 'Historique Interfaçage SMART STREAM',
-    icon: Inbox,
-    link: '/reporting/journal-comptable?vue=historique',
-    description: 'Historique des exports SmartStream',
-    enabled: true,
-  },
-  {
-    key: 'interfacage-smartstream',
-    name: 'Interfaçage SMART STREAM',
-    icon: ArrowLeftRight,
-    link: '/reporting/journal-comptable?vue=journal',
-    description: 'Export .txt au format SmartStream',
-    enabled: true,
-  },
-  {
     key: 'locaux-vacants',
     name: 'Liste Locaux vacants',
-    icon: Home,
+    icon: DoorOpen,
     link: '/reporting/locaux-vacants',
     description: 'Locaux sans bail en cours, filtrables par Propriétaire',
-    enabled: true,
-  },
-  {
-    key: 'bon-de-commande',
-    name: 'Importation Bon de Commande',
-    icon: Upload,
-    link: '/property-management/bon-de-commande',
-    description: 'Import Excel des bons de commande (page Bons de Commande)',
     enabled: true,
   },
   {
@@ -252,17 +138,9 @@ const items = [
     enabled: true,
   },
   {
-    key: 'taxe-habitation',
-    name: "Taxe d'Habitation",
-    icon: Coins,
-    link: '/reporting/taxe-habitation',
-    description: 'Loyer net annualisé par actif, filtrable par Propriétaire/Actif',
-    enabled: true,
-  },
-  {
     key: 'etat-rejet',
     name: 'Etat de rejet',
-    icon: XCircle,
+    icon: CircleX,
     link: '',
     description: 'Encaissements rejetés, export Excel direct',
     enabled: true,
@@ -271,7 +149,7 @@ const items = [
   {
     key: 'etat-contentieux',
     name: 'Etat de contentieux',
-    icon: AlertTriangle,
+    icon: Scale,
     link: '',
     description: 'Baux en contentieux, export Excel direct',
     enabled: true,
@@ -419,9 +297,12 @@ const Reporting = () => {
 
   return (
     <div className='space-y-4'>
-      <Title icon={BarChart3} title='Reporting' description='Rapports comptables et financiers' />
+      <Title icon={BarChart3} title='Reporting' description='Rapports de gestion locative' />
 
-      <HubCardGrid items={items.map((item) => ({ ...item, onClick: () => handleCardClick(item) }))} />
+      <HubCardGrid
+        iconStrokeWidth={1.5}
+        items={items.map((item) => ({ ...item, onClick: () => handleCardClick(item) }))}
+      />
 
       <BaseDialog
         open={activeDownload !== null}

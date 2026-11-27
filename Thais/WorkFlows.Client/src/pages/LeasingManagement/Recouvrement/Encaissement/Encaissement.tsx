@@ -2,6 +2,7 @@ import { ExportTiles } from '@/components/export/export-tiles';
 import { BaseDialog } from '@/components/dialog/dialog';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { AvatarCell, Chip, MoneyCell, PrimarySecondary } from '@/components/table/list-cells';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -277,48 +278,48 @@ const Encaissement = () => {
     {
       accessorKey: 'numero',
       header: ({ column }) => <DataTableColumnHeader column={column} title='N°' sorting />,
-      cell: ({ row }) => <div className='font-medium'>ENC{row.original.numero}</div>,
+      cell: ({ row }) => <Chip className='font-mono'>ENC{row.original.numero}</Chip>,
     },
     {
       accessorKey: 'nomLocataire',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Locataire' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomLocataire || '-'}</div>,
+      cell: ({ row }) => <AvatarCell name={row.original.nomLocataire} />,
     },
     {
       accessorKey: 'nomBuilding',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Actif' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomBuilding || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomBuilding} />,
     },
     {
       accessorKey: 'montant',
-      header: ({ column }) => <DataTableColumnHeader column={column} title='Encaissement (MAD)' />,
-      cell: ({ row }) => <div className='font-bold text-green-700'>{fmtMontant(row.original.montant)}</div>,
+      header: () => <div className='text-right'>Encaissement</div>,
+      cell: ({ row }) => <MoneyCell value={row.original.montant} tone='success' />,
     },
     {
       id: 'datePaiement',
       accessorFn: (row) => fmtDate(row.datePaiement),
       header: ({ column }) => <DataTableColumnHeader column={column} title='Date Encaissement' sorting />,
-      cell: ({ row }) => <div className='font-medium'>{fmtDate(row.original.datePaiement)}</div>,
+      cell: ({ row }) => <span className='whitespace-nowrap'>{fmtDate(row.original.datePaiement)}</span>,
     },
     {
       accessorKey: 'modePaiement',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Mode Paiement' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.modePaiement}</div>,
+      cell: ({ row }) => row.original.modePaiement ? <Chip>{row.original.modePaiement}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'reference',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Référence' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.reference || '-'}</div>,
+      cell: ({ row }) => row.original.reference ? <Chip className='font-mono'>{row.original.reference}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       accessorKey: 'nomEncaisseur',
       header: ({ column }) => <DataTableColumnHeader column={column} title='Encaisseur' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.nomEncaisseur || '-'}</div>,
+      cell: ({ row }) => <PrimarySecondary primary={row.original.nomEncaisseur} />,
     },
     {
       accessorKey: 'numRemiseBancaire',
       header: ({ column }) => <DataTableColumnHeader column={column} title='N° Remise Bancaire' />,
-      cell: ({ row }) => <div className='font-medium'>{row.original.numRemiseBancaire || '-'}</div>,
+      cell: ({ row }) => row.original.numRemiseBancaire ? <Chip className='font-mono'>{row.original.numRemiseBancaire}</Chip> : <span className='text-muted-foreground'>—</span>,
     },
     {
       id: 'statut',
@@ -328,14 +329,14 @@ const Encaissement = () => {
         const label = annule ? 'Annulé' : rejete ? 'Rejeté' : demandeAnnulation ? "Demande d'annulation" : 'Actif';
         const badgeClass =
           annule || rejete
-            ? 'text-red-700 bg-red-100'
+            ? 'bg-red-500/10 text-red-700 dark:text-red-400'
             : demandeAnnulation
-              ? 'text-amber-700 bg-amber-100'
-              : 'text-green-700 bg-green-100';
+              ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+              : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
         return (
           <div className='flex justify-center'>
             <span
-              className={`inline-block w-fit text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${badgeClass}`}
+              className={`inline-block w-fit text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap ${badgeClass}`}
             >
               {label}
             </span>
@@ -352,7 +353,7 @@ const Encaissement = () => {
             <Button
               size='sm'
               variant='outline'
-              className='text-red-600 hover:text-red-700'
+              className='border-red-500/30 text-red-600 hover:bg-red-500/10 hover:text-red-600 dark:text-red-400'
               onClick={() => setAnnulationDialogItem(row.original)}
             >
               <Ban className='h-4 w-4 mr-2' />
@@ -378,7 +379,7 @@ const Encaissement = () => {
         <div className='space-y-4'>
           <div className='flex flex-wrap items-center justify-between gap-2'>
             <Title icon={Receipt} title='Encaissement' description='Consultation des encaissements enregistrés' />
-            <div className='rounded-md bg-green-50 px-4 py-2 text-sm font-semibold text-green-700'>
+            <div className='rounded-lg bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400'>
               Total {annee !== '0' ? annee : 'toutes années'} : {fmtMontant(totalMontant)} MAD
             </div>
           </div>
@@ -393,9 +394,9 @@ const Encaissement = () => {
           pagination={pagination}
           toolbar={
             <div className='flex flex-wrap items-center gap-2'>
-              <div className='w-full sm:w-44'>
+              <div className='w-full sm:w-56'>
                 <Select value={noProprietaire} onValueChange={setNoProprietaire}>
-                  <SelectTrigger className='h-8'>
+                  <SelectTrigger className='h-10 rounded-lg bg-card'>
                     <SelectValue placeholder='Tous les propriétaires' />
                   </SelectTrigger>
                   <SelectContent>
@@ -410,7 +411,7 @@ const Encaissement = () => {
               </div>
               <div className='w-full sm:w-40'>
                 <Select value={annee} onValueChange={setAnnee}>
-                  <SelectTrigger className='h-8'>
+                  <SelectTrigger className='h-10 rounded-lg bg-card'>
                     <SelectValue placeholder='Année' />
                   </SelectTrigger>
                   <SelectContent>
@@ -425,7 +426,7 @@ const Encaissement = () => {
               </div>
               <div className='w-full sm:w-40'>
                 <Select value={mois} onValueChange={setMois}>
-                  <SelectTrigger className='h-8'>
+                  <SelectTrigger className='h-10 rounded-lg bg-card'>
                     <SelectValue placeholder='Mois' />
                   </SelectTrigger>
                   <SelectContent>
@@ -438,9 +439,9 @@ const Encaissement = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className='w-full sm:w-44'>
+              <div className='w-full sm:w-56'>
                 <Select value={noEncaisseur} onValueChange={setNoEncaisseur}>
-                  <SelectTrigger className='h-8'>
+                  <SelectTrigger className='h-10 rounded-lg bg-card'>
                     <SelectValue placeholder='Choix Encaisseur' />
                   </SelectTrigger>
                   <SelectContent>
@@ -519,7 +520,7 @@ const Encaissement = () => {
           </div>
           {remiseImportResult && (
             <div className='rounded-md bg-muted p-3 text-sm space-y-1'>
-              <p className='font-medium text-green-700'>
+              <p className='font-medium text-emerald-700 dark:text-emerald-400'>
                 {remiseImportResult.nombreAssocies} encaissement(s) associé(s).
               </p>
               {remiseImportResult.referencesIntrouvables.length > 0 && (

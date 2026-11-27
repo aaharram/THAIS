@@ -41,7 +41,7 @@ export interface ExportMenuProps {
   pdfColumnStyles?: Record<number, { cellWidth?: number; halign?: 'left' | 'center' | 'right' }>;
 }
 
-/** Bouton « Export » (menu PDF / Excel), même rendu que la liste des actifs. */
+/** Boutons d'export (PDF bleu, Excel vert) de la barre d'outils d'une liste. */
 export function ExportMenu({ fileName, pdfTitle, header, getRows, pdfColumnStyles }: ExportMenuProps) {
   const dispatch = useAppDispatch();
   const [busy, setBusy] = useState<'pdf' | 'excel' | null>(null);
@@ -101,7 +101,7 @@ export function ExportMenu({ fileName, pdfTitle, header, getRows, pdfColumnStyle
     });
 
   return (
-    <div className='flex items-center gap-2'>
+    <div className='order-3 flex items-center gap-2'>
       <ActionTile
         color={TILE_COLORS.bleu}
         icon={PdfGlyph}
